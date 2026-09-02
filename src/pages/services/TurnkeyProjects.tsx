@@ -2,8 +2,13 @@ import { motion } from 'motion/react';
 import { Compass, Droplets, PenTool, Wrench, Settings, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../../config/images';
+import { usePageMeta } from '../../hooks/usePageMeta';
 
 export default function TurnkeyProjects() {
+  usePageMeta(
+    'Turnkey Swimming Pool Construction',
+    'Crystal Pools delivers end-to-end swimming pool construction services in Pune and across India — from design and civil works to hydraulic engineering and commissioning, all from one swimming pool contractor.',
+  );
   const benefits = [
     {
       title: "Accelerated Project Rollouts",

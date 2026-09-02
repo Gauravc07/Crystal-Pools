@@ -11,7 +11,7 @@ import { DOCUMENTS } from "../config/documents";
 export default function About() {
   usePageMeta(
     'About Crystal Pools',
-    'Established in 1993, Crystal Pools is India\'s trusted swimming pool contractor. Meet our leadership team and discover our 25+ year journey of engineering excellence.',
+    'Established in 1993, Crystal Pools is India\'s trusted swimming pool consultant, builder, and one of the leading swimming pool contractors in Pune. Meet our leadership team and discover our 25+ year journey of engineering excellence.',
   );
 
   const fadeUpVariant: Variants = {
@@ -100,7 +100,8 @@ export default function About() {
                 variants={fadeUpVariant}
                 className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed"
               >
-                We don't just build pools; we engineer aquatic environments. Our
+                As swimming pool builders in Pune and contractors across India, we don't just
+                build pools; we engineer aquatic environments. Our
                 rigorous approach ensures structural integrity and hydrodynamic
                 precision, resulting in spaces that are as enduring as they are
                 breathtaking.

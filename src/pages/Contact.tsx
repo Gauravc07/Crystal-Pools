@@ -40,7 +40,7 @@ function validate(f: FormFields): Partial<Record<keyof FormFields, string>> {
 export default function Contact() {
   usePageMeta(
     'Contact Crystal Pools — Get a Free Quote',
-    'Reach out to Crystal Pools for luxury pool construction, renovation, and equipment across Pune, Mumbai, Nashik, and all India. Call or send an inquiry today.',
+    'Reach out to Crystal Pools, a trusted swimming pool consultant and contractor in Pune, for luxury pool construction, renovation, and equipment across Pune, Mumbai, Nashik, and all India. Call or send an inquiry today.',
   );
 
   const { hash } = useLocation();
@@ -228,7 +228,6 @@ export default function Contact() {
                         aria-invalid={!!errors.name}
                         aria-describedby={errors.name ? 'name-error' : undefined}
                         className={`w-full px-5 py-3.5 rounded-2xl border bg-white/5 text-white placeholder-white/40 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all outline-none shadow-sm ${errors.name ? 'border-red-400/60' : 'border-white/20'}`}
-                        placeholder="John Doe"
                       />
                       {errors.name && <p id="name-error" className="mt-1 text-xs text-red-300">{errors.name}</p>}
                     </div>
@@ -243,7 +242,6 @@ export default function Contact() {
                         aria-invalid={!!errors.email}
                         aria-describedby={errors.email ? 'email-error' : undefined}
                         className={`w-full px-5 py-3.5 rounded-2xl border bg-white/5 text-white placeholder-white/40 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all outline-none shadow-sm ${errors.email ? 'border-red-400/60' : 'border-white/20'}`}
-                        placeholder="john@example.com"
                       />
                       {errors.email && <p id="email-error" className="mt-1 text-xs text-red-300">{errors.email}</p>}
                     </div>
@@ -261,7 +259,6 @@ export default function Contact() {
                         aria-invalid={!!errors.phone}
                         aria-describedby={errors.phone ? 'phone-error' : undefined}
                         className={`w-full px-5 py-3.5 rounded-2xl border bg-white/5 text-white placeholder-white/40 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all outline-none shadow-sm ${errors.phone ? 'border-red-400/60' : 'border-white/20'}`}
-                        placeholder="+91 98765 43210"
                       />
                       {errors.phone && <p id="phone-error" className="mt-1 text-xs text-red-300">{errors.phone}</p>}
                     </div>
@@ -281,6 +278,7 @@ export default function Contact() {
                         <option value="Renovation">Renovation</option>
                         <option value="Premium Equipment">Premium Equipment</option>
                         <option value="Commercial Pool">Commercial Pool</option>
+                        <option value="Other">Other</option>
                       </select>
                       {errors.projectType && <p id="type-error" className="mt-1 text-xs text-red-300">{errors.projectType}</p>}
                     </div>

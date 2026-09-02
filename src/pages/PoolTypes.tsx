@@ -4,7 +4,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 export default function PoolTypes() {
   usePageMeta(
     'Swimming Pool Types',
-    'Explore our full range of swimming pool designs — private, commercial, competition, vanishing edge, overflow, skimmer, and readymade FRP pools.',
+    'Explore all type of swimming pools in India — private, commercial, competition, vanishing edge, overflow, skimmer, and readymade FRP pools — from Crystal Pools.',
   );
   return (
     <div className="w-full">

@@ -64,6 +64,10 @@ const TechnicalTable = ({ headers, data, renderRow }: any) => (
 // --- Main Page ---
 
 export default function Accessories() {
+  usePageMeta(
+    'Swimming Pool Accessories & Equipment',
+    'Crystal Pools supplies swimming pool accessories, filtration and filter systems, and swimming pool pumps in Pune and across India — ladders, skimmers, sand filters, and more.',
+  );
   const [activeTab, setActiveTab] = useState('ladders');
   const [modalImage, setModalImage] = useState<string | null>(null);
 
@@ -367,7 +371,7 @@ export default function Accessories() {
             transition={{ duration: 1, delay: 0.65 }}
             className="text-base md:text-lg text-white/75 font-light leading-relaxed max-w-sm"
           >
-            The uncompromising components behind world-class aquatic facilities.
+            Swimming pool accessories, filtration, and pumps in Pune — the uncompromising components behind world-class aquatic facilities.
           </motion.p>
         </div>
 

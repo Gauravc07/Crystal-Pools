@@ -17,7 +17,7 @@ import { IMAGES } from '../config/images';
 export default function Home() {
   usePageMeta(
     'Premium Swimming Pool Construction',
-    "India's premier swimming pool constructor since 1993. Luxury private, commercial, and competition pools across Pune, Mumbai, Nashik, and beyond.",
+    "Crystal Pools is a leading swimming pool consultant, builder, and construction company in Pune since 1993. Luxury private, commercial, and competition swimming pools construction across Pune, Mumbai, Nashik, and beyond.",
   );
 
   const shouldReduceMotion = useReducedMotion();

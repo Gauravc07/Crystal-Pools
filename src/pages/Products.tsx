@@ -40,6 +40,10 @@ const products = [
 ];
 
 export default function Products() {
+  usePageMeta(
+    'Swimming Pool Equipment & Accessories',
+    'Crystal Pools is a trusted swimming pool equipment supplier and swimming pool manufacturer, offering filtration, pumps, filter systems, and accessories in Pune and across India.',
+  );
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -160,7 +164,7 @@ export default function Products() {
            Engineered for Excellence
          </h2>
          <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-light">
-           Crystal Pools is India's premier importer and supplier of commercial and residential swimming pool equipment. Serving elite hotels, resorts, sports clubs, and advanced water treatment facilities, we provide a comprehensive ecosystem of aquatic technology. Every component in our catalog is procured from world-class global vendors, guaranteeing absolute reliability, uncompromising safety, and peak operational efficiency for your facility.
+           Crystal Pools is India's premier swimming pool equipment supplier and manufacturer, importing commercial and residential swimming pool equipment — from filtration and filter systems to pumps, disinfection, and underwater lights. Serving elite hotels, resorts, sports clubs, and advanced water treatment facilities, we provide a comprehensive ecosystem of aquatic technology. Every component in our catalog is procured from world-class global vendors, guaranteeing absolute reliability, uncompromising safety, and peak operational efficiency for your facility.
          </p>
       </section>
 

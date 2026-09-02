@@ -78,7 +78,7 @@ export default function PoolBentoSection() {
             Versatile Aquatic Architecture
           </h3>
           <p className="mt-4 text-gray-600 dark:text-slate-400">
-            Click on any pool type to learn more about our construction techniques.
+            Explore all type of swimming pools in India — click on any pool type to learn more about our construction techniques.
           </p>
         </div>
       </div>

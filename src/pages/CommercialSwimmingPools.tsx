@@ -10,7 +10,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 export default function CommercialSwimmingPools() {
   usePageMeta(
     'Commercial Swimming Pools',
-    'High-traffic commercial swimming pools for hotels, resorts, and apartment complexes. Built for durability, compliance, and premium guest experience.',
+    'Crystal Pools is a leading commercial swimming pool consultant and pool builder in Pune, designing high-traffic commercial swimming pools for hotels, resorts, and apartment complexes across India.',
   );
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-[#060F1A] overflow-hidden">
@@ -46,7 +46,7 @@ export default function CommercialSwimmingPools() {
             className="max-w-lg pb-0 md:pb-4"
           >
             <p className="text-lg md:text-xl text-white font-medium drop-shadow-xl leading-relaxed">
-              As India’s premier commercial swimming pool contractors, we blend over 25 years of industry experience with innovative design to maximize productivity, aesthetic appeal, and long-term performance for your project.
+              As India's premier commercial swimming pool contractors and commercial pool consultants in Pune, we blend over 25 years of industry experience with innovative design to maximize productivity, aesthetic appeal, and long-term performance for your project.
             </p>
           </motion.div>
         </div>
@@ -78,10 +78,10 @@ export default function CommercialSwimmingPools() {
             </div>
             
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-sans font-light leading-relaxed mb-8">
-              <span className="font-bold text-slate-900 dark:text-white">The Crystal Advantage:</span> Today’s modern leisure centers, luxury hotels, schools, and hydrotherapy facilities require more than just attractive designs. They demand durable structures equipped to handle the heaviest bathing loads with absolute reliability. 
+              <span className="font-bold text-slate-900 dark:text-white">The Crystal Advantage:</span> Today's modern leisure centers, luxury hotels, schools, and hydrotherapy facilities need more than an attractive commercial swimming pool design. They demand durable structures equipped to handle the heaviest bathing loads with absolute reliability.
             </p>
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-sans font-light leading-relaxed">
-              Having successfully completed over 3,100 swimming pools across more than 50 Pan-India locations, Crystal Pools adds measurable value to your development. From our in-house AutoCAD drafting to rigorous on-site supervision, we ensure that your aquatic facility becomes a cornerstone of your property's success.
+              Having successfully completed over 3,100 swimming pools across more than 50 Pan-India locations — including commercial swimming pools in Pune — Crystal Pools adds measurable value to your development. From our in-house AutoCAD drafting to rigorous on-site supervision, we ensure that your aquatic facility becomes a cornerstone of your property's success.
             </p>
           </div>
         </div>

@@ -8,6 +8,10 @@ const faqs = [
     answer: "The timeline for building a luxury swimming pool depends on the complexity of the design, size, and location. Generally, a standard concrete pool takes 8-12 weeks from excavation to completion. Custom features, intricate landscaping, and permit approvals may extend the timeframe. We provide a detailed project schedule during our initial consultation."
   },
   {
+    question: "What is the swimming pool construction cost in Pune?",
+    answer: "Swimming pool prices vary based on size, depth, materials, and features such as tiling, filtration, and lighting. As a general guide, private pool construction typically starts from a few lakhs and scales up with custom design elements, while commercial and readymade FRP pools follow their own pricing tiers. Share your requirements with our team for a detailed, no-obligation quote tailored to your project in Pune or anywhere in India."
+  },
+  {
     question: "Do you offer pool maintenance and aftercare services?",
     answer: "Yes, we offer comprehensive pool maintenance and aftercare services to ensure your pool remains in pristine condition. Our team handles everything from water chemistry balancing, equipment inspection, and seasonal openings/closings to full-service cleaning and repairs."
   },

@@ -281,7 +281,7 @@ function AdvantageSection({ adv, index }: { adv: Advantage; index: number; key?:
 export default function ReadymadePools() {
   usePageMeta(
     'Readymade & Prefabricated Pools — Crystal Pools',
-    'Discover Crystal Pools\' premium prefabricated FRP pool range. Faster installation, zero seepage, architectural customization, and superior ROI across India.',
+    'Discover Crystal Pools\' premium prefabricated, portable swimming pool range in Pune. Faster installation, zero seepage, architectural customization, and superior ROI across India.',
   );
 
   return (

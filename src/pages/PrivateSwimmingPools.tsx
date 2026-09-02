@@ -10,7 +10,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 export default function PrivateSwimmingPools() {
   usePageMeta(
     'Private Swimming Pools',
-    'Crystal Pools designs and builds bespoke private swimming pools tailored to your home, style, and space. End-to-end construction across India.',
+    'Crystal Pools is a trusted private swimming pool consultant and builder in Pune, offering bespoke private swimming pool design and construction across India.',
   );
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-[#060F1A] overflow-hidden">
@@ -46,7 +46,7 @@ export default function PrivateSwimmingPools() {
             className="max-w-lg pb-0 md:pb-4"
           >
             <p className="text-lg md:text-xl text-white font-medium drop-shadow-xl leading-relaxed">
-              As India’s premier private swimming pool contractors, we blend architectural elegance with 25+ years of engineering mastery to transform your residence into a masterpiece of leisure.
+              As India's premier private swimming pool contractors, builders, and consultants in Pune, we blend architectural elegance with 25+ years of engineering mastery to transform your residence into a masterpiece of leisure.
             </p>
           </motion.div>
         </div>
@@ -78,10 +78,10 @@ export default function PrivateSwimmingPools() {
             </div>
             
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-sans font-light leading-relaxed mb-8">
-              While traditional private pools typically range from 12 ft x 24 ft to 20 ft x 40 ft, we don't believe in "standard" dimensions. Whether it is an intimate indoor retreat in a refurbished basement or a sprawling garden centerpiece, our designs are limited only by your imagination.
+              While traditional private pools typically range from 12 ft x 24 ft to 20 ft x 40 ft, we don't believe in "standard" dimensions. Whether it is an intimate indoor retreat in a refurbished basement or a sprawling garden centerpiece, our private swimming pool design is limited only by your imagination.
             </p>
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-sans font-light leading-relaxed">
-              We bridge the gap between cost-efficiency and high-end performance, ensuring that you never have to cut corners to achieve your dream. From the sun-drenched backyards of our 3,200+ happy clients to the most exclusive private estates in India, we bring the "resort life" home.
+              We bridge the gap between cost-efficiency and high-end performance, ensuring that you never have to cut corners to achieve your dream. From private swimming pool construction in our home city of Pune to the most exclusive private estates across India, we bring the "resort life" home.
             </p>
           </div>
         </div>

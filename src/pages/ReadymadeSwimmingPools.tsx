@@ -11,7 +11,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 export default function ReadymadeSwimmingPools() {
   usePageMeta(
     'Readymade Swimming Pools',
-    'Prefabricated FRP readymade swimming pools for fast installation. Quick setup, durable construction, and full equipment support from Crystal Pools.',
+    'Prefabricated FRP readymade and portable swimming pools in Pune for fast installation. Quick setup, durable construction, and full equipment support from Crystal Pools.',
   );
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-[#060F1A] overflow-hidden">
@@ -47,7 +47,7 @@ export default function ReadymadeSwimmingPools() {
             className="max-w-lg pb-0 md:pb-4"
           >
             <p className="text-lg md:text-xl text-white font-medium drop-shadow-xl leading-relaxed">
-              The trend of readymade swimming pools is catching up fast in the Indian market. From villas and resorts to sports clubs and wellness centers, clients prefer them for their immense flexibility.
+              The trend of portable, readymade swimming pools is catching up fast in the Indian market, including in Pune. From villas and resorts to sports clubs and wellness centers, clients prefer them for their immense flexibility.
             </p>
           </motion.div>
         </div>

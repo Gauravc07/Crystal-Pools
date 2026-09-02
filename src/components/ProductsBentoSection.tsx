@@ -82,6 +82,7 @@ export default function ProductsBentoSection() {
                   <img
                     src={product.image}
                     alt={product.title}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[0.25,1,0.5,1] group-hover:scale-[1.06]"
                   />
 

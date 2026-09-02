@@ -1,7 +1,7 @@
 export const IMAGES = {
   hero: {
-    lightMode: '/images/hero/light-mode.png',
-    darkMode:  '/images/hero/dark-mode.png',
+    lightMode: '/images/hero/light-mode.webp',
+    darkMode:  '/images/hero/dark-mode.webp',
     video:     '/images/hero/hero-video.mp4',
   },
   about: {
@@ -9,19 +9,19 @@ export const IMAGES = {
     construction: '/images/about/pool-construction.png',
   },
   services: {
-    swimmingPool:       '/images/services/hub/swimming-pool.png',
-    turnkeyHero:        '/images/services/turnkey-projects/hero.png',
-    accessoriesHero:    '/images/services/accessories/hero.png',
+    swimmingPool:       '/images/services/hub/swimming-pool.webp',
+    turnkeyHero:        '/images/services/turnkey-projects/hero.webp',
+    accessoriesHero:    '/images/services/accessories/hero.webp',
     accessoriesLadder:  '/images/services/accessories/ladder.jpg',
     skimmerEdge:        '/images/services/accessories/standard-skimmer-edge.png',
     overflowEdge:       '/images/services/accessories/deck-level-overflow-edge.png',
-    renovationHero:     '/images/services/renovation/hero.png',
+    renovationHero:     '/images/services/renovation/hero.webp',
     renovation:         [
       '/images/services/renovation/1.png',
       '/images/services/renovation/2.png',
       '/images/services/renovation/3.png',
     ],
-    readymadeHero:      '/images/services/readymade-pools/hero.png',
+    readymadeHero:      '/images/services/readymade-pools/hero.webp',
     readymadeAdvantages: [
       '/images/services/readymade-pools/Advantage-01.png',
       '/images/services/readymade-pools/Advantage-02.png',
@@ -31,14 +31,14 @@ export const IMAGES = {
     ],
   },
   poolTypes: {
-    private:      '/images/pool-types/private.jpg',
-    commercial:   '/images/pool-types/commercial.jpg',
-    recreational: '/images/pool-types/recreational.jpg',
-    competition:  '/images/pool-types/competition.jpg',
-    vanishingEdge:'/images/pool-types/vanishing-edge.png',
-    overflow:     '/images/pool-types/overflow.png',
+    private:      '/images/pool-types/private.webp',
+    commercial:   '/images/pool-types/commercial.webp',
+    recreational: '/images/pool-types/recreational.webp',
+    competition:  '/images/pool-types/competition.webp',
+    vanishingEdge:'/images/pool-types/vanishing-edge.webp',
+    overflow:     '/images/pool-types/overflow.webp',
     skimmer:      '/images/pool-types/skimmer.png',
-    readymade:    '/images/pool-types/readymade.png',
+    readymade:    '/images/pool-types/readymade.webp',
   },
   gallery: {
     light: [
@@ -75,7 +75,7 @@ export const IMAGES = {
     udaipur:    '/images/locations/udaipur.jpg',
   },
   equipment: {
-    hero:                 '/images/products/equipment-catalogue/hero.png',
+    hero:                 '/images/products/equipment-catalogue/hero.webp',
     fSeries:              '/images/products/equipment-catalogue/filters/f-series.png',
     bSeries:              '/images/products/equipment-catalogue/filters/b-series.png',
     mSeries:              '/images/products/equipment-catalogue/filters/m-series.png',
@@ -98,7 +98,7 @@ export const IMAGES = {
     poolPlastic:          '/images/products/equipment-catalogue/disinfection/pool-plastic.png',
     poolGeneral:          '/images/products/equipment-catalogue/disinfection/pool-general.png',
   },
-  tilesHero: '/images/services/pool-tiles/hero.png',
+  tilesHero: '/images/services/pool-tiles/hero.webp',
   tiles: [
     '/images/services/pool-tiles/1.png',
     '/images/services/pool-tiles/2.png',
@@ -110,7 +110,7 @@ export const IMAGES = {
     '/images/services/pool-tiles/8.png',
   ],
   waterFeatures: {
-    hero:     '/images/services/water-features/hero.png',
+    hero:     '/images/services/water-features/hero.webp',
     geyser:   '/images/services/water-features/geyser-jet-fountain.png',
     foam:     '/images/services/water-features/foam-jet-fountain.png',
     bell:     '/images/services/water-features/bell-jet-fountain.png',
@@ -122,7 +122,7 @@ export const IMAGES = {
     musical:  'https://images.unsplash.com/photo-1510006851064-e6056cd0e3a8?auto=format&fit=crop&w=800&q=80',
   },
   specialty: {
-    hero: '/images/products/specialty-installations/hero.png',
+    hero: '/images/products/specialty-installations/hero.webp',
     adhesiveGrout: [
       '/images/products/specialty-installations/adhesive-grout/1.png',
       '/images/products/specialty-installations/adhesive-grout/2.png',

@@ -83,6 +83,10 @@ const gradientClass = {
 };
 
 export default function Services() {
+  usePageMeta(
+    'Swimming Pool Construction Services',
+    'Crystal Pools offers complete swimming pool construction services in Pune and across India — turnkey projects, water features, tiles, accessories, and readymade pools from a trusted swimming pool company in Pune.',
+  );
   return (
     <div className="bg-[#f8fafc] dark:bg-[#060F1A] min-h-screen pt-32 pb-24 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -100,7 +104,7 @@ export default function Services() {
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
             From design and construction to maintenance and spectacular water features,
-            Crystal Pools provides everything you need under one roof.
+            Crystal Pools provides complete swimming pool services in Pune and beyond — everything you need under one roof.
           </p>
         </motion.div>
 
