@@ -14,7 +14,7 @@ function getInitialDarkMode(): boolean {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) return stored === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return false;
   } catch {
     return false;
   }
