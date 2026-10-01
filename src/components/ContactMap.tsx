@@ -4,6 +4,8 @@ import { MapPin, Phone, User, MapPin as MapPinIcon, Building2 } from 'lucide-rea
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { pageImage, usePageContent } from '../lib/pageContent';
+import { contactPage } from '../content/pages/contact';
 
 // Fix leaflet icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -33,16 +35,9 @@ const defaultIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-export const locationsData = [
-  { id: "pune", city: "Pune (Head Office)", contactName: "Mr. Nilesh Shukla (Managing Director)", phone: "+(91) 9850997486 / (020) 24690602", address: "Sr. No. 10/1/1, Shed No. 3&4, Nr. Kailash Jeevan Factory, Dhayari, Pune 411041", lat: 18.4372, lng: 73.8052, image: "/images/locations/pune.jpg" },
-  { id: "nashik", city: "Nashik", contactName: "Mr. Sarang Sukenkar", phone: "+91 98502 37502", address: "Block no 2, Ambarai Apartment, Vise mala, Canada corner, Nashik 422005", lat: 20.0075, lng: 73.7663, image: "/images/locations/nashik.jpg" },
-  { id: "kolhapur", city: "Kolhapur", contactName: "Mr. Prasad Vaidya", phone: "+91 98221 16662", address: "B305, Anant Pride, Kolhapur, Maharashtra 416002", lat: 16.7050, lng: 74.2433, image: "/images/locations/kolhapur.jpg" },
-  { id: "sindhudurg", city: "Sindhudurg", contactName: "Sales & Support", phone: "+91 95525 26371", address: "Sindhudurg, Maharashtra 416812", lat: 16.0543, lng: 73.5274, image: "/images/locations/sindhudurg.jpg" },
-  { id: "goa", city: "Goa", contactName: "Mr. Ashis Patel", phone: "+91 93242 29688", address: "101/A4 Saldhana Kyle Gardens, near Church of Piety, Khobra Waddo, Calangute, Goa 403516", lat: 15.5447, lng: 73.7554, image: "/images/locations/goa.jpg" },
-  { id: "udaipur", city: "Rajasthan (Udaipur)", contactName: "Shri Siddhi Vinayak Associates", phone: "+91 96940 99801", address: "20 Nakoda complex, Hansa Palace Lane, Hiran Magri Sec 4, Udaipur 313002", lat: 24.5712, lng: 73.7125, image: "/images/locations/udaipur.jpg" }
-];
+interface Location { id: string; city: string; contactName: string; phone: string; address: string; lat: number; lng: number; image: string }
 
-function MapController({ activeLocation }: { activeLocation: typeof locationsData[0] | undefined }) {
+function MapController({ activeLocation }: { activeLocation: Location | undefined }) {
   const map = useMap();
   useEffect(() => {
     if (activeLocation) {
@@ -63,6 +58,11 @@ function MapController({ activeLocation }: { activeLocation: typeof locationsDat
 
 export default function ContactMap() {
   const [activeLocationId, setActiveLocationId] = useState<string | null>(null);
+  const c = usePageContent(contactPage);
+  // Branches without valid coordinates are listed in the admin but not pinned on the map
+  const locationsData: Location[] = c.list('map.locations')
+    .map((l, i) => ({ id: String(i), city: l.city, contactName: l.contactName, phone: l.phone, address: l.address, lat: parseFloat(l.lat), lng: parseFloat(l.lng), image: l.image ? pageImage(l.image) : '' }))
+    .filter(l => Number.isFinite(l.lat) && Number.isFinite(l.lng));
 
   const activeLocation = locationsData.find(loc => loc.id === activeLocationId);
 
@@ -75,9 +75,9 @@ export default function ContactMap() {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-[#0a5c86] dark:text-white mb-4">Our Presence Across India</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-[#0a5c86] dark:text-white mb-4">{c.text('map.heading')}</h2>
           <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">
-            Find an expert near you. Click on the map markers to view details for our operational branches and get in touch with local representatives.
+            {c.text('map.intro')}
           </p>
         </div>
 
@@ -127,7 +127,7 @@ export default function ContactMap() {
                 className="absolute shrink-0 z-10 bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white px-5 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-medium text-sm hover:scale-105 transition-transform flex items-center border border-slate-200 dark:border-slate-700"
               >
                 <MapPinIcon size={16} className="mr-2" />
-                Zoom Out to India
+                {c.text('map.zoomOut')}
               </button>
             )}
           </motion.div>
@@ -141,8 +141,8 @@ export default function ContactMap() {
             <div className="w-full h-full rounded-3xl p-8 flex flex-col justify-center items-center text-center border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] overflow-hidden bg-white dark:bg-[#08121d]">
               {activeLocation && (
                 <div 
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url('${activeLocation.image}')` }}
+                  className="absolute inset-0 bg-cover bg-center bg-linear-to-br from-[#0a5c86] to-[#06283d]"
+                  style={activeLocation.image ? { backgroundImage: `url('${activeLocation.image}')` } : undefined}
                 >
                   <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/60 to-black/30" />
                 </div>
@@ -153,9 +153,9 @@ export default function ContactMap() {
                     <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mb-6 text-slate-400 dark:text-slate-500">
                       <MapPinIcon size={28} />
                     </div>
-                    <h3 className="text-2xl font-serif text-slate-900 dark:text-white mb-3">Select Location</h3>
+                    <h3 className="text-2xl font-serif text-slate-900 dark:text-white mb-3">{c.text('map.selectTitle')}</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
-                      Click on a map marker to view branch details and contact information.
+                      {c.text('map.selectText')}
                     </p>
                   </>
                 ) : (

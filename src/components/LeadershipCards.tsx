@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { leaders } from '../data/team';
+import { usePageContent } from '../lib/pageContent';
+import { aboutPage } from '../content/pages/about';
 
 export default function LeadershipCards() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(true);
   const shouldReduceMotion = useReducedMotion();
+  const leaders = usePageContent(aboutPage).list('leadership.people').map((p, i) => ({ id: String(i), name: p.name, role: p.role, initials: p.initials, description: p.description }));
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');

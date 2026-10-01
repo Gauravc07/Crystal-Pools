@@ -3,51 +3,37 @@ import { usePageMeta } from '../hooks/usePageMeta';
 import { motion, AnimatePresence } from 'motion/react';
 import { Download, MessageCircle, X, ChevronRight, ShieldCheck, Settings2, Droplets, Headphones, Waves } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { IMAGES } from '../config/images';
-import { DOCUMENTS } from '../config/documents';
+import { Lines, pageImage, parsePairs, usePageContent } from '../lib/pageContent';
+import { productsPage } from '../content/pages/products';
 import { usePanelContext } from '../contexts/PanelContext';
 import { useLenis } from '../components/SmoothScroll';
+import { useSiteSettings, whatsappHref } from '../lib/siteSettings';
 
-const categories = ['All', 'Commercial & Residential Filters', 'Pumps', 'Disinfection System'];
+// Icon for each hero feature-strip position
+const BADGE_ICONS = [ShieldCheck, Settings2, Droplets, Headphones];
 
-const products = [
-  // Commercial & Residential Filters
-  { id: 1,  category: 'Commercial & Residential Filters', title: 'F Series Sand Filters',       desc: 'Heavy-duty performance for high-capacity applications.', image: IMAGES.equipment.fSeries,            datasheet: DOCUMENTS.equipment.fSeries,              specs: [{ label: 'Type', value: 'Commercial High-Capacity' }, { label: 'Material', value: 'Fiberglass' }] },
-  { id: 2,  category: 'Commercial & Residential Filters', title: 'B Series Filters',            desc: 'Horizontal commercial filtration solutions.',           image: IMAGES.equipment.bSeries,            datasheet: DOCUMENTS.equipment.bSeries,              specs: [{ label: 'Format', value: 'Horizontal' }] },
-  { id: 3,  category: 'Commercial & Residential Filters', title: 'M Series Filters',            desc: 'Premium top-mount residential filtration systems.',     image: IMAGES.equipment.mSeries,            datasheet: DOCUMENTS.equipment.mSeries,              specs: [{ label: 'Mount', value: 'Top' }] },
-  { id: 4,  category: 'Commercial & Residential Filters', title: 'MS Series Filters',           desc: 'Side-mount residential filtration systems.',           image: IMAGES.equipment.msSeries,                                                                specs: [{ label: 'Mount', value: 'Side' }] },
-
-  // Pumps
-  { id: 5,  category: 'Pumps', title: 'MXB Series Pumps', desc: 'Reliable performance for residential pools.',    image: IMAGES.equipment.mxbSeries, datasheet: DOCUMENTS.equipment.mxbSeries, specs: [{ label: 'Application', value: 'Residential' }] },
-  { id: 6,  category: 'Pumps', title: 'MRB Series Pumps', desc: 'Heavy-duty commercial flanged pumps.',          image: IMAGES.equipment.mrbSeries, datasheet: DOCUMENTS.equipment.mrbSeries, specs: [{ label: 'Type', value: 'Flanged Commercial' }] },
-  { id: 7,  category: 'Pumps', title: 'MTX Series Pumps', desc: 'Compact, high-efficiency circulation.',         image: IMAGES.equipment.mtxSeries, datasheet: DOCUMENTS.equipment.mtxSeries, specs: [{ label: 'Benefit', value: 'High Efficiency' }] },
-
-  // Disinfection System
-  { id: 8,  category: 'Disinfection System', title: 'Minderchlor Salt Chlorinator', desc: 'Automated, silky-smooth water sanitation.',             image: IMAGES.equipment.minderchlor,          datasheet: DOCUMENTS.equipment.minderchlor,          specs: [] },
-  { id: 9,  category: 'Disinfection System', title: 'Chemical Tablet Feeders',      desc: 'Consistent, regulated chlorine dispersion.',           image: IMAGES.equipment.chemicalTabletFeeder,  datasheet: DOCUMENTS.equipment.chemicalTabletFeeder, specs: [] },
-  { id: 10, category: 'Disinfection System', title: 'Dosingstar Dosing Pump',       desc: 'Precise automated liquid chemical injection.',         image: IMAGES.equipment.dosingstar,            datasheet: DOCUMENTS.equipment.dosingstar,           specs: [] },
-  { id: 11, category: 'Disinfection System', title: 'BP Series Dosing Pump',        desc: 'Reliable chemical dosing for balanced water.',         image: IMAGES.equipment.bpSeries,              datasheet: DOCUMENTS.equipment.bpSeries,             specs: [] },
-  { id: 12, category: 'Disinfection System', title: 'Hydrosmart Pool System',       desc: 'Intelligent, centralized water quality management.',   image: IMAGES.equipment.hydrosmart,            datasheet: DOCUMENTS.equipment.hydrosmart,           specs: [] },
-  { id: 13, category: 'Disinfection System', title: 'Pool Vacuum',                  desc: 'Efficient pool floor and wall vacuuming.',             image: IMAGES.equipment.poolVacuum,                                                                   specs: [] },
-  { id: 14, category: 'Disinfection System', title: 'Heavy-Duty SS Vacuum Head',    desc: 'Stainless steel vacuum head for commercial pools.',    image: IMAGES.equipment.heavyDutyVacuumHead,                                                          specs: [] },
-  { id: 15, category: 'Disinfection System', title: 'Aluminum Vacuum Head',         desc: 'Lightweight aluminum head for residential use.',       image: IMAGES.equipment.aluminumVacuumHead,                                                           specs: [] },
-  { id: 16, category: 'Disinfection System', title: 'Vacuum Head with Side Brush',  desc: 'Combined vacuuming and brushing in one pass.',         image: IMAGES.equipment.vacuumHeadSideBrush,                                                          specs: [] },
-  { id: 17, category: 'Disinfection System', title: 'SS Algae Brushes',             desc: 'Stainless steel bristles for stubborn algae removal.', image: IMAGES.equipment.ssAlgaeBrushes,                                                               specs: [] },
-  { id: 18, category: 'Disinfection System', title: 'Telescopic Poles',             desc: 'Grip-lock telescopic poles for all cleaning tools.',  image: IMAGES.equipment.polesWithGripLock,                                                            specs: [] },
-  { id: 19, category: 'Disinfection System', title: 'Pool Hose',                    desc: 'Durable flexible hose for vacuum and cleaning systems.', image: IMAGES.equipment.poolHose,                                                                  specs: [] },
-  { id: 20, category: 'Disinfection System', title: 'Pool Plastic Fittings',        desc: 'Essential plastic fittings and accessories for pool systems.', image: IMAGES.equipment.poolPlastic,                                                          specs: [] },
-  { id: 21, category: 'Disinfection System', title: 'Swimming Pool Accessories',    desc: 'Complete range of general-purpose pool accessories.', image: IMAGES.equipment.poolGeneral,                                                                   specs: [] },
-];
+interface Product { id: number; category: string; title: string; desc: string; image: string; datasheet: string; specs: { label: string; value: string }[] }
 
 export default function Products() {
-  usePageMeta(
-    'Swimming Pool Equipment & Accessories',
-    'Crystal Pools is a trusted swimming pool equipment supplier and swimming pool manufacturer, offering filtration, pumps, filter systems, and accessories in Pune and across India.',
-  );
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const c = usePageContent(productsPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const allLabel = c.text('catalog.allLabel');
+  const categories = [allLabel, ...c.list('catalog.categories').map(cat => cat.name).filter(Boolean)];
+  const products: Product[] = c.list('catalog.products').map((p, i) => ({
+    id: i,
+    category: p.category,
+    title: p.title,
+    desc: p.desc,
+    image: pageImage(p.image),
+    datasheet: p.datasheet ? pageImage(p.datasheet) : '',
+    specs: parsePairs(p.specs).map(s => ({ label: s.label, value: s.sub })),
+  }));
+  const inquiry = (title: string) => `${c.text('catalog.whatsappMessage')} ${title}`;
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const { setPanelOpen } = usePanelContext();
+  const { whatsapp } = useSiteSettings();
   const lenis = useLenis();
 
   useEffect(() => {
@@ -57,11 +43,12 @@ export default function Products() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const filteredProducts = activeCategory === 'All'
+  const currentCategory = activeCategory ?? allLabel;
+  const filteredProducts = currentCategory === allLabel
     ? products
-    : products.filter(p => p.category === activeCategory);
+    : products.filter(p => p.category === currentCategory);
 
-  const openPanel = (product: any) => { setSelectedProduct(product); setPanelOpen(true); lenis?.stop(); };
+  const openPanel = (product: Product) => { setSelectedProduct(product); setPanelOpen(true); lenis?.stop(); };
   const closePanel = () => { setSelectedProduct(null); setPanelOpen(false); lenis?.start(); };
 
   // Close panel on escape key
@@ -81,8 +68,8 @@ export default function Products() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src={IMAGES.equipment.hero}
-            alt="Premium aquatic equipment"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
           <div className="absolute inset-0 bg-linear-to-r from-[#050d1a]/90 via-[#050d1a]/55 to-transparent" />
@@ -97,7 +84,7 @@ export default function Products() {
               transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
               className="text-6xl sm:text-7xl md:text-8xl font-display font-light text-white dark:text-brand-gold leading-none"
             >
-              Premium<br />Aquatic
+              <Lines text={c.text('hero.title')} />
             </motion.h1>
 
             <motion.p
@@ -106,7 +93,7 @@ export default function Products() {
               transition={{ duration: 0.9, ease: 'easeOut', delay: 0.35 }}
               className="text-5xl sm:text-6xl md:text-7xl font-serif italic text-[#f9c80e] leading-none mt-1 mb-8"
             >
-              Equipment<br />& Supply
+              <Lines text={c.text('hero.highlight')} />
             </motion.p>
 
             {/* Divider */}
@@ -127,7 +114,7 @@ export default function Products() {
               transition={{ duration: 1, delay: 0.7 }}
               className="text-base md:text-lg text-slate-300 font-light leading-relaxed max-w-sm"
             >
-              The definitive source for high-performance pool infrastructure and maintenance technology.
+              {c.text('hero.subtitle')}
             </motion.p>
           </div>
         </div>
@@ -140,13 +127,8 @@ export default function Products() {
           className="relative z-10 border-t border-[#f9c80e]/30 bg-[#050d1a]/85 backdrop-blur-sm"
         >
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 max-w-7xl mx-auto">
-            {[
-              { icon: ShieldCheck, title: 'Premium Quality',    desc: 'Industry-leading brands and products.' },
-              { icon: Settings2,   title: 'High Performance',   desc: 'Engineered for efficiency, built to last.' },
-              { icon: Droplets,    title: 'Complete Solutions', desc: 'Everything you need for peak pool performance.' },
-              { icon: Headphones,  title: 'Expert Support',     desc: 'Dedicated guidance every step of the way.' },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="flex items-start gap-4 px-6 py-6 md:px-8 md:py-7">
+            {c.list('hero.badges').map(({ title, desc }, i) => ({ icon: BADGE_ICONS[i % BADGE_ICONS.length], title, desc })).map(({ icon: Icon, title, desc }, i) => (
+              <div key={i} className="flex items-start gap-4 px-6 py-6 md:px-8 md:py-7">
                 <Icon className="w-7 h-7 text-[#f9c80e] shrink-0 mt-0.5" strokeWidth={1.5} />
                 <div>
                   <p className="text-xs tracking-[0.2em] uppercase font-bold text-[#f9c80e] mb-1">{title}</p>
@@ -161,10 +143,10 @@ export default function Products() {
       {/* 2. Uncompromising Quality & Sourcing */}
       <section className="py-16 md:py-24 px-6 lg:px-12 max-w-4xl mx-auto text-center">
          <h2 className="text-3xl lg:text-4xl font-display font-medium text-slate-900 dark:text-white mb-6">
-           Engineered for Excellence
+           {c.text('intro.heading')}
          </h2>
          <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-light">
-           Crystal Pools is India's premier swimming pool equipment supplier and manufacturer, importing commercial and residential swimming pool equipment — from filtration and filter systems to pumps, disinfection, and underwater lights. Serving elite hotels, resorts, sports clubs, and advanced water treatment facilities, we provide a comprehensive ecosystem of aquatic technology. Every component in our catalog is procured from world-class global vendors, guaranteeing absolute reliability, uncompromising safety, and peak operational efficiency for your facility.
+           {c.text('intro.text')}
          </p>
       </section>
 
@@ -179,7 +161,7 @@ export default function Products() {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border
-                  ${activeCategory === cat 
+                  ${currentCategory === cat 
                     ? 'bg-[#0a5c86] border-[#0a5c86] text-white dark:bg-[#38bdf8] dark:border-[#38bdf8] dark:text-[#060F1A]' 
                     : 'bg-transparent border-slate-200 text-slate-600 hover:border-[#0a5c86] dark:border-slate-800 dark:text-slate-400 dark:hover:border-[#38bdf8]'
                   }`}
@@ -231,7 +213,7 @@ export default function Products() {
                          </a>
                        )}
                        <a
-                         href={`https://wa.me/919552526371?text=Hi%2C%20I%27m%20interested%20in%20the%20${encodeURIComponent(product.title)}`}
+                         href={whatsappHref(whatsapp, inquiry(product.title))}
                          target="_blank"
                          rel="noopener noreferrer"
                          onClick={(e) => e.stopPropagation()}
@@ -265,11 +247,11 @@ export default function Products() {
       {/* 4. Footer CTA */}
       <section className="py-24 md:py-32 px-6 flex flex-col items-center justify-center text-center bg-white dark:bg-[#09090b] border-t border-slate-100 dark:border-slate-800 relative z-20">
         <h2 className="text-4xl md:text-5xl font-display font-medium text-[#0a5c86] dark:text-white mb-12 tracking-tight">
-          Equip Your Facility with the Best.
+          {c.text('cta.heading')}
         </h2>
         <Link to="/contact-swimming-pool-contractor">
           <button className="group inline-flex items-center space-x-4 bg-[#0a5c86] hover:bg-[#084b6e] text-white dark:bg-[#38bdf8] dark:text-[#060F1A] dark:hover:bg-cyan-400 px-8 md:px-12 py-5 rounded-full font-bold uppercase tracking-widest text-sm transition-colors duration-300">
-            <span>Request the Full Equipment Catalog</span>
+            <span>{c.text('cta.button')}</span>
             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
         </Link>
@@ -327,7 +309,7 @@ export default function Products() {
                  {/* Specifications Table styled cleanly */}
                  {selectedProduct.specs && selectedProduct.specs.length > 0 && (
                    <div className="mb-10">
-                     <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">Technical Specifications</h4>
+                     <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">{c.text('catalog.specsHeading')}</h4>
                      <table className="w-full text-left border-collapse">
                        <tbody>
                          {selectedProduct.specs.map((spec: any, idx: number) => (
@@ -350,17 +332,17 @@ export default function Products() {
                      className="w-full flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-medium hover:scale-[1.02] transition-transform"
                    >
                      <Download className="w-5 h-5" />
-                     <span>Download Datasheet</span>
+                     <span>{c.text('catalog.datasheetButton')}</span>
                    </a>
                    )}
                    <a
-                     href={`https://wa.me/919552526371?text=Hi%2C%20I%27m%20interested%20in%20the%20${encodeURIComponent(selectedProduct.title)}`}
+                     href={whatsappHref(whatsapp, inquiry(selectedProduct.title))}
                      target="_blank"
                      rel="noopener noreferrer"
                      className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-4 rounded-xl font-medium hover:bg-[#1ebe5d] transition-colors"
                    >
                      <MessageCircle className="w-5 h-5" />
-                     <span>Inquire on WhatsApp</span>
+                     <span>{c.text('catalog.whatsappButton')}</span>
                    </a>
                  </div>
 

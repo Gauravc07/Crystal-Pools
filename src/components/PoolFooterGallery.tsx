@@ -1,7 +1,11 @@
 import { useAnimationFrame } from 'motion/react';
-import React, { useRef, useState, useEffect } from 'react';
-import { Phone, Mail, Instagram, Facebook, Linkedin, ArrowRight } from 'lucide-react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { Phone, Mail, Instagram, Facebook, Linkedin, Youtube, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { telHref, useSiteSettings } from '../lib/siteSettings';
+import { projectImage, useProjects } from '../lib/content';
+
+const SOCIAL_ICONS = { facebook: Facebook, instagram: Instagram, linkedin: Linkedin, youtube: Youtube } as const;
 
 export interface PoolGalleryImage {
   src: string;
@@ -9,9 +13,21 @@ export interface PoolGalleryImage {
   title?: string;
 }
 
-export default function PoolFooterGallery({ images, poolName }: { images: PoolGalleryImage[], poolName: string }) {
+/**
+ * Marquee gallery at the bottom of each pool type page.
+ * Shows photos from published admin projects of this pool type; falls back to the built-in images.
+ */
+export default function PoolFooterGallery({ images: fallbackImages, poolName, poolType }: { images: PoolGalleryImage[], poolName: string, poolType?: string }) {
+  const projects = useProjects();
+  const images = useMemo(() => {
+    const fromProjects = (projects ?? [])
+      .filter(p => p.pool_type === poolType)
+      .flatMap(p => p.images.map(img => ({ src: projectImage(img.path) ?? '', alt: img.alt || p.name, title: p.name })));
+    return fromProjects.length ? fromProjects : fallbackImages;
+  }, [projects, poolType, fallbackImages]);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const settings = useSiteSettings();
   
   const [isHovered, setIsHovered] = useState(false);
   const x = useRef(0);
@@ -150,31 +166,30 @@ export default function PoolFooterGallery({ images, poolName }: { images: PoolGa
 
         <div className="mt-16 flex flex-col md:flex-row gap-8 md:gap-16 justify-between items-start md:items-end w-full">
            <div className="space-y-3">
-              <a href="tel:+919552526371" className="flex items-center gap-3 text-slate-300 hover:text-cyan-400 transition-colors text-sm font-medium tracking-widest">
+              <a href={telHref(settings.phone)} className="flex items-center gap-3 text-slate-300 hover:text-cyan-400 transition-colors text-sm font-medium tracking-widest">
                 <div className="w-8 h-8 rounded-full border border-cyan-900/50 flex flex-col items-center justify-center bg-cyan-900/20">
                   <Phone size={14} />
                 </div>
-                +91 95525 26371
+                {settings.phone}
               </a>
-              <a href="mailto:sales@crystalpools.in" className="flex items-center gap-3 text-slate-300 hover:text-cyan-400 transition-colors text-sm font-medium tracking-widest">
+              <a href={`mailto:${settings.email}`} className="flex items-center gap-3 text-slate-300 hover:text-cyan-400 transition-colors text-sm font-medium tracking-widest">
                 <div className="w-8 h-8 rounded-full border border-cyan-900/50 flex flex-col items-center justify-center bg-cyan-900/20">
                   <Mail size={14} />
                 </div>
-                sales@crystalpools.in
+                {settings.email}
               </a>
            </div>
 
            <div className="flex flex-col items-start md:items-end gap-6">
               <div className="flex gap-4">
-                <a href="https://www.facebook.com/crystalpoolspune/" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors">
-                  <Facebook size={18} />
-                </a>
-                <a href="https://www.instagram.com/crystalpoolspune/" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors">
-                  <Instagram size={18} />
-                </a>
-                <a href="https://www.linkedin.com/company/crystal-swimming-pools/" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors">
-                  <Linkedin size={18} />
-                </a>
+                {(Object.keys(SOCIAL_ICONS) as (keyof typeof SOCIAL_ICONS)[]).filter(k => settings.social_links[k]).map(k => {
+                  const Icon = SOCIAL_ICONS[k];
+                  return (
+                    <a key={k} href={settings.social_links[k]} target="_blank" rel="noopener noreferrer" aria-label={k} className="text-slate-500 hover:text-white transition-colors">
+                      <Icon size={18} />
+                    </a>
+                  );
+                })}
               </div>
               <p className="text-slate-600 text-xs tracking-widest font-light">
                 © {currentYear} CRYSTAL POOLS.

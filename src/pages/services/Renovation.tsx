@@ -2,36 +2,22 @@ import { motion } from 'motion/react';
 import { ArrowRight, Palette, Zap, Shield, CheckCircle } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { Link } from 'react-router-dom';
-import { IMAGES } from '../../config/images';
+import { usePageContent, pageImage } from '../../lib/pageContent';
+import { renovationPage } from '../../content/pages/services';
 
-const renovationScope = [
-  {
-    number: '01',
-    title: "Aesthetic Transformations",
-    description: "Replacing worn surfaces with premium glass mosaic tiling, modernizing deck coping, and integrating elegant, energy-efficient underwater lighting.",
-    icon: Palette,
-  },
-  {
-    number: '02',
-    title: "Advanced System Upgrades",
-    description: "Swapping out outdated pumps and plumbing for high-efficiency, state-of-the-art filtration and sanitation plants that guarantee crystal-clear water.",
-    icon: Zap,
-  },
-  {
-    number: '03',
-    title: "Structural Refurbishment",
-    description: "Expertly diagnosing and resolving leaks, addressing structural wear, and applying advanced waterproofing techniques to ensure decades of renewed longevity.",
-    icon: Shield,
-  },
-  {
-    number: '04',
-    title: "Safety & Hygiene Optimization",
-    description: "Modernizing drains, handrails, and anti-slip surfaces to meet the absolute highest benchmarks for user safety.",
-    icon: CheckCircle,
-  },
-];
+// Icon for each scope card position
+const ICONS = [Palette, Zap, Shield, CheckCircle];
 
 export default function Renovation() {
+  const c = usePageContent(renovationPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const gallery = c.list('gallery.images');
+  const renovationScope = c.list('scope.items').map((item, i) => ({
+    number: String(i + 1).padStart(2, '0'),
+    title: item.title,
+    description: item.description,
+    icon: ICONS[i % ICONS.length],
+  }));
   return (
     <div className="bg-[#fbfbfb] dark:bg-[#060F1A] w-full">
 
@@ -39,8 +25,8 @@ export default function Renovation() {
       <section className="relative w-full h-screen overflow-hidden flex items-center bg-black">
         <div className="absolute inset-0">
           <img
-            src={IMAGES.services.renovationHero}
-            alt="Renovated luxury pool"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
           <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-transparent" />
@@ -53,7 +39,7 @@ export default function Renovation() {
             transition={{ duration: 0.8 }}
             className="font-serif italic text-[#f9c80e] text-lg md:text-xl mb-3"
           >
-            Crystal Pools
+            {c.text('hero.eyebrow')}
           </motion.p>
           <motion.div
             initial={{ scaleX: 0, originX: 0 }}
@@ -67,8 +53,8 @@ export default function Renovation() {
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
             className="text-6xl sm:text-7xl md:text-8xl font-display font-light text-white dark:text-brand-gold leading-none mb-8"
           >
-            Masterful<br />
-            <span className="text-[#f9c80e]">Renovations.</span>
+            {c.text('hero.title')}<br />
+            <span className="text-[#f9c80e]">{c.text('hero.highlight')}</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -76,7 +62,7 @@ export default function Renovation() {
             transition={{ duration: 1, delay: 0.7 }}
             className="text-base md:text-lg text-slate-200 font-light leading-relaxed max-w-sm"
           >
-            Transforming aging pools into modern masterpieces through expert restoration and premium craftsmanship.
+            {c.text('hero.subtitle')}
           </motion.p>
         </div>
 
@@ -102,7 +88,7 @@ export default function Renovation() {
             transition={{ duration: 0.8 }}
             className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6"
           >
-            Our Philosophy
+            {c.text('philosophy.eyebrow')}
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -111,9 +97,9 @@ export default function Renovation() {
             transition={{ duration: 0.9, delay: 0.1 }}
             className="text-3xl md:text-5xl font-display font-light text-slate-900 dark:text-white leading-tight mb-8"
           >
-            We don't just repair pools.
+            {c.text('philosophy.heading')}
             <br />
-            <span className="font-serif italic text-[#0a5c86] dark:text-white">We revive them entirely.</span>
+            <span className="font-serif italic text-[#0a5c86] dark:text-white">{c.text('philosophy.highlight')}</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -122,7 +108,7 @@ export default function Renovation() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl font-light"
           >
-            Over time, even the most exquisitely crafted pools lose their original brilliance. Aging filtration equipment, structural wear, and fading surfaces quietly compromise both the experience and safety of your pool. At Crystal Pools, we bring sophisticated technology and architectural vision to your existing setup — restoring your pool's glory while elevating it to contemporary standards of luxury and performance.
+            {c.text('philosophy.text')}
           </motion.p>
         </div>
       </section>
@@ -139,8 +125,8 @@ export default function Renovation() {
             className="md:col-span-3 md:row-span-2 overflow-hidden rounded-2xl"
           >
             <img
-              src={IMAGES.services.renovation[0]}
-              alt="Renovation project showcase"
+              src={pageImage(gallery[0]?.image)}
+              alt={gallery[0]?.alt}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
             />
           </motion.div>
@@ -154,8 +140,8 @@ export default function Renovation() {
             className="md:col-span-2 overflow-hidden rounded-2xl"
           >
             <img
-              src={IMAGES.services.renovation[1]}
-              alt="Renovation detail"
+              src={pageImage(gallery[1]?.image)}
+              alt={gallery[1]?.alt}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
             />
           </motion.div>
@@ -169,8 +155,8 @@ export default function Renovation() {
             className="md:col-span-2 overflow-hidden rounded-2xl"
           >
             <img
-              src={IMAGES.services.renovation[2]}
-              alt="Renovation finish"
+              src={pageImage(gallery[2]?.image)}
+              alt={gallery[2]?.alt}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
             />
           </motion.div>
@@ -187,9 +173,9 @@ export default function Renovation() {
             transition={{ duration: 0.8 }}
             className="mb-16"
           >
-            <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-4">What We Cover</p>
+            <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-4">{c.text('scope.eyebrow')}</p>
             <h2 className="text-3xl md:text-5xl font-display font-bold text-[#0a5c86] dark:text-white tracking-tight">
-              Our Renovation Scope
+              {c.text('scope.heading')}
             </h2>
           </motion.div>
 
@@ -230,16 +216,16 @@ export default function Renovation() {
           transition={{ duration: 1 }}
           className="max-w-3xl mx-auto"
         >
-          <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6">Ready to begin</p>
+          <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6">{c.text('cta.eyebrow')}</p>
           <h2 className="text-4xl md:text-6xl font-display font-light text-[#0a5c86] dark:text-white tracking-tight mb-12 leading-tight">
-            Give Your Pool the<br />
-            <span className="font-serif italic text-[#f9c80e]">Renewal It Deserves.</span>
+            {c.text('cta.heading')}<br />
+            <span className="font-serif italic text-[#f9c80e]">{c.text('cta.highlight')}</span>
           </h2>
           <Link
             to="/contact-swimming-pool-contractor#inquiry"
             className="group inline-flex items-center gap-4 px-10 py-5 border border-[#0a5c86] dark:border-[#38bdf8] text-[#0a5c86] dark:text-white hover:bg-[#0a5c86] dark:hover:bg-[#38bdf8] hover:text-white dark:hover:text-slate-900 transition-all duration-300 uppercase tracking-widest text-sm font-bold"
           >
-            Start Your Renovation
+            {c.text('cta.button')}
             <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </motion.div>

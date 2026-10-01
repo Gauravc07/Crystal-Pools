@@ -10,7 +10,8 @@ import {
   CircleDollarSign, Award, Timer, Shield, Check,
 } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
-import { IMAGES } from '../../config/images';
+import { Highlighted, Lines, parsePairs, pageImage, usePageContent } from '../../lib/pageContent';
+import { readymadeServicePage } from '../../content/pages/readymadeService';
 import { DOCUMENTS } from '../../config/documents';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,80 +27,19 @@ interface Advantage {
   dividerVariant: 'lotus' | 'leaf' | 'chart';
   features: Feature[];
   valueProp?: string;
+  valueText?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data
 // ─────────────────────────────────────────────────────────────────────────────
-const ADVANTAGES: Advantage[] = [
-  {
-    id: 'monolithic',
-    titleLine1: 'Monolithic',
-    titleLine2: 'Structural Integrity',
-    desc: 'Engineered as a robust, single-piece composite structure. This eliminates vulnerable seams and joints, guaranteeing absolute zero water seepage or leakage.',
-    image: IMAGES.services.readymadeAdvantages[0],
-    dividerVariant: 'lotus',
-    features: [
-      { icon: Droplets,  label: 'ZERO LEAKAGE',  sub: 'Guaranteed' },
-      { icon: Link,      label: 'NO SEAMS',       sub: 'No Weak Points' },
-      { icon: Gem,       label: 'BUILT TO LAST',  sub: 'Maximum Durability' },
-    ],
-  },
-  {
-    id: 'accelerated',
-    titleLine1: 'Accelerated',
-    titleLine2: 'Deployment',
-    desc: 'Transform your landscape in a fraction of the time. Our turnkey delivery and installation process ensures incredibly quick project handovers compared to traditional pool construction.',
-    image: IMAGES.services.readymadeAdvantages[1],
-    dividerVariant: 'lotus',
-    features: [
-      { icon: Clock,         label: 'FASTER INSTALLATION', sub: 'Weeks, not months' },
-      { icon: Settings,      label: 'TURNKEY SOLUTION',    sub: 'End-to-end service' },
-      { icon: CalendarCheck, label: 'QUICK HANDOVER',      sub: 'Enjoy sooner' },
-    ],
-  },
-  {
-    id: 'customization',
-    titleLine1: 'Architectural',
-    titleLine2: 'Customization',
-    desc: 'Bespoke design is never compromised. Enjoy a high degree of tailoring in dimensions, profiles, and premium interior color finishes to match your specific aesthetic.',
-    image: IMAGES.services.readymadeAdvantages[2],
-    dividerVariant: 'lotus',
-    features: [
-      { icon: Ruler,   label: 'CUSTOM DIMENSIONS', sub: 'Tailored to your space' },
-      { icon: Layers,  label: 'CUSTOM PROFILES',   sub: 'Edges & steps your way' },
-      { icon: Palette, label: 'PREMIUM FINISHES',  sub: 'Luxury color options' },
-      { icon: PenLine, label: 'BESPOKE DESIGN',    sub: 'Crafted for you' },
-    ],
-  },
-  {
-    id: 'sustainable',
-    titleLine1: 'Sustainable',
-    titleLine2: 'Performance',
-    desc: 'Designed for the future. Experience zero water wastage, minimized energy consumption, and significantly reduced lifetime maintenance requirements.',
-    image: IMAGES.services.readymadeAdvantages[3],
-    dividerVariant: 'leaf',
-    features: [
-      { icon: RefreshCw, label: 'ZERO WATER WASTAGE',    sub: 'Smart circulation' },
-      { icon: Zap,       label: 'MINIMIZED ENERGY',      sub: 'LED & efficient systems' },
-      { icon: Wrench,    label: 'REDUCED MAINTENANCE',   sub: 'Durable by design' },
-    ],
-  },
-  {
-    id: 'optimized',
-    titleLine1: 'Optimized',
-    titleLine2: 'Investment',
-    desc: 'A highly cost-effective, economical alternative to traditional building methods. We deliver a superior price-to-value ratio without sacrificing the high-end luxury aesthetic.',
-    image: IMAGES.services.readymadeAdvantages[4],
-    dividerVariant: 'chart',
-    features: [
-      { icon: CircleDollarSign, label: 'COST-EFFECTIVE', sub: 'Lower lifecycle costs' },
-      { icon: Award,            label: 'HIGH VALUE',     sub: 'Premium quality' },
-      { icon: Timer,            label: 'FASTER ROI',     sub: 'Quick installation' },
-      { icon: Shield,           label: 'BUILT TO LAST',  sub: 'Durable, low maintenance' },
-    ],
-    valueProp: 'SUPERIOR PRICE-TO-VALUE RATIO',
-  },
+// Icons and divider style per advantage position (text and images are edited in the admin panel).
+const ADVANTAGE_STYLES: { icons: LucideIcon[]; dividerVariant: Advantage['dividerVariant'] }[] = [
+  { icons: [Droplets, Link, Gem], dividerVariant: 'lotus' },
+  { icons: [Clock, Settings, CalendarCheck], dividerVariant: 'lotus' },
+  { icons: [Ruler, Layers, Palette, PenLine], dividerVariant: 'lotus' },
+  { icons: [RefreshCw, Zap, Wrench], dividerVariant: 'leaf' },
+  { icons: [CircleDollarSign, Award, Timer, Shield], dividerVariant: 'chart' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +47,7 @@ const ADVANTAGES: Advantage[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Decorative gold shield badge with number */
-function ShieldBadge({ n }: { n: number }) {
+function ShieldBadge({ n, prefix }: { n: number; prefix: string }) {
   const label = String(n).padStart(2, '0');
   return (
     <div className="flex items-center gap-3 mb-8">
@@ -130,7 +70,7 @@ function ShieldBadge({ n }: { n: number }) {
         <span className="relative text-[#c9963c] font-bold text-sm font-display leading-none">{label}</span>
       </div>
       <span className="text-[#c9963c] font-sans font-bold tracking-[0.35em] text-[11px] uppercase">
-        Advantage {label}
+        {prefix} {label}
       </span>
     </div>
   );
@@ -176,7 +116,7 @@ function FeatureRow({ features }: { features: Feature[] }) {
   return (
     <div className="flex flex-wrap items-start gap-x-0 gap-y-6 mt-10 pt-8 border-t border-[#c9963c]/20">
       {features.map((feat, i) => (
-        <div key={feat.label} className="flex items-start gap-0">
+        <div key={i} className="flex items-start gap-0">
           {i > 0 && (
             <div className="self-stretch w-px bg-[#c9963c]/30 mx-5 mt-1 hidden sm:block" />
           )}
@@ -198,7 +138,7 @@ function FeatureRow({ features }: { features: Feature[] }) {
 }
 
 /** Single editorial advantage card */
-function AdvantageSection({ adv, index }: { adv: Advantage; index: number; key?: React.Key }) {
+function AdvantageSection({ adv, index, badgePrefix }: { adv: Advantage; index: number; badgePrefix: string; key?: React.Key }) {
   const isEven = index % 2 === 0;
 
   return (
@@ -221,7 +161,7 @@ function AdvantageSection({ adv, index }: { adv: Advantage; index: number; key?:
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1], delay: 0.1 }}
         >
-          <ShieldBadge n={index + 1} />
+          <ShieldBadge n={index + 1} prefix={badgePrefix} />
 
           <h2 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-display font-bold text-[#0a1628] dark:text-white leading-tight mb-1">
             {adv.titleLine1}
@@ -247,7 +187,7 @@ function AdvantageSection({ adv, index }: { adv: Advantage; index: number; key?:
                   {adv.valueProp}
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Smart investment. Luxury living.
+                  {adv.valueText}
                 </p>
               </div>
             </div>
@@ -279,10 +219,24 @@ function AdvantageSection({ adv, index }: { adv: Advantage; index: number; key?:
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ReadymadePools() {
-  usePageMeta(
-    'Readymade & Prefabricated Pools — Crystal Pools',
-    'Discover Crystal Pools\' premium prefabricated, portable swimming pool range in Pune. Faster installation, zero seepage, architectural customization, and superior ROI across India.',
-  );
+  const c = usePageContent(readymadeServicePage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const items = c.list('advantages.items');
+  const ADVANTAGES: Advantage[] = items.map((item, i) => {
+    const style = ADVANTAGE_STYLES[i % ADVANTAGE_STYLES.length];
+    const isLast = i === items.length - 1;
+    return {
+      id: String(i),
+      titleLine1: item.titleLine1,
+      titleLine2: item.titleLine2,
+      desc: item.desc,
+      image: pageImage(item.image),
+      dividerVariant: style.dividerVariant,
+      features: parsePairs(item.features).map((f, j) => ({ icon: style.icons[j % style.icons.length], label: f.label, sub: f.sub })),
+      valueProp: isLast ? c.text('advantages.valueTitle') : undefined,
+      valueText: isLast ? c.text('advantages.valueText') : undefined,
+    };
+  });
 
   return (
     <div className="bg-white dark:bg-[#060F1A] font-sans selection:bg-brand-blue selection:text-white">
@@ -291,8 +245,8 @@ export default function ReadymadePools() {
       <section className="relative w-full h-screen overflow-hidden flex items-center bg-black">
         <div className="absolute inset-0">
           <img
-            src={IMAGES.services.readymadeHero}
-            alt="Elite Prefabricated Pool at Twilight"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-85"
           />
           <div className="absolute inset-0 bg-linear-to-r from-[#050d1a]/90 via-[#050d1a]/50 to-transparent" />
@@ -307,7 +261,7 @@ export default function ReadymadePools() {
           >
             <div className="w-8 h-px bg-[#c9963c]" />
             <span className="text-[#c9963c] font-bold text-xs tracking-[0.35em] uppercase">
-              FRP Technology
+              {c.text('hero.eyebrow')}
             </span>
           </motion.div>
 
@@ -317,8 +271,8 @@ export default function ReadymadePools() {
             transition={{ duration: 1.2, ease: [0.33, 1, 0.68, 1] }}
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-light text-white leading-none mb-6"
           >
-            Advanced<br />Prefabricated<br />
-            <span className="text-[#c9963c] font-serif italic font-normal">Pools.</span>
+            <Lines text={c.text('hero.title')} /><br />
+            <span className="text-[#c9963c] font-serif italic font-normal">{c.text('hero.highlight')}</span>
           </motion.h1>
 
           <motion.div
@@ -338,9 +292,7 @@ export default function ReadymadePools() {
             transition={{ duration: 1, delay: 0.8 }}
             className="text-base md:text-lg text-slate-200 font-light leading-relaxed max-w-sm"
           >
-            Uncompromising luxury, delivered with unprecedented{' '}
-            <span className="text-[#c9963c]">speed</span> and{' '}
-            <span className="text-[#c9963c]">efficiency</span>.
+            <Highlighted text={c.text('hero.subtitle')} className="text-[#c9963c]" />
           </motion.p>
         </div>
 
@@ -372,13 +324,15 @@ export default function ReadymadePools() {
           className="max-w-4xl mx-auto text-center"
         >
           <p className="text-[#c9963c] font-bold text-xs tracking-[0.35em] uppercase mb-5">
-            The Crystal Pools Difference
+            {c.text('intro.eyebrow')}
           </p>
           <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0a1628] dark:text-white mb-8 tracking-tight leading-tight">
-            Optimize Time.<br className="hidden sm:block" /> Maximize Value.
+            {c.text('intro.heading').split('\n').map((line, i) => (
+              <span key={i}>{i > 0 && <><br className="hidden sm:block" /> </>}{line}</span>
+            ))}
           </h2>
           <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 leading-relaxed font-light max-w-3xl mx-auto">
-            For elite villas, boutique resorts, and premium wellness centers across India, Crystal Pools engineers prefabricated aquatic solutions that fuse immense architectural flexibility with extraordinary convenience — bypassing the prolonged timelines of traditional concrete construction.
+            {c.text('intro.text')}
           </p>
         </motion.div>
       </section>
@@ -386,16 +340,16 @@ export default function ReadymadePools() {
       {/* ── 3. Section header ── */}
       <div className="bg-[#faf8f4] dark:bg-[#050d18] py-12 px-8 text-center border-y border-[#c9963c]/15">
         <p className="text-[#c9963c] font-bold text-[10px] tracking-[0.4em] uppercase mb-2">
-          Five Pillars of Excellence
+          {c.text('intro.pillarsEyebrow')}
         </p>
         <h3 className="text-2xl md:text-3xl font-display font-bold text-[#0a1628] dark:text-white">
-          The FRP Advantage
+          {c.text('intro.pillarsHeading')}
         </h3>
       </div>
 
       {/* ── 4. Advantage sections ── */}
       {ADVANTAGES.map((adv, i) => (
-        <AdvantageSection key={adv.id} adv={adv} index={i} />
+        <AdvantageSection key={adv.id} adv={adv} index={i} badgePrefix={c.text('advantages.badgePrefix')} />
       ))}
 
       {/* ── 5. CTA ── */}
@@ -408,13 +362,13 @@ export default function ReadymadePools() {
           className="max-w-3xl w-full"
         >
           <p className="text-[#c9963c] font-bold text-[10px] tracking-[0.4em] uppercase mb-6">
-            Get Started
+            {c.text('cta.eyebrow')}
           </p>
           <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tight mb-4 leading-none text-[#0a1628] dark:text-white">
-            Accelerate
+            {c.text('cta.heading')}
           </h2>
           <h2 className="text-5xl md:text-7xl font-serif italic font-normal text-[#c9963c] mb-16 leading-none">
-            Your Vision.
+            {c.text('cta.highlight')}
           </h2>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -422,7 +376,7 @@ export default function ReadymadePools() {
               to="/contact-swimming-pool-contractor#inquiry"
               className="group inline-flex items-center gap-4 px-10 py-5 bg-[#0a1628] dark:bg-[#c9963c] text-white dark:text-[#0a1628] hover:bg-[#c9963c] dark:hover:bg-[#b8852a] hover:text-[#0a1628] transition-all duration-300 uppercase tracking-[0.2em] text-sm font-bold"
             >
-              Request a Quote
+              {c.text('cta.button')}
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </RouterLink>
 
@@ -433,7 +387,7 @@ export default function ReadymadePools() {
               className="inline-flex items-center gap-3 border border-[#c9963c]/50 text-[#c9963c] hover:border-[#c9963c] hover:bg-[#c9963c]/5 transition-all duration-300 uppercase tracking-[0.2em] text-sm font-bold px-8 py-5"
             >
               <Download size={16} />
-              Download Brochure
+              {c.text('cta.brochureButton')}
             </a>
           </div>
         </motion.div>

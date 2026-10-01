@@ -1,7 +1,9 @@
 import { motion } from 'motion/react';
-import { IMAGES } from '../config/images';
+import { pageImage, usePageContent } from '../lib/pageContent';
+import { galleryPage } from '../content/pages/galleryBlog';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePageMeta } from '../hooks/usePageMeta';
+import ProjectsShowcase from '../components/ProjectsShowcase';
 
 const spans = [
   'col-span-1 md:col-span-2 md:row-span-1', // 01 - 1672×941 landscape
@@ -18,6 +20,9 @@ const spans = [
 
 export default function Gallery() {
   const { isDarkMode } = useTheme();
+  const c = usePageContent(galleryPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'));
+  const photos = c.list('grid.images').slice(0, spans.length);
 
   return (
     <div className="bg-[#f8fcfd] dark:bg-[#070d14] min-h-screen pt-24 pb-20">
@@ -29,10 +34,10 @@ export default function Gallery() {
           className="text-center"
         >
           <h1 className="text-4xl md:text-5xl font-bold font-display text-[#0a5c86] dark:text-white mb-6">
-            Our Masterpieces
+            {c.text('header.heading')}
           </h1>
           <p className="text-gray-600 dark:text-slate-300 text-lg max-w-2xl mx-auto">
-            Explore a showcase of our luxurious swimming pools, from residential sanctuaries to resort scale designs.
+            {c.text('header.intro')}
           </p>
         </motion.div>
       </div>
@@ -45,8 +50,9 @@ export default function Gallery() {
           variants={{ visible: { transition: { staggerChildren: 0.1, delayChildren: 0.3 } } }}
           className="grid grid-cols-1 md:grid-cols-4 grid-flow-row-dense gap-2 md:gap-4 lg:gap-6 auto-rows-[250px] md:auto-rows-[300px]"
         >
-          {IMAGES.gallery.light.map((lightUrl, idx) => {
-            const darkUrl = IMAGES.gallery.dark[idx];
+          {photos.map((photo, idx) => {
+            const lightUrl = pageImage(photo.light);
+            const darkUrl = pageImage(photo.dark || photo.light);
             return (
               <motion.div
                 key={idx}
@@ -59,14 +65,15 @@ export default function Gallery() {
                 {/* Light image */}
                 <img
                   src={lightUrl}
-                  alt={`Gallery Project ${idx + 1}`}
+                  alt={photo.alt}
                   loading="lazy"
                   className={`absolute inset-0 w-full h-full object-cover transition-[opacity,transform] duration-700 md:group-hover:scale-105 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}
                 />
                 {/* Dark image */}
                 <img
                   src={darkUrl}
-                  alt={`Gallery Project ${idx + 1}`}
+                  alt=""
+                  aria-hidden="true"
                   loading="lazy"
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 md:group-hover:scale-105 transition-transform duration-[1.5s] ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
                 />
@@ -78,6 +85,8 @@ export default function Gallery() {
           })}
         </motion.div>
       </div>
+
+      <ProjectsShowcase heading={c.text('projects.heading')} intro={c.text('projects.intro')} />
     </div>
   );
 }

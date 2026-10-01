@@ -1,6 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { motion, useInView, useMotionValue, animate, useTransform } from 'motion/react';
 import LiquidBackground from './LiquidBackground';
+import { usePageContent, pageImage } from '../lib/pageContent';
+import { homePage } from '../content/pages/home';
 
 const ANIMATION_DURATION = 4.0;
 
@@ -47,6 +49,7 @@ export default function CompanyStatsSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   
   const bgProgressMotion = useMotionValue(0);
+  const stats = usePageContent(homePage).list('stats.items');
 
   useEffect(() => {
     if (isInView) {
@@ -64,10 +67,9 @@ export default function CompanyStatsSection() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col items-center pt-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 w-full">
-          <RisingStat target={2000} label="Pools" suffix="+" isInView={isInView} />
-          <RisingStat target={8} label="Categories" isInView={isInView} />
-          <RisingStat target={2000} label="Happy Clients" suffix="+" isInView={isInView} />
-          <RisingStat target={25} label="Years Of Experience" suffix="+" isInView={isInView} />
+          {stats.map((s, i) => (
+            <RisingStat key={i} target={Number(s.value.replace(/[^\d.]/g, '')) || 0} label={s.label} suffix={s.suffix} isInView={isInView} />
+          ))}
         </div>
       </div>
     </section>

@@ -12,21 +12,11 @@ import {
   Palmtree
 } from 'lucide-react';
 
-const topRowLogos = [
-  { id: 1, Icon: Building2, name: 'Marriott' },
-  { id: 2, Icon: Hotel, name: 'Hilton' },
-  { id: 3, Icon: Landmark, name: 'Taj Hotels' },
-  { id: 4, Icon: Home, name: 'Ritz-Carlton' },
-  { id: 5, Icon: Castle, name: 'Oberoi' },
-];
+import { usePageContent } from '../lib/pageContent';
+import { homePage } from '../content/pages/home';
 
-const bottomRowLogos = [
-  { id: 6, Icon: Tent, name: 'Club Mahindra' },
-  { id: 7, Icon: Trees, name: 'Four Seasons' },
-  { id: 8, Icon: Warehouse, name: 'Hyatt' },
-  { id: 9, Icon: MapPin, name: 'ITC Hotels' },
-  { id: 10, Icon: Landmark, name: 'Leela Palaces' },
-];
+// Decorative icons, cycled across the client names edited in the admin panel.
+const ICONS = [Building2, Hotel, Landmark, Home, Castle, Tent, Trees, Warehouse, MapPin, Landmark];
 
 const LogoCard: FC<{ Icon: ElementType, name: string }> = ({ Icon, name }) => {
   return (
@@ -42,11 +32,18 @@ const LogoCard: FC<{ Icon: ElementType, name: string }> = ({ Icon, name }) => {
 };
 
 export default function EsteemedClientsSection() {
+  const c = usePageContent(homePage);
+  const logos = c.list('clients.items')
+    .filter(item => item.name.trim())
+    .map((item, i) => ({ id: i, Icon: ICONS[i % ICONS.length], name: item.name }));
+  const half = Math.ceil(logos.length / 2);
+  const topRowLogos = logos.slice(0, half);
+  const bottomRowLogos = logos.slice(half).length ? logos.slice(half) : topRowLogos;
   return (
     <section className="py-24 bg-[#f8fafc] dark:bg-[#060F1A] transition-colors duration-500 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
-        <h2 className="text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4">Trusted Worldwide</h2>
-        <h3 className="text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white font-display">Our Esteemed Clients</h3>
+        <h2 className="text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4">{c.text('clients.eyebrow')}</h2>
+        <h3 className="text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white font-display">{c.text('clients.heading')}</h3>
       </div>
 
       <div 

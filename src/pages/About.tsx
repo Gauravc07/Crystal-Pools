@@ -7,12 +7,13 @@ import WhyChooseUs from "../components/WhyChooseUs";
 import GlowCard from "../components/GlowCard";
 import { IMAGES } from "../config/images";
 import { DOCUMENTS } from "../config/documents";
+import { Lines, usePageContent } from '../lib/pageContent';
+import { aboutPage } from '../content/pages/about';
 
 export default function About() {
-  usePageMeta(
-    'About Crystal Pools',
-    'Established in 1993, Crystal Pools is India\'s trusted swimming pool consultant, builder, and one of the leading swimming pool contractors in Pune. Meet our leadership team and discover our 25+ year journey of engineering excellence.',
-  );
+  const c = usePageContent(aboutPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const cornerstoneIcons = [Handshake, ShieldCheck, Zap];
 
   const fadeUpVariant: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -37,9 +38,9 @@ export default function About() {
       <section className="relative w-full h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
           <img
-            alt="Cinematic infinity pool at sunset"
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover saturate-[1.1] brightness-[1.05]"
-            src={IMAGES.about.hero}
+            src={c.image('hero.image')}
           />
           {/* Base overlay for text readability without making it dark and dull */}
           <div className="absolute inset-0 bg-black/20"></div>
@@ -54,15 +55,14 @@ export default function About() {
             variants={fadeUpVariant}
             className="text-3xl md:text-5xl lg:text-7xl font-sans font-bold text-white dark:text-brand-gold mb-6 leading-[1.2] drop-shadow-lg"
           >
-            Committed to<br />
-            <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-[80px]">Excellence.</span>
+            {c.text('hero.title')}<br />
+            <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-[80px]">{c.text('hero.highlight')}</span>
           </motion.h1>
           <motion.p
             variants={fadeUpVariant}
             className="text-xl md:text-2xl text-white font-medium max-w-3xl mx-auto drop-shadow-xl"
           >
-            For over three decades, we have been crafting iconic aquatic
-            experiences that redefine the boundaries of engineering and design.
+            {c.text('hero.intro')}
           </motion.p>
         </motion.div>
       </section>
@@ -81,7 +81,7 @@ export default function About() {
                 variants={fadeUpVariant}
                 className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-6 tracking-tight"
               >
-                Our Philosophy
+                {c.text('philosophy.heading')}
               </motion.h2>
               <motion.div
                 variants={fadeUpVariant}
@@ -91,20 +91,13 @@ export default function About() {
                 variants={fadeUpVariant}
                 className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed mb-6"
               >
-                At Crystal Pools, we believe that true luxury lies in the
-                perfect harmony between aesthetic brilliance and uncompromising
-                functionality. Every project is a testament to our dedication to
-                balancing beauty and performance.
+                {c.text('philosophy.p1')}
               </motion.p>
               <motion.p
                 variants={fadeUpVariant}
                 className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed"
               >
-                As swimming pool builders in Pune and contractors across India, we don't just
-                build pools; we engineer aquatic environments. Our
-                rigorous approach ensures structural integrity and hydrodynamic
-                precision, resulting in spaces that are as enduring as they are
-                breathtaking.
+                {c.text('philosophy.p2')}
               </motion.p>
             </motion.div>
             <motion.div
@@ -115,9 +108,9 @@ export default function About() {
               transition={{ duration: 0.8 }}
             >
               <img
-                alt="Detail shot of pool construction"
+                alt={c.text('philosophy.alt')}
                 className="w-full h-full object-cover"
-                src={IMAGES.about.construction}
+                src={c.image('philosophy.image')}
               />
             </motion.div>
           </div>
@@ -138,13 +131,13 @@ export default function About() {
               variants={fadeUpVariant}
               className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-4 tracking-tight"
             >
-              Our Cornerstones
+              {c.text('cornerstones.heading')}
             </motion.h2>
             <motion.p
               variants={fadeUpVariant}
               className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto"
             >
-              The principles that guide our every endeavor.
+              {c.text('cornerstones.intro')}
             </motion.p>
           </motion.div>
 
@@ -155,47 +148,22 @@ export default function About() {
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
           >
-            {/* Cornerstone 1 */}
-            <motion.div variants={fadeUpVariant} className="h-full">
-              <GlowCard className="h-full">
-                <Handshake className="w-12 h-12 text-[#06b6d4] mb-6 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="font-display text-2xl font-bold text-[#0a5c86] dark:text-white mb-4">
-                  Commitment
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  A relentless pursuit of perfection, ensuring every project is
-                  delivered to the highest standards of excellence.
-                </p>
-              </GlowCard>
-            </motion.div>
-
-            {/* Cornerstone 2 */}
-            <motion.div variants={fadeUpVariant} className="h-full">
-              <GlowCard className="h-full">
-                <ShieldCheck className="w-12 h-12 text-[#06b6d4] mb-6 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="font-display text-2xl font-bold text-[#0a5c86] dark:text-white mb-4">
-                  Excellence
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Uncompromising quality in design, engineering, and execution. We pursue
-                  superior craftsmanship and innovative solutions in every aquatic project.
-                </p>
-              </GlowCard>
-            </motion.div>
-
-            {/* Cornerstone 3 */}
-            <motion.div variants={fadeUpVariant} className="h-full">
-              <GlowCard className="h-full">
-                <Zap className="w-12 h-12 text-[#06b6d4] mb-6 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="font-display text-2xl font-bold text-[#0a5c86] dark:text-white mb-4">
-                  Efficiency
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Optimized processes and innovative engineering that maximize
-                  resources without compromising on quality.
-                </p>
-              </GlowCard>
-            </motion.div>
+            {c.list('cornerstones.items').map((item, i) => {
+              const Icon = cornerstoneIcons[i % cornerstoneIcons.length];
+              return (
+                <motion.div key={i} variants={fadeUpVariant} className="h-full">
+                  <GlowCard className="h-full">
+                    <Icon className="w-12 h-12 text-[#06b6d4] mb-6 group-hover:scale-110 transition-transform duration-300" />
+                    <h3 className="font-display text-2xl font-bold text-[#0a5c86] dark:text-white mb-4">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {item.text}
+                    </p>
+                  </GlowCard>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
@@ -211,11 +179,11 @@ export default function About() {
               transition={{ duration: 0.8 }}
             >
               <h2 className="font-display text-4xl md:text-5xl font-bold mb-6 tracking-tight text-[#0a5c86] dark:text-white">
-                Corporate Resources
+                {c.text('resources.heading')}
               </h2>
               <div className="w-20 h-1 bg-linear-to-r from-[#06b6d4] to-[#2563eb] mb-8" />
               <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
-                Access our official documentation and corporate literature to learn more about our engineering standards, project methodologies, and 30-year legacy of excellence.
+                {c.text('resources.intro')}
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
@@ -225,7 +193,7 @@ export default function About() {
                   className="inline-flex items-center gap-3 px-8 py-4 bg-[#0a5c86] dark:bg-white text-white dark:text-slate-900 font-bold rounded-sm hover:bg-[#034466] dark:hover:bg-cyan-400 transition-colors duration-300"
                 >
                   <FileText size={20} />
-                  Download Company Profile
+                  {c.text('resources.profileButton')}
                 </a>
                 <a
                   href={DOCUMENTS.companyBrochure}
@@ -234,7 +202,7 @@ export default function About() {
                   className="inline-flex items-center gap-3 px-8 py-4 border border-[#0a5c86]/40 dark:border-white/20 text-[#0a5c86] dark:text-white font-bold rounded-sm hover:bg-[#0a5c86]/10 dark:hover:bg-white/10 transition-colors duration-300"
                 >
                   <Download size={20} />
-                  Corporate Brochure
+                  {c.text('resources.brochureButton')}
                 </a>
               </div>
             </motion.div>
@@ -249,8 +217,8 @@ export default function About() {
                 <div className="w-20 h-20 bg-[#0a5c86]/10 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
                   <FileText size={40} className="text-[#0a5c86] dark:text-brand-gold" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2 text-slate-800 dark:text-white">Technical Specifications</h3>
-                <p className="text-slate-500 dark:text-slate-400">Detailed insights into our construction processes and quality benchmarks.</p>
+                <h3 className="text-2xl font-bold mb-2 text-slate-800 dark:text-white">{c.text('resources.cardTitle')}</h3>
+                <p className="text-slate-500 dark:text-slate-400">{c.text('resources.cardText')}</p>
               </div>
             </motion.div>
           </div>
@@ -270,15 +238,13 @@ export default function About() {
             variants={fadeUpVariant}
             className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-4 tracking-tight"
           >
-            The Architects of Fluidity
+            {c.text('leadership.heading')}
           </motion.h2>
           <motion.p
             variants={fadeUpVariant}
             className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed"
           >
-            Behind every structure of technical perfection is a foundation of
-            human vision. Meet the leadership driving the future of aquatic
-            architecture.
+            {c.text('leadership.intro')}
           </motion.p>
         </motion.div>
 

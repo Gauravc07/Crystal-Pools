@@ -72,7 +72,7 @@ const NAV_LINKS: NavLink[] = [
     ],
   },
   { name: 'Gallery', path: '/gallery-swimming-pool-construction' },
-  { name: 'Blog',    path: '/blog' },
+  { name: 'Blog',    path: '/blogs' },
   { name: 'Contact', path: '/contact-swimming-pool-contractor' },
 ];
 

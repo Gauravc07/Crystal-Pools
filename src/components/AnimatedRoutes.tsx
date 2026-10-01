@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useLenis } from './SmoothScroll';
 import { AnimatePresence, motion } from 'motion/react';
 import PageLoader from './PageLoader';
@@ -21,6 +21,7 @@ const Services                  = lazy(() => import('../pages/Services'));
 const Products                  = lazy(() => import('../pages/Products'));
 const Gallery                   = lazy(() => import('../pages/Gallery'));
 const Blog                      = lazy(() => import('../pages/Blog'));
+const BlogPost                  = lazy(() => import('../pages/BlogPost'));
 const Contact                   = lazy(() => import('../pages/Contact'));
 const TurnkeyProjects           = lazy(() => import('../pages/services/TurnkeyProjects'));
 const WaterFeatures             = lazy(() => import('../pages/services/WaterFeatures'));
@@ -29,6 +30,12 @@ const Accessories               = lazy(() => import('../pages/services/Accessori
 const Renovation                = lazy(() => import('../pages/services/Renovation'));
 const ReadymadePools            = lazy(() => import('../pages/services/ReadymadePools'));
 const SpecialtyInstallations    = lazy(() => import('../pages/products/SpecialtyInstallations'));
+
+// Old /blog/:slug links (before the move to /blogs) keep working.
+function LegacyBlogRedirect() {
+  const { slug } = useParams();
+  return <Navigate to={`/blogs/${slug}`} replace />;
+}
 
 function PageFallback() {
   return (
@@ -56,6 +63,22 @@ export default function AnimatedRoutes() {
   const location = useLocation();
   const lenis = useLenis();
   const fillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Google Analytics (added by the server when configured) only records the first page load;
+  // report later in-app navigations as page views too.
+  const firstPath = useRef(location.pathname);
+  useEffect(() => {
+    if (location.pathname === firstPath.current) return;
+    firstPath.current = '';
+    const t = setTimeout(() => {
+      (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.('event', 'page_view', {
+        page_path: location.pathname,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    }, 300); // after usePageMeta has set the new title
+    return () => clearTimeout(t);
+  }, [location.pathname]);
 
   const [isInitialLoad, setIsInitialLoad] = useState(() => {
     try { return sessionStorage.getItem('cp-loaded') === null; }
@@ -123,7 +146,10 @@ export default function AnimatedRoutes() {
             <Route path="/products/specialty-installations" element={<PageWrapper><SpecialtyInstallations /></PageWrapper>} />
 
             <Route path="/gallery-swimming-pool-construction" element={<PageWrapper><Gallery /></PageWrapper>} />
-            <Route path="/blog" element={<PageWrapper><Blog /></PageWrapper>} />
+            <Route path="/blogs" element={<PageWrapper><Blog /></PageWrapper>} />
+            <Route path="/blogs/:slug" element={<PageWrapper><BlogPost /></PageWrapper>} />
+            <Route path="/blog" element={<Navigate to="/blogs" replace />} />
+            <Route path="/blog/:slug" element={<LegacyBlogRedirect />} />
             <Route path="/contact-swimming-pool-contractor" element={<PageWrapper><Contact /></PageWrapper>} />
             <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
           </Routes>

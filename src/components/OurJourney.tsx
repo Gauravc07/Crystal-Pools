@@ -2,41 +2,19 @@ import { useRef } from 'react';
 import type { FC } from 'react';
 import { motion, useScroll, useTransform, useSpring, MotionValue } from 'motion/react';
 
-const journeyData = [
-  {
-    year: "1998",
-    title: "The Foundation",
-    description: "Nilesh Shukla laid the foundation of Crystal Pools with a vision to redefine aquatic architecture.",
-    position: 0.1 // Keeping position for animation triggering relative to progress
-  },
-  {
-    year: "2005",
-    title: "Pioneering Technology",
-    description: "Introduced advanced filtration and structural technologies to the Indian market.",
-    position: 0.3
-  },
-  {
-    year: "2010",
-    title: "Expanding Reach",
-    description: "Successfully completed milestone projects across multiple states, establishing a national footprint.",
-    position: 0.5
-  },
-  {
-    year: "2015",
-    title: "Global Standards",
-    description: "Achieved complete adherence to international manufacturing standards under Make in India.",
-    position: 0.7
-  },
-  {
-    year: "2024",
-    title: "Expanding Horizons",
-    description: "Sarthak Shukla leads the next phase of global expansion and sustainable innovations.",
-    position: 0.9
-  }
-];
+import { usePageContent } from '../lib/pageContent';
+import { aboutPage } from '../content/pages/about';
+
+interface MilestoneData {
+  year: string;
+  title: string;
+  description: string;
+  /** Scroll progress (0–1) at which the milestone lights up */
+  position: number;
+}
 
 const Milestone: FC<{
-  milestone: typeof journeyData[0];
+  milestone: MilestoneData;
   index: number;
   scrollYProgress: MotionValue<number>;
 }> = ({ milestone, index, scrollYProgress }) => {
@@ -109,6 +87,10 @@ const Milestone: FC<{
 }
 
 export default function OurJourney() {
+  const c = usePageContent(aboutPage);
+  const items = c.list('journey.items');
+  // Spread milestones evenly along the scroll track (5 items → 0.1, 0.3, 0.5, 0.7, 0.9)
+  const journeyData: MilestoneData[] = items.map((m, i) => ({ year: m.year, title: m.title, description: m.description, position: (i + 0.5) / items.length }));
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   
@@ -163,7 +145,7 @@ export default function OurJourney() {
           viewport={{ once: true }}
           className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-4 tracking-tight"
         >
-          Our Journey
+          {c.text('journey.heading')}
         </motion.h2>
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
@@ -172,7 +154,7 @@ export default function OurJourney() {
           transition={{ delay: 0.1 }}
           className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed"
         >
-          A legacy built on precision, spanning decades of redefining aquatic architecture.
+          {c.text('journey.intro')}
         </motion.p>
       </div>
 
@@ -196,7 +178,7 @@ export default function OurJourney() {
         <div className="relative z-10">
           {journeyData.map((milestone, i) => (
             <Milestone 
-              key={milestone.year} 
+              key={i} 
               index={i}
               milestone={milestone} 
               scrollYProgress={smoothProgress} 

@@ -2,40 +2,15 @@ import type { FC, ElementType } from 'react';
 import { motion } from 'motion/react';
 import { Blocks, Award, Handshake, CircleDollarSign, GraduationCap, Zap } from 'lucide-react';
 
-const whyChooseUsData = [
-  {
-    title: "Integrated Solutions",
-    description: "Concept to completion under one roof, maximizing convenience and reliability.",
-    icon: Blocks,
-  },
-  {
-    title: "Quality Focus",
-    description: "Rigorous quality checks at every stage from material selection to execution.",
-    icon: Award,
-  },
-  {
-    title: "Long-term Support",
-    description: "The close of a sale is just the beginning of a long-lasting partnership.",
-    icon: Handshake,
-  },
-  {
-    title: "Cost Competitive",
-    description: "Streamlined workflows ensure optimal use of resources for better cost benefits.",
-    icon: CircleDollarSign,
-  },
-  {
-    title: "Training Options",
-    description: "Intensive Owner-Operator training for seamless end-to-end daily functioning.",
-    icon: GraduationCap,
-  },
-  {
-    title: "Rapid Response",
-    description: "Swift and professional response to demands for spares, repairs, and servicing.",
-    icon: Zap,
-  }
-];
+import { usePageContent } from '../lib/pageContent';
+import { aboutPage } from '../content/pages/about';
 
-const HexagonCard: FC<{ item: typeof whyChooseUsData[0]; index: number }> = ({ item, index }) => {
+// Icon for each of the 6 positions; titles and descriptions come from the admin panel.
+const ICONS: ElementType[] = [Blocks, Award, Handshake, CircleDollarSign, GraduationCap, Zap];
+
+interface Reason { title: string; description: string; icon: ElementType }
+
+const HexagonCard: FC<{ item: Reason; index: number }> = ({ item, index }) => {
   const Icon = item.icon;
   return (
     <motion.div 
@@ -63,6 +38,12 @@ const HexagonCard: FC<{ item: typeof whyChooseUsData[0]; index: number }> = ({ i
 }
 
 export default function WhyChooseUs() {
+  const c = usePageContent(aboutPage);
+  const whyChooseUsData: Reason[] = c.list('why.items').map((item, i) => ({ title: item.title, description: item.description, icon: ICONS[i % ICONS.length] }));
+  // The last word of the heading is highlighted in gold
+  const words = c.text('why.heading').trim().split(/\s+/);
+  const headingLast = words.pop() ?? '';
+  const headingStart = words.join(' ');
   return (
     <section className="py-16 md:py-20 bg-[#f8fcfd] dark:bg-[#020609] relative overflow-hidden min-h-[100dvh] flex flex-col justify-center">
       {/* Background subtleties */}
@@ -77,7 +58,7 @@ export default function WhyChooseUs() {
             viewport={{ once: true }}
             className="font-sans text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
           >
-            Why Choose <span className="text-brand-gold">Us</span>
+            {headingStart}{headingStart && ' '}<span className="text-brand-gold">{headingLast}</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -86,7 +67,7 @@ export default function WhyChooseUs() {
             transition={{ delay: 0.1 }}
             className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-light max-w-2xl mx-auto"
           >
-            India's leading experts in premium aquatic architecture, combining innovative engineering with robust support.
+            {c.text('why.intro')}
           </motion.p>
         </div>
 

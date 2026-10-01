@@ -3,17 +3,16 @@ import { usePageMeta } from '../../hooks/usePageMeta';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Waves } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { IMAGES } from '../../config/images';
-
-const adhesives = [
-  { id: 1, name: 'Premium White Adhesive',   image: IMAGES.specialty.adhesiveGrout[0] },
-  { id: 2, name: 'Polymer-Modified Grout',   image: IMAGES.specialty.adhesiveGrout[1] },
-  { id: 3, name: 'Epoxy Grout System',        image: IMAGES.specialty.adhesiveGrout[2] },
-  { id: 4, name: 'Waterproofing Membrane',    image: IMAGES.specialty.adhesiveGrout[3] },
-];
+import { Lines, pageImage, usePageContent } from '../../lib/pageContent';
+import { specialtyPage } from '../../content/pages/specialty';
 
 export default function SpecialtyInstallations() {
   const [isHoveringTherapy, setIsHoveringTherapy] = useState(false);
+  const c = usePageContent(specialtyPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const adhesives = c.list('adhesives.products').map((p, i) => ({ id: i, name: p.name, image: pageImage(p.image) }));
+  const saunaImages = c.list('sauna.images');
+  const jacuzziImages = c.list('jacuzzi.images');
 
   return (
     <div className="w-full font-sans overflow-x-hidden min-h-screen">
@@ -22,8 +21,8 @@ export default function SpecialtyInstallations() {
       <section className="relative w-full h-screen overflow-hidden bg-black flex items-center">
         <div className="absolute inset-0">
           <img
-            src={IMAGES.specialty.hero}
-            alt="Specialty Installations & Wellness"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
           <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-transparent" />
@@ -36,7 +35,7 @@ export default function SpecialtyInstallations() {
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-light text-white leading-none mb-2"
           >
-            Specialty<br />Installations
+            <Lines text={c.text('hero.title')} />
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -44,7 +43,7 @@ export default function SpecialtyInstallations() {
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.3 }}
             className="text-4xl sm:text-5xl md:text-6xl font-serif italic text-[#f9c80e] leading-none mb-8"
           >
-            & Wellness
+            {c.text('hero.highlight')}
           </motion.p>
 
           {/* Gold rule + wave icon */}
@@ -65,7 +64,7 @@ export default function SpecialtyInstallations() {
             transition={{ duration: 1, delay: 0.75 }}
             className="text-base md:text-lg text-slate-200 font-light leading-relaxed max-w-sm"
           >
-            Elevating every detail of your aquatic and wellness environments.
+            {c.text('hero.subtitle')}
           </motion.p>
         </div>
 
@@ -88,26 +87,20 @@ export default function SpecialtyInstallations() {
           
           <div className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-[#0a5c86] dark:text-white mb-6 tracking-tight">
-              Advanced Tile Adhesive & Grout Systems
+              {c.text('adhesives.heading')}
             </h2>
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-light leading-relaxed">
-              The foundation of a flawless, enduring finish lies beneath the surface. Crystal Pools provides high-performance, polymer-modified white adhesives specifically engineered for the permanent installation of premium glass mosaics and tiles.
+              {c.text('adhesives.intro')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-            <div className="bg-[#fbfbfb] dark:bg-[#060F1A] p-8 rounded-2xl border border-slate-100 dark:border-slate-800">
-               <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100 mb-4 font-display">Superior Adhesion</h3>
-               <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">Highly flexible, non-shrink formulas that guarantee a permanent bond.</p>
-            </div>
-            <div className="bg-[#fbfbfb] dark:bg-[#060F1A] p-8 rounded-2xl border border-slate-100 dark:border-slate-800">
-               <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100 mb-4 font-display">Extreme Durability</h3>
-               <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">Heatproof, self-curing, and structurally resilient under heavy water loads.</p>
-            </div>
-            <div className="bg-[#fbfbfb] dark:bg-[#060F1A] p-8 rounded-2xl border border-slate-100 dark:border-slate-800">
-               <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100 mb-4 font-display">Absolute Waterproofing</h3>
-               <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">Forms an impenetrable barrier, protecting the structural integrity of the pool shell.</p>
-            </div>
+            {c.list('adhesives.benefits').map((b, i) => (
+              <div key={i} className="bg-[#fbfbfb] dark:bg-[#060F1A] p-8 rounded-2xl border border-slate-100 dark:border-slate-800">
+                 <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100 mb-4 font-display">{b.title}</h3>
+                 <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">{b.text}</p>
+              </div>
+            ))}
           </div>
 
           {/* Adhesives 4-Column Grid */}
@@ -136,10 +129,10 @@ export default function SpecialtyInstallations() {
           
           <div className="max-w-4xl mx-auto text-center mb-24">
             <h2 className="text-3xl md:text-5xl font-display font-medium text-[#5c4a3d] dark:text-[#d4c5b9] mb-6 tracking-tight">
-              Bespoke Wellness Retreats
+              {c.text('wellness.heading')}
             </h2>
             <p className="text-lg md:text-xl text-[#7a6b5e] dark:text-[#a89f91] font-light leading-relaxed">
-              Beyond the pool, Crystal Pools is a premier architect of immersive relaxation spaces. From private residences to elite spa chains and health clubs, we design and install world-class wellness environments that harmonize beautifully with your lifestyle, with an absolute focus on safety and superior efficacy.
+              {c.text('wellness.intro')}
             </p>
           </div>
 
@@ -153,7 +146,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="col-span-2 h-[400px] rounded-2xl overflow-hidden"
               >
-                <img src={IMAGES.specialty.sunbath[0]} alt="Sauna Main" className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[0]?.image)} alt={saunaImages[0]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -162,7 +155,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-[250px] rounded-2xl overflow-hidden"
               >
-                <img src={IMAGES.specialty.sunbath[1]} alt="Sauna Detail" className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[1]?.image)} alt={saunaImages[1]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -171,7 +164,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-[250px] rounded-2xl overflow-hidden"
               >
-                <img src={IMAGES.specialty.sunbath[2]} alt="Steam Room" className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[2]?.image)} alt={saunaImages[2]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -180,7 +173,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-55 rounded-2xl overflow-hidden"
               >
-                <img src={IMAGES.specialty.sunbath[3]} alt="Sauna Interior" className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[3]?.image)} alt={saunaImages[3]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -189,14 +182,14 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-55 rounded-2xl overflow-hidden"
               >
-                <img src={IMAGES.specialty.sunbath[4]} alt="Steam Detail" className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[4]?.image)} alt={saunaImages[4]?.alt} className="w-full h-full object-cover" />
               </motion.div>
             </div>
             <div className="w-full lg:w-[40%]">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#8c7a6b] dark:text-[#c4b3a3] mb-3">Sauna & Steam Rooms</h3>
-              <h4 className="text-3xl md:text-4xl font-display font-medium text-[#4a3b30] dark:text-[#ebdcd0] mb-6 leading-tight">Splendidly Stylish, <br/> Exceptionally Efficient</h4>
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#8c7a6b] dark:text-[#c4b3a3] mb-3">{c.text('sauna.eyebrow')}</h3>
+              <h4 className="text-3xl md:text-4xl font-display font-medium text-[#4a3b30] dark:text-[#ebdcd0] mb-6 leading-tight"><Lines text={c.text('sauna.heading')} /></h4>
               <p className="text-base text-[#7a6b5e] dark:text-[#a89f91] font-light leading-relaxed mb-8">
-                Step into ultimate rejuvenation. We design and construct bespoke therapeutic, enclosed wooden saunas and modern glass-enclosed steam baths using tested materials and the latest production technology.
+                {c.text('sauna.text')}
               </p>
               
               <div 
@@ -209,11 +202,11 @@ export default function SpecialtyInstallations() {
                     ${isHoveringTherapy ? 'opacity-100' : 'opacity-0'}`}
                 ></div>
                 
-                <h5 className="relative z-10 text-lg font-medium text-[#4a3b30] dark:text-[#ebdcd0] mb-2 font-display">The Sauna Experience</h5>
+                <h5 className="relative z-10 text-lg font-medium text-[#4a3b30] dark:text-[#ebdcd0] mb-2 font-display">{c.text('sauna.boxTitle')}</h5>
                 <p className={`relative z-10 text-sm font-light leading-relaxed transition-colors duration-500
                   ${isHoveringTherapy ? 'text-[#5c4a3d] dark:text-[#d4c5b9]' : 'text-[#7a6b5e] dark:text-[#a89f91]'}`}
                 >
-                  Utilizing dry heat typically ranging from 70° to 100° Celsius, our saunas offer profound health benefits, including improved blood circulation, lowered blood pressure, and enhanced skin health, while infusing a deep sense of relaxation.
+                  {c.text('sauna.boxText')}
                 </p>
               </div>
             </div>
@@ -222,14 +215,14 @@ export default function SpecialtyInstallations() {
           {/* Row 2: Jacuzzis & Hydrotherapy (Text Left, Image Right) */}
           <div className="flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-24">
             <div className="w-full lg:w-[40%]">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#8c7a6b] dark:text-[#c4b3a3] mb-3">Jacuzzis & Hydrotherapy Tubs</h3>
-              <h4 className="text-3xl md:text-4xl font-display font-medium text-[#4a3b30] dark:text-[#ebdcd0] mb-6 leading-tight">Experience Seasonal Pinnacle.</h4>
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#8c7a6b] dark:text-[#c4b3a3] mb-3">{c.text('jacuzzi.eyebrow')}</h3>
+              <h4 className="text-3xl md:text-4xl font-display font-medium text-[#4a3b30] dark:text-[#ebdcd0] mb-6 leading-tight">{c.text('jacuzzi.heading')}</h4>
               <p className="text-base text-[#7a6b5e] dark:text-[#a89f91] font-light leading-relaxed">
-                Experience the pinnacle of hydrotherapy. As a leading manufacturer of Hydro Massage Bath Tubs and Systems, we deliver units that meet the highest industrial standards. Whether integrated into your primary swimming pool design or installed as a standalone oasis, our Hydrotherapy units are widely acclaimed for their robust construction, superior architectural finish, and a high degree of customization.
+                {c.text('jacuzzi.text')}
               </p>
             </div>
             <div className="w-full lg:w-[60%] grid grid-cols-2 gap-4">
-              {IMAGES.specialty.jacuzzi.slice(0, 4).map((src, i) => (
+              {jacuzziImages.slice(0, 4).map((img, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, scale: 1.05 }}
@@ -238,7 +231,7 @@ export default function SpecialtyInstallations() {
                   viewport={{ once: true }}
                   className="h-62.5 rounded-2xl overflow-hidden group relative cursor-pointer"
                 >
-                  <img src={src} alt={`Jacuzzi ${i + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={pageImage(img.image)} alt={img.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 </motion.div>
               ))}
               <motion.div
@@ -248,7 +241,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="col-span-2 h-[400px] rounded-2xl overflow-hidden group relative cursor-pointer"
               >
-                <img src={IMAGES.specialty.jacuzzi[4]} alt="Hydrotherapy Main" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={pageImage(jacuzziImages[4]?.image)} alt={jacuzziImages[4]?.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               </motion.div>
             </div>
           </div>
@@ -265,13 +258,13 @@ export default function SpecialtyInstallations() {
            transition={{ duration: 0.8 }}
            className="max-w-3xl"
         >
-          <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6">Start the conversation</p>
+          <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6">{c.text('cta.eyebrow')}</p>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium text-[#0a5c86] dark:text-white mb-12 tracking-tight">
-            Complete Your Oasis.
+            {c.text('cta.heading')}
           </h2>
           <Link to="/contact-swimming-pool-contractor">
             <button className="group inline-flex items-center gap-4 border border-[#0a5c86] dark:border-[#38bdf8] text-[#0a5c86] dark:text-white hover:bg-[#0a5c86] dark:hover:bg-[#38bdf8] hover:text-white dark:hover:text-slate-900 px-10 py-5 font-bold uppercase tracking-widest text-sm transition-all duration-300">
-              <span>Inquire About Wellness & Finishes</span>
+              <span>{c.text('cta.button')}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </Link>

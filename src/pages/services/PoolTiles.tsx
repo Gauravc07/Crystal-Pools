@@ -1,42 +1,34 @@
 import { Download } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { motion } from 'motion/react';
-import { IMAGES } from '../../config/images';
 import { DOCUMENTS } from '../../config/documents';
 import { LinkButton } from '../../components/Button';
+import { Lines, usePageContent, pageImage } from '../../lib/pageContent';
+import { poolTilesPage } from '../../content/pages/services';
 
-const advantages = [
-  {
-    title: "Luminous Aesthetics",
-    description: "A brilliant, radiant finish that catches the light and dramatically enhances water clarity."
-  },
-  {
-    title: "Exceptional Durability",
-    description: "A sturdy, long-lasting composition that is highly resistant to pool chemicals, wear, and fading."
-  },
-  {
-    title: "Eco-Friendly Engineering",
-    description: "Sustainable manufacturing processes for an environmentally conscious, premium choice."
-  },
-  {
-    title: "Effortless Maintenance",
-    description: "Smooth, non-porous surfaces designed for easy cleaning and optimal hygiene."
-  },
-  {
-    title: "Comprehensive Project Support",
-    description: "Complimentary design consultations, including expert recommendations for adhesives and custom grout color matching to ensure a flawless finish."
-  }
+// Bento grid cell for each gallery position: [size classes, animation delay]
+const GALLERY_CELLS: [string, number][] = [
+  ['col-span-2 row-span-2', 0],
+  ['col-span-1 row-span-1', 0.1],
+  ['col-span-1 row-span-1', 0.15],
+  ['col-span-2 row-span-1', 0.2],
+  ['col-span-1 row-span-1', 0.25],
+  ['col-span-1 md:col-span-3 row-span-1', 0.3],
 ];
 
 export default function PoolTiles() {
+  const c = usePageContent(poolTilesPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const advantages = c.list('mosaic.advantages');
+  const gallery = c.list('collection.images').slice(0, GALLERY_CELLS.length);
   return (
     <div className="bg-[#fbfbfb] dark:bg-[#060F1A] w-full">
       {/* 1. The Mural Component (Immersive Visuals) */}
       <section className="min-h-screen w-full relative flex items-center bg-black">
         <div className="absolute inset-0 z-0">
           <img
-            src={IMAGES.tilesHero}
-            alt="Bespoke ceramic pool mural underwater"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
           {/* Left vignette for text legibility */}
@@ -52,7 +44,7 @@ export default function PoolTiles() {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="font-serif italic text-[#f9c80e] text-lg md:text-xl mb-3"
           >
-            The Magic of Murals
+            {c.text('hero.eyebrow')}
           </motion.p>
 
           {/* Gold rule */}
@@ -72,7 +64,7 @@ export default function PoolTiles() {
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
             className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-light text-white dark:text-brand-gold leading-none mb-8 drop-shadow-lg"
           >
-            Aquatic<br />Artistry
+            <Lines text={c.text('hero.title')} />
           </motion.h1>
 
           {/* Body */}
@@ -83,7 +75,7 @@ export default function PoolTiles() {
             transition={{ duration: 1, delay: 0.7 }}
             className="text-base md:text-lg text-slate-200 font-light leading-relaxed max-w-sm"
           >
-            Transforming pools into breathtaking works of art through bespoke ceramic murals and premium glass mosaic craftsmanship.
+            {c.text('hero.subtitle')}
           </motion.p>
         </div>
       </section>
@@ -93,15 +85,15 @@ export default function PoolTiles() {
         {/* Left Column (Sticky Visuals) */}
         <div className="lg:w-1/2 relative sticky-col lg:top-0 h-[50vh] lg:h-screen overflow-hidden">
           <img
-            src={IMAGES.tiles[1]}
-            alt="Glass Mosaic Tiles Texture"
+            src={c.image('mosaic.image')}
+            alt={c.text('mosaic.alt')}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-linear-to-t from-slate-900/60 to-transparent lg:hidden pointer-events-none"></div>
           {/* Mobile Overlay Text */}
           <div className="absolute bottom-8 left-6 right-6 lg:hidden z-10">
-            <h2 className="text-3xl font-light tracking-wide text-white mb-2 drop-shadow-md">Premium Glass Mosaic</h2>
-            <p className="text-sm tracking-widest text-[#f9c80e] uppercase">by Element Mosaics</p>
+            <h2 className="text-3xl font-light tracking-wide text-white mb-2 drop-shadow-md">{c.text('mosaic.mobileHeading')}</h2>
+            <p className="text-sm tracking-widest text-[#f9c80e] uppercase">{c.text('mosaic.brand')}</p>
           </div>
         </div>
         
@@ -116,24 +108,24 @@ export default function PoolTiles() {
           >
              <div className="hidden lg:block">
                  <h2 className="text-3xl md:text-4xl font-display font-bold text-[#0a5c86] dark:text-white mb-2 tracking-tight">
-                   Premium Glass Mosaic Tiles
+                   {c.text('mosaic.heading')}
                  </h2>
-                 <p className="text-sm tracking-widest text-[#f9c80e] uppercase mb-8 font-bold font-sans">by Element Mosaics</p>
+                 <p className="text-sm tracking-widest text-[#f9c80e] uppercase mb-8 font-bold font-sans">{c.text('mosaic.brand')}</p>
              </div>
              
              <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed mb-6 font-sans">
-               Elevate your swimming pool with the luminous elegance of designer glass mosaic tiles. Proudly manufactured by Element Mosaics—a signature brand of Crystal Pools—our collections are engineered for uncompromising quality and spectacular visual impact.
+               {c.text('mosaic.p1')}
              </p>
              <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed mb-16 font-sans">
-               Crafted from superior raw materials under strict quality control, these tiles offer an exclusive aesthetic grace characterized by brilliant light reflection and vibrant, lasting color.
+               {c.text('mosaic.p2')}
              </p>
 
              <div className="space-y-4 border-t border-slate-200 dark:border-slate-800/80 pt-8">
                 <h3 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2 mb-6 font-display">
-                  The Element Mosaics Advantage
+                  {c.text('mosaic.advantagesHeading')}
                 </h3>
-                {advantages.map((adv) => (
-                  <div key={adv.title} className="group p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:-translate-y-1 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                {advantages.map((adv, i) => (
+                  <div key={i} className="group p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:-translate-y-1 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
                     <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-3 group-hover:text-[#0a5c86] dark:group-hover:text-[#38bdf8] transition-colors">{adv.title}</h4>
                     <p className="text-sm text-slate-600 dark:text-slate-400 font-sans leading-relaxed">{adv.description}</p>
                   </div>
@@ -142,7 +134,7 @@ export default function PoolTiles() {
              
               <div className="mt-16 flex flex-wrap gap-4">
                 <LinkButton href="/contact-swimming-pool-contractor#inquiry" variant="primary" size="lg">
-                  Explore Element Mosaics
+                  {c.text('mosaic.primaryButton')}
                 </LinkButton>
                 <LinkButton
                   href={DOCUMENTS.glassMosaicCatalogue}
@@ -152,7 +144,7 @@ export default function PoolTiles() {
                   size="lg"
                 >
                   <Download size={18} />
-                  Download Catalogue
+                  {c.text('mosaic.catalogueButton')}
                 </LinkButton>
               </div>
           </motion.div>
@@ -170,77 +162,28 @@ export default function PoolTiles() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white tracking-tight mb-4">
-              Our Collection
+              {c.text('collection.heading')}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-lg font-light max-w-2xl mx-auto">
-              A curated selection from our signature glass mosaic range — each tile a testament to colour, light, and craftsmanship.
+              {c.text('collection.intro')}
             </p>
           </motion.div>
 
           {/* Bento grid — 4 columns, 3 rows */}
           <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[200px] md:auto-rows-[230px] gap-3 md:gap-4">
 
-            {/* Large feature — top-left, 2×2 */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="col-span-2 row-span-2 overflow-hidden rounded-2xl"
-            >
-              <img src={IMAGES.tiles[2]} alt="Tile design 3" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </motion.div>
-
-            {/* Top-right column — two stacked cells */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="col-span-1 row-span-1 overflow-hidden rounded-2xl"
-            >
-              <img src={IMAGES.tiles[3]} alt="Tile design 4" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.15 }}
-              className="col-span-1 row-span-1 overflow-hidden rounded-2xl"
-            >
-              <img src={IMAGES.tiles[4]} alt="Tile design 5" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </motion.div>
-
-            {/* Middle-right — wide, spans 2 cols */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="col-span-2 row-span-1 overflow-hidden rounded-2xl"
-            >
-              <img src={IMAGES.tiles[5]} alt="Tile design 6" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </motion.div>
-
-            {/* Bottom row — narrow + wide */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.25 }}
-              className="col-span-1 row-span-1 overflow-hidden rounded-2xl"
-            >
-              <img src={IMAGES.tiles[6]} alt="Tile design 7" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="col-span-1 md:col-span-3 row-span-1 overflow-hidden rounded-2xl"
-            >
-              <img src={IMAGES.tiles[7]} alt="Tile design 8" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </motion.div>
+            {gallery.map((cell, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.97 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: GALLERY_CELLS[i][1] }}
+                className={`${GALLERY_CELLS[i][0]} overflow-hidden rounded-2xl`}
+              >
+                <img src={pageImage(cell.image)} alt={cell.alt} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              </motion.div>
+            ))}
 
           </div>
         </div>

@@ -1,67 +1,18 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
-import { IMAGES } from '../config/images';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { usePageContent, pageImage } from '../lib/pageContent';
+import { servicesPage } from '../content/pages/hubs';
 
-const services = [
-  {
-    num: '01',
-    category: 'Swimming Pools',
-    title: 'Turnkey Projects',
-    description:
-      'End-to-end pool construction from structural civil works to hydraulic engineering and commissioning. One partner, zero compromise.',
-    path: '/services/turnkey-projects',
-    image: IMAGES.services.turnkeyHero,
-    variant: 'hero' as const,
-  },
-  {
-    num: '02',
-    category: 'Waterfall & Fountain',
-    title: 'Water Features',
-    description:
-      'Commercial and residential waterfalls, fountains, rain dance, and waterscapes in any shape or scale.',
-    path: '/services/waterfall-fountain',
-    image: IMAGES.waterFeatures.hero,
-    variant: 'side' as const,
-  },
-  {
-    num: '03',
-    category: 'Pool Tiles',
-    title: 'Glass Mosaic',
-    description:
-      'Handcut murals and glass mosaic tiles that transform your pool floor into a work of art.',
-    path: '/services/pool-tiles',
-    image: IMAGES.tilesHero,
-    variant: 'side' as const,
-  },
-  {
-    num: '04',
-    category: 'Accessories',
-    title: 'Engineering Equipment',
-    description: 'High-grade ladders, skimmers, overflow grating and specialized pumps.',
-    path: '/services/accessories',
-    image: IMAGES.services.accessoriesHero,
-    variant: 'base' as const,
-  },
-  {
-    num: '05',
-    category: 'Readymade FRP Pools',
-    title: 'Prefabricated',
-    description: 'Uncompromising luxury delivered with unprecedented speed and efficiency.',
-    path: '/services/readymade-pools',
-    image: IMAGES.services.readymadeHero,
-    variant: 'base' as const,
-  },
-  {
-    num: '06',
-    category: 'Renovation',
-    title: 'Repairs & Maintenance',
-    description: 'Give your aging pool a stunning new look with top-notch refurbishment.',
-    path: '/services/renovation',
-    image: IMAGES.services.renovationHero,
-    variant: 'base' as const,
-  },
+// Layout and link for each card position; text and images come from the admin panel.
+const SLOTS = [
+  { path: '/services/turnkey-projects', variant: 'hero' as const },
+  { path: '/services/waterfall-fountain', variant: 'side' as const },
+  { path: '/services/pool-tiles', variant: 'side' as const },
+  { path: '/services/accessories', variant: 'base' as const },
+  { path: '/services/readymade-pools', variant: 'base' as const },
+  { path: '/services/renovation', variant: 'base' as const },
 ];
 
 const colClass = {
@@ -83,10 +34,16 @@ const gradientClass = {
 };
 
 export default function Services() {
-  usePageMeta(
-    'Swimming Pool Construction Services',
-    'Crystal Pools offers complete swimming pool construction services in Pune and across India — turnkey projects, water features, tiles, accessories, and readymade pools from a trusted swimming pool company in Pune.',
-  );
+  const c = usePageContent(servicesPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'));
+  const services = c.list('cards.items').slice(0, SLOTS.length).map((item, i) => ({
+    num: String(i + 1).padStart(2, '0'),
+    category: item.category,
+    title: item.title,
+    description: item.description,
+    image: pageImage(item.image),
+    ...SLOTS[i],
+  }));
   return (
     <div className="bg-[#f8fafc] dark:bg-[#060F1A] min-h-screen pt-32 pb-24 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,13 +55,12 @@ export default function Services() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center max-w-3xl mx-auto mb-14"
         >
-          <p className="text-xs font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4">Our Services</p>
-          <h2 className="text-5xl md:text-6xl font-display font-bold text-[#0a5c86] dark:text-white mb-5 tracking-tight">
-            Comprehensive Pool Solutions
-          </h2>
+          <p className="text-xs font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4">{c.text('header.eyebrow')}</p>
+          <h1 className="text-5xl md:text-6xl font-display font-bold text-[#0a5c86] dark:text-white mb-5 tracking-tight">
+            {c.text('header.heading')}
+          </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            From design and construction to maintenance and spectacular water features,
-            Crystal Pools provides complete swimming pool services in Pune and beyond — everything you need under one roof.
+            {c.text('header.intro')}
           </p>
         </motion.div>
 
@@ -146,7 +102,7 @@ export default function Services() {
                     </span>
                     {isHero && (
                       <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/50 border border-white/20 px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        Featured
+                        {c.text('cards.badge')}
                       </span>
                     )}
                   </div>
@@ -184,7 +140,7 @@ export default function Services() {
                         hover:text-[#f9c80e] transition-colors duration-300 group/link"
                       style={{ fontSize: isHero ? '0.65rem' : '0.6rem', letterSpacing: '0.2em' }}
                     >
-                      View Details
+                      {c.text('cards.linkText')}
                       <ArrowUpRight className={`transition-transform duration-300
                         group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5
                         ${isHero ? 'w-4 h-4' : 'w-3 h-3'}`}

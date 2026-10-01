@@ -3,62 +3,30 @@ import { motion, useInView, type Variants } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import TiltCard from './TiltCard';
-import { IMAGES } from '../config/images';
+import { usePageContent, pageImage } from '../lib/pageContent';
+import { homePage } from '../content/pages/home';
 
-const servicesData = [
-  {
-    id: "swimming-pools",
-    title: "Swimming pools",
-    description: "Turnkey projects",
-    image: IMAGES.services.turnkeyHero,
-    colSpanClass: "md:col-span-1 md:row-span-2",
-    path: "/services/turnkey-projects"
-  },
-  {
-    id: "waterfall-fountain",
-    title: "Waterfall & fountain",
-    description: "Water features",
-    image: IMAGES.waterFeatures.hero,
-    colSpanClass: "md:col-span-2 md:row-span-1",
-    path: "/services/waterfall-fountain"
-  },
-  {
-    id: "pool-tiles",
-    title: "Pool tiles",
-    description: "Glass mosaic",
-    image: IMAGES.tilesHero,
-    colSpanClass: "md:col-span-1 md:row-span-1",
-    path: "/services/pool-tiles"
-  },
-  {
-    id: "accessories",
-    title: "Accessories",
-    description: "Engineering equipment",
-    image: IMAGES.services.accessoriesHero,
-    colSpanClass: "md:col-span-1 md:row-span-1",
-    path: "/services/accessories"
-  },
-  {
-    id: "readymade-pools",
-    title: "Readymade FRP pools",
-    description: "Prefabricated",
-    image: IMAGES.services.readymadeHero,
-    colSpanClass: "md:col-span-2 md:row-span-1",
-    path: "/services/readymade-pools"
-  },
-  {
-    id: "renovation",
-    title: "Renovation",
-    description: "Pool & spa upgrades",
-    image: IMAGES.services.renovationHero,
-    colSpanClass: "md:col-span-1 md:row-span-1",
-    path: "/services/renovation"
-  },
+// Card layout and link for each position (text and images are edited in the admin panel).
+const SLOTS = [
+  { colSpanClass: "md:col-span-1 md:row-span-2", path: "/services/turnkey-projects" },
+  { colSpanClass: "md:col-span-2 md:row-span-1", path: "/services/waterfall-fountain" },
+  { colSpanClass: "md:col-span-1 md:row-span-1", path: "/services/pool-tiles" },
+  { colSpanClass: "md:col-span-1 md:row-span-1", path: "/services/accessories" },
+  { colSpanClass: "md:col-span-2 md:row-span-1", path: "/services/readymade-pools" },
+  { colSpanClass: "md:col-span-1 md:row-span-1", path: "/services/renovation" },
 ];
 
 export default function ServicesBentoSection() {
   const containerRef = useRef<HTMLElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.1 });
+  const c = usePageContent(homePage);
+  const servicesData = c.list('services.items').map((item, i) => ({
+    id: String(i),
+    title: item.title,
+    description: item.description,
+    image: pageImage(item.image),
+    ...(SLOTS[i] ?? SLOTS[SLOTS.length - 1]),
+  }));
 
   const containerVariants: Variants = {
     hidden: {},
@@ -82,8 +50,8 @@ export default function ServicesBentoSection() {
     <section ref={containerRef} className="py-16 md:py-24 bg-white dark:bg-[#09090b] transition-colors duration-500 text-[#1a202c] dark:text-gray-100 flex items-center min-h-screen">
       <div className="w-full">
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16 px-4">
-          <h2 className="text-xs md:text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-3 md:mb-4">Engineering Precision</h2>
-          <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0a5c86] dark:text-white font-display">Our Premium Services</h3>
+          <h2 className="text-xs md:text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-3 md:mb-4">{c.text('services.eyebrow')}</h2>
+          <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0a5c86] dark:text-white font-display">{c.text('services.heading')}</h3>
         </div>
 
         <motion.div
@@ -143,7 +111,7 @@ export default function ServicesBentoSection() {
               text-[#0a5c86] dark:text-white hover:text-[#f9c80e] dark:hover:text-[#f9c80e]
               transition-colors duration-300"
           >
-            View All Services
+            {c.text('services.linkText')}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>

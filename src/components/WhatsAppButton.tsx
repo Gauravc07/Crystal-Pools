@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { usePanelContext } from '../contexts/PanelContext';
+import { useSiteSettings, whatsappHref } from '../lib/siteSettings';
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
@@ -8,17 +9,17 @@ interface WhatsAppButtonProps {
 }
 
 export default function WhatsAppButton({
-  phoneNumber = "919552526371",
+  phoneNumber,
   message = "Hello! I would like to know more about your services."
 }: WhatsAppButtonProps) {
   const { isPanelOpen } = usePanelContext();
+  const settings = useSiteSettings();
   const [isHovered, setIsHovered] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   if (isPanelOpen) return null;
 
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+  const whatsappUrl = whatsappHref(phoneNumber ?? settings.whatsapp, message);
 
   return (
     <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[90] pointer-events-none flex items-center justify-center">

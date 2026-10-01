@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 const SITE_NAME = 'Crystal Pools';
 
-export function usePageMeta(title: string, description: string) {
+export function usePageMeta(title: string, description: string, image?: string | null) {
   useEffect(() => {
     document.title = `${title} | ${SITE_NAME}`;
 
@@ -21,5 +21,10 @@ export function usePageMeta(title: string, description: string) {
     setMeta('og:description', description, 'property');
     setMeta('twitter:title', `${title} | ${SITE_NAME}`, 'property');
     setMeta('twitter:description', description, 'property');
-  }, [title, description]);
+    if (image) {
+      const absolute = new URL(image, window.location.origin).href;
+      setMeta('og:image', absolute, 'property');
+      setMeta('twitter:image', absolute, 'property');
+    }
+  }, [title, description, image]);
 }

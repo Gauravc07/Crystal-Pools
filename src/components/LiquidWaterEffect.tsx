@@ -6,7 +6,6 @@ const prefersReducedMotion =
 
 const StaticBackground = () => (
   <div className="absolute inset-0 w-full h-full bg-linear-to-br from-[#0a5c86] to-[#041d2f] overflow-hidden">
-    <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-[url('/images/sections/liquid-effect.jpg')] bg-cover bg-center" />
   </div>
 );
 
@@ -139,7 +138,6 @@ function LiquidWaterEffectCanvas() {
 
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full bg-linear-to-br from-[#0a5c86] to-[#041d2f] overflow-hidden">
-      <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-[url('/images/sections/liquid-effect.jpg')] bg-cover bg-center" />
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full mix-blend-screen" />
     </div>
   );

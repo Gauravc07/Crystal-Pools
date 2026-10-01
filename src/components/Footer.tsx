@@ -1,13 +1,20 @@
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 import Logo from './Logo';
 
 import ScrollToTopButton from './ScrollToTopButton';
 import { IMAGES } from '../config/images';
 import { DOCUMENTS } from '../config/documents';
+import { telHref, useSiteSettings } from '../lib/siteSettings';
+import { usePageContent } from '../lib/pageContent';
+import { footerContent } from '../content/pages/footer';
+
+const SOCIAL_ICONS = { instagram: Instagram, facebook: Facebook, linkedin: Linkedin, youtube: Youtube } as const;
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const settings = useSiteSettings();
+  const c = usePageContent(footerContent);
 
   return (
     <footer className="relative text-slate-100 min-h-screen pt-20 lg:pt-28 pb-0 overflow-hidden bg-slate-900 border-none flex flex-col">
@@ -37,13 +44,13 @@ export default function Footer() {
               <span className="font-display font-bold text-xl tracking-tight text-white">Crystal Pools</span>
             </Link>
             <p className="text-slate-300 text-sm leading-relaxed mb-4">
-              India's leading swimming pool construction company. We create luxurious, state-of-the-art swimming pools for commercial and residential sectors across the nation.
+              {c.text('about')}
             </p>
           </div>
 
           {/* Col 2: Downloads */}
           <div className="lg:pl-8">
-            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">Downloads</h4>
+            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">{c.text('downloads.heading')}</h4>
             <ul className="space-y-3 text-[14px] text-slate-300">
               <li>
                 <a href={DOCUMENTS.companyBrochure} target="_blank" rel="noopener noreferrer" className="flex items-center group hover:text-cyan-400 transition-colors w-fit">
@@ -74,9 +81,9 @@ export default function Footer() {
 
           {/* Col 3: Branches */}
           <div>
-            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">Our Branches</h4>
+            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">{c.text('branches.heading')}</h4>
             <ul className="grid grid-cols-2 gap-y-3 gap-x-2 text-[14px] text-slate-300 mb-6">
-              {['Pune', 'Mumbai', 'Nashik', 'Kolhapur', 'Rajasthan', 'Goa'].map(branch => (
+              {settings.branches.map(branch => (
                 <li key={branch} className="flex items-center group cursor-default">
                   <MapPin size={14} className="mr-2 text-cyan-500/70 group-hover:text-cyan-400 transition-colors" />
                   <span className="group-hover:text-cyan-400 transition-colors">{branch}</span>
@@ -84,52 +91,45 @@ export default function Footer() {
               ))}
             </ul>
 
-            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">Working Hours</h4>
+            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">{c.text('hours.heading')}</h4>
             <ul className="space-y-2 text-slate-300 text-[14px]">
-              <li className="flex justify-between items-center group cursor-default">
-                <span className="group-hover:text-cyan-400 transition-colors">Mon - Fri</span>
-                <span className="text-white">10:00 AM - 06:00 PM</span>
-              </li>
-              <li className="flex justify-between items-center group cursor-default">
-                <span className="group-hover:text-cyan-400 transition-colors">Saturday</span>
-                <span className="text-white">10:00 AM - 06:00 PM</span>
-              </li>
-              <li className="flex justify-between items-center group cursor-default">
-                <span className="group-hover:text-cyan-400 transition-colors">Sunday</span>
-                <span className="text-[#0a5c86]">Closed</span>
-              </li>
+              {c.list('hours.items').map((h, i) => (
+                <li key={i} className="flex justify-between items-center group cursor-default">
+                  <span className="group-hover:text-cyan-400 transition-colors">{h.day}</span>
+                  <span className={/^closed$/i.test(h.time.trim()) ? 'text-[#0a5c86]' : 'text-white'}>{h.time}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Col 4: Contact & Social */}
           <div>
-            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">Contact Us</h4>
+            <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">{c.text('contact.heading')}</h4>
             <div className="space-y-3 text-slate-300 text-[14px] mb-6">
-              <a href="tel:+919552526371" className="flex items-center group hover:text-cyan-400 transition-colors w-fit">
+              <a href={telHref(settings.phone)} className="flex items-center group hover:text-cyan-400 transition-colors w-fit">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-all">
                    <Phone size={14} />
                 </div>
-                +91 95525 26371
+                {settings.phone}
               </a>
-              <a href="mailto:sales@crystalpools.in" className="flex items-center group hover:text-cyan-400 transition-colors w-fit">
+              <a href={`mailto:${settings.email}`} className="flex items-center group hover:text-cyan-400 transition-colors w-fit">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-all">
                    <Mail size={14} />
                 </div>
-                sales@crystalpools.in
+                {settings.email}
               </a>
             </div>
 
-            <h4 className="text-sm tracking-wider mb-3 font-semibold uppercase text-white">Follow Us</h4>
+            <h4 className="text-sm tracking-wider mb-3 font-semibold uppercase text-white">{c.text('follow.heading')}</h4>
             <div className="flex space-x-3">
-              <a href="https://www.instagram.com/crystalpoolspune/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-cyan-500 hover:text-white transition-all transform hover:-translate-y-1">
-                <Instagram size={16} />
-              </a>
-              <a href="https://www.facebook.com/crystalpoolspune/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-cyan-500 hover:text-white transition-all transform hover:-translate-y-1">
-                <Facebook size={16} />
-              </a>
-              <a href="https://www.linkedin.com/company/crystal-swimming-pools/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-cyan-500 hover:text-white transition-all transform hover:-translate-y-1">
-                <Linkedin size={16} />
-              </a>
+              {(Object.keys(SOCIAL_ICONS) as (keyof typeof SOCIAL_ICONS)[]).filter(k => settings.social_links[k]).map(k => {
+                const Icon = SOCIAL_ICONS[k];
+                return (
+                  <a key={k} href={settings.social_links[k]} target="_blank" rel="noopener noreferrer" aria-label={k} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-cyan-500 hover:text-white transition-all transform hover:-translate-y-1">
+                    <Icon size={16} />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="relative z-10 border-t border-white/10 pt-16 pb-6 bg-slate-900/50 backdrop-blur-sm w-full mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center text-slate-400 text-sm font-light">
-          <p className="mb-4 md:mb-0">© {currentYear} Crystal Swimming Pools India Pvt Ltd. All rights reserved.</p>
+          <p className="mb-4 md:mb-0">© {currentYear} {c.text('copyright')}</p>
           <div className="flex space-x-6">
             <a href="#" className="hover:text-cyan-400 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-cyan-400 transition-colors">Terms of Service</a>

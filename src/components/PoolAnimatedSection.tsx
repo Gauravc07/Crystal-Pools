@@ -3,65 +3,40 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import BubbleBackground from './BubbleBackground';
-import { IMAGES } from '../config/images';
+import { usePageContent, pageImage } from '../lib/pageContent';
+import { homePage } from '../content/pages/home';
 
-const DATA = [
-  {
-    title: "Dive into Excellence",
-    desc: "Discover our diverse range of luxury pools, engineered for beauty, durability, and a pristine swimming experience. Scroll seamlessly to explore our architectural designs.",
-    img: IMAGES.services.swimmingPool
-  },
-  {
-    id: 'private-swimming-pools',
-    title: 'PRIVATE SWIMMING POOLS',
-    desc: 'Private swimming pools are usually smaller than public pools, offering personal retreats tailored to your individual style and available space. We focus on bespoke designs.',
-    img: IMAGES.poolTypes.private
-  },
-  {
-    id: 'commercial-swimming-pools',
-    title: 'COMMERCIAL SWIMMING POOLS',
-    desc: 'Crystal pool has expertise with Commercial swimming pools for hotels, resorts, and apartment complexes. Designed for high traffic and maximum durability.',
-    img: IMAGES.poolTypes.commercial
-  },
-  {
-    id: 'recreation-swimming-pools',
-    title: 'RECREATION SWIMMING POOLS',
-    desc: 'Public pools are often part of a larger leisure center or recreational complex featuring lazy rivers, wave pools, and splash pads.',
-    img: IMAGES.poolTypes.recreational
-  },
-  {
-    id: 'competition-swimming-pools',
-    title: 'COMPETITION SWIMMING POOLS',
-    desc: 'FINA-standard competition pools engineered for excellence. We build Olympic-grade pools with precise dimensions, wave-reducing gutters, and compliance with international competition standards.',
-    img: IMAGES.poolTypes.competition
-  },
-  {
-    id: 'vanishing-edge-swimming-pools',
-    title: 'VANISHING EDGE SWIMMING POOLS',
-    desc: 'Vanishing edge pool is a swimming or reflecting pool that produces a visual effect of water extending to the horizon. Perfect for scenic locations.',
-    img: IMAGES.poolTypes.vanishingEdge
-  },
-  {
-    id: 'overflow-type-swimming-pools',
-    title: 'OVERFLOW TYPE SWIMMING POOLS',
-    desc: 'A perimeter-overflow pool is a type of vanishing-edge pool designed so that water spills over all four walls, creating a flawless mirror surface.',
-    img: IMAGES.poolTypes.overflow
-  },
-  {
-    id: 'skimmer-type-swimming-pools',
-    title: 'SKIMMER TYPE SWIMMING POOLS',
-    desc: 'A skimmer swimming pool is designed to pull water into the system from the pools surface with a skimming action. Highly efficient and cost-effective.',
-    img: IMAGES.poolTypes.skimmer
-  },
-  {
-    id: 'readymade-swimming-pool',
-    title: 'READYMADE SWIMMING POOL',
-    desc: 'Prefabs and readymade pools offer quick installation. Our service department is available for all equipment repair and replace as well as new readymade installs.',
-    img: IMAGES.poolTypes.readymade
-  }
+// Each pool type slide links to its page, in this order.
+const POOL_PATHS = [
+  '/private-swimming-pools',
+  '/commercial-swimming-pools',
+  '/recreational-swimming-pools',
+  '/competition-swimming-pools',
+  '/vanishing-edge-swimming-pools',
+  '/overflow-type-swimming-pools',
+  '/skimmer-type-swimming-pools',
+  '/readymade-swimming-pool',
 ];
 
+interface Slide { title: string; desc: string; img: string; path?: string }
+
+/** Intro slide + one slide per pool type, from the admin-editable Home content. */
+function useSlides() {
+  const c = usePageContent(homePage);
+  const slides: Slide[] = [
+    { title: c.text('pools.title'), desc: c.text('pools.desc'), img: c.image('pools.introImage') },
+    ...c.list('pools.items').map((item, i) => ({
+      title: item.title,
+      desc: item.desc,
+      img: pageImage(item.image),
+      path: POOL_PATHS[i] ?? '/swimming-pool-types',
+    })),
+  ];
+  return { slides, eyebrow: c.text('pools.eyebrow'), title: c.text('pools.title'), mobileDesc: c.text('pools.mobileDesc') };
+}
+
 const DesktopView = () => {
+  const { slides: DATA, eyebrow } = useSlides();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
   // Pass through an identity function to disable WAAPI scroll timeline generation,
@@ -140,6 +115,7 @@ const DesktopView = () => {
             stepSize={stepSize}
             slideHalf={slideHalf}
             pauseHalf={pauseHalf}
+            eyebrow={eyebrow}
           />
         ))}
 
@@ -162,6 +138,7 @@ const DesktopView = () => {
             <ImageLayer 
               key={i} 
               src={item.img} 
+              alt={item.title}
               index={i} 
               progress={smoothProgress} 
               stepSize={stepSize}
@@ -173,7 +150,7 @@ const DesktopView = () => {
   );
 };
 
-const TextBlock = ({ item, index, progress, stepSize, slideHalf, pauseHalf }: any) => {
+const TextBlock = ({ item, index, progress, stepSize, slideHalf, pauseHalf, eyebrow }: any) => {
   const center = index * stepSize;
 
   // Values intentionally allowed outside [0,1] for the first and last slides.
@@ -212,7 +189,7 @@ const TextBlock = ({ item, index, progress, stepSize, slideHalf, pauseHalf }: an
         style={{ y: ySubtitle }}
         className="text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4 drop-shadow-sm"
       >
-        {index === 0 ? "Swimming Pools" : `0${index} / 08`}
+        {index === 0 ? eyebrow : `0${index} / 08`}
       </motion.h2>
       <motion.h3 
         style={{ y: yTitle }}
@@ -226,10 +203,10 @@ const TextBlock = ({ item, index, progress, stepSize, slideHalf, pauseHalf }: an
       >
         {item.desc}
       </motion.p>
-      {item.id && (
+      {item.path && (
         <motion.div style={{ y: yDesc }}>
           <Link 
-            to={item.id === 'private-swimming-pools' ? '/private-swimming-pools' : item.id === 'commercial-swimming-pools' ? '/commercial-swimming-pools' : item.id === 'recreation-swimming-pools' ? '/recreational-swimming-pools' : item.id === 'competition-swimming-pools' ? '/competition-swimming-pools' : item.id === 'vanishing-edge-swimming-pools' ? '/vanishing-edge-swimming-pools' : item.id === 'overflow-type-swimming-pools' ? '/overflow-type-swimming-pools' : item.id === 'skimmer-type-swimming-pools' ? '/skimmer-type-swimming-pools' : item.id === 'readymade-swimming-pool' ? '/readymade-swimming-pool' : '/swimming-pool-types'}
+            to={item.path}
             className="inline-flex items-center text-[#f9c80e] font-bold text-sm tracking-widest uppercase animate-pulse hover:text-[#e0b40b] transition-colors"
           >
             Learn More <ArrowRight size={16} className="ml-2" />
@@ -240,7 +217,7 @@ const TextBlock = ({ item, index, progress, stepSize, slideHalf, pauseHalf }: an
   );
 };
 
-const ImageLayer = ({ src, index, progress, stepSize }: any) => {
+const ImageLayer = ({ src, alt, index, progress, stepSize }: any) => {
   const center = index * stepSize;
   const inRange = [
     center - stepSize * 0.6,
@@ -256,7 +233,7 @@ const ImageLayer = ({ src, index, progress, stepSize }: any) => {
     <motion.div className="absolute inset-0 origin-center" style={{ opacity }}>
       <motion.img 
         src={src} 
-        alt="Pool type" 
+        alt={alt} 
         className="w-full h-full object-cover" 
         style={{ scale }}
       />
@@ -267,6 +244,7 @@ const ImageLayer = ({ src, index, progress, stepSize }: any) => {
 };
 
 const MobileView = () => {
+  const { slides: DATA, eyebrow, title, mobileDesc } = useSlides();
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -279,12 +257,12 @@ const MobileView = () => {
       </div>
 
       <div className="relative z-10 text-center max-w-xl mx-auto border-b border-gray-200 dark:border-slate-800 pb-16 w-full">
-        <h1 className="text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4">Swimming Pools</h1>
+        <p className="text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-4">{eyebrow}</p>
         <h2 className="text-4xl font-bold text-[#0a5c86] dark:text-white font-display leading-[1.1]">
-          Dive into Excellence
+          {title}
         </h2>
         <p className="mt-8 text-lg text-slate-600 dark:text-slate-400 font-serif leading-relaxed">
-          Discover our diverse range of luxury pools, engineered for beauty, durability, and a pristine swimming experience.
+          {mobileDesc}
         </p>
       </div>
 
@@ -311,9 +289,9 @@ const MobileView = () => {
           <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-serif text-lg">
             {item.desc}
           </p>
-          {item.id && (
+          {item.path && (
             <Link 
-              to={item.id === 'private-swimming-pools' ? '/private-swimming-pools' : item.id === 'commercial-swimming-pools' ? '/commercial-swimming-pools' : item.id === 'recreation-swimming-pools' ? '/recreational-swimming-pools' : item.id === 'competition-swimming-pools' ? '/competition-swimming-pools' : item.id === 'vanishing-edge-swimming-pools' ? '/vanishing-edge-swimming-pools' : item.id === 'overflow-type-swimming-pools' ? '/overflow-type-swimming-pools' : item.id === 'skimmer-type-swimming-pools' ? '/skimmer-type-swimming-pools' : item.id === 'readymade-swimming-pool' ? '/readymade-swimming-pool' : '/swimming-pool-types'}
+              to={item.path}
               className="inline-flex items-center text-[#f9c80e] font-bold text-sm tracking-widest uppercase animate-pulse mt-2"
             >
               Learn More <ArrowRight size={16} className="ml-2" />

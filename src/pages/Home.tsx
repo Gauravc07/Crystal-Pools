@@ -10,18 +10,29 @@ import CompanyStatsSection from '../components/CompanyStatsSection';
 import ServicesBentoSection from '../components/ServicesBentoSection';
 import ProductsBentoSection from '../components/ProductsBentoSection';
 import EsteemedClientsSection from '../components/EsteemedClientsSection';
+import TestimonialsSection from '../components/TestimonialsSection';
 
 import CrossfadeVideo from '../components/CrossfadeVideo';
 import { IMAGES } from '../config/images';
+import { siteMedia, useSiteSettings } from '../lib/siteSettings';
+import { usePageContent } from '../lib/pageContent';
+import { homePage } from '../content/pages/home';
 
 export default function Home() {
-  usePageMeta(
-    'Premium Swimming Pool Construction',
-    "Crystal Pools is a leading swimming pool consultant, builder, and construction company in Pune since 1993. Luxury private, commercial, and competition swimming pools construction across Pune, Mumbai, Nashik, and beyond.",
-  );
+  const content = usePageContent(homePage);
+  usePageMeta(content.text('seo.title'), content.text('seo.description'));
+  const words = content.list('hero.words').map(w => w.word).filter(Boolean);
+  const typeSequence = words.flatMap(w => [w, 2000]);
 
   const shouldReduceMotion = useReducedMotion();
   const { isDarkMode } = useTheme();
+  // Homepage banner media can be replaced from the admin panel; the built-in files are the fallback.
+  const settings = useSiteSettings();
+  const hero = {
+    light: siteMedia(settings.hero_image_light) ?? IMAGES.hero.lightMode,
+    dark: siteMedia(settings.hero_image_dark) ?? IMAGES.hero.darkMode,
+    video: siteMedia(settings.hero_video) ?? IMAGES.hero.video,
+  };
   const { scrollY } = useScroll();
   const indicatorOpacity = useTransform(scrollY, [0, 200], [1, 0]);
 
@@ -41,20 +52,20 @@ export default function Home() {
         <div className="absolute inset-0">
           {/* Static images load instantly; video layers on top when ready */}
           <img
-            src={IMAGES.hero.lightMode}
+            src={hero.light}
             alt=""
             aria-hidden="true"
             fetchPriority="high"
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}
           />
           <CrossfadeVideo
-            src={IMAGES.hero.video}
+            src={hero.video}
             className="absolute inset-0 w-full h-full object-cover"
             isVisible={!isDarkMode}
           />
           <img
-            src={IMAGES.hero.darkMode}
-            alt="Crystal Pools View"
+            src={hero.dark}
+            alt={content.text('hero.alt')}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
           />
           <div className={`absolute inset-0 transition-opacity duration-1000 ${isDarkMode ? 'bg-linear-to-b from-black/80 via-black/10 to-transparent' : 'bg-linear-to-t from-black/60 via-transparent to-black/30'}`}></div>
@@ -79,7 +90,7 @@ export default function Home() {
                   transition={{ duration: 0.7, ease: 'easeOut' }}
                 >
                   <motion.span style={{ opacity: shouldReduceMotion ? 1 : buildOpacity, display: 'block' }}>
-                    We build
+                    {content.text('hero.lead')}
                   </motion.span>
                 </motion.span>
                 <motion.span
@@ -90,16 +101,8 @@ export default function Home() {
                   {/* aria-live announces rotating text to screen readers */}
                   <span aria-live="polite" aria-atomic="true">
                     <TypeAnimation
-                      sequence={[
-                        'Bespoke Pools',
-                        2000,
-                        'Luxury Retreats',
-                        2000,
-                        'Aquatic Artistry',
-                        2000,
-                        'Elegant Spas',
-                        2000
-                      ]}
+                      key={words.join('|')}
+                      sequence={typeSequence}
                       wrapper="span"
                       speed={50}
                       repeat={Infinity}
@@ -140,7 +143,10 @@ export default function Home() {
       {/* 5. Products (Bento Grid) */}
       <ProductsBentoSection />
 
-      {/* 6. Esteemed Clients */}
+      {/* 6. Testimonials (managed in the admin panel) */}
+      <TestimonialsSection />
+
+      {/* 7. Esteemed Clients */}
       <EsteemedClientsSection />
     </div>
   );

@@ -95,9 +95,9 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
               transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
               className="flex flex-col items-center md:items-start"
             >
-              <h1 className="text-3xl md:text-5xl font-display text-slate-800 tracking-wider mb-3 font-light uppercase">
+              <p aria-hidden="true" className="text-3xl md:text-5xl font-display text-slate-800 tracking-wider mb-3 font-light uppercase">
                 Crystal <span className="text-brand-blue font-semibold">Pools</span>
-              </h1>
+              </p>
               
               {/* Progress Line Indicator */}
               <div className="w-full h-[2px] bg-slate-100 relative overflow-hidden rounded-full">

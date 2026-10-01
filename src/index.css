@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Anton&family=Pacifico&display=swap');
 @import "tailwindcss";
+@source not "../admin";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -142,3 +143,19 @@
     }
   }
 }
+
+/* ── Blog post content (HTML written in the admin panel) ── */
+.blog-content { @apply text-lg leading-8 text-slate-700 dark:text-slate-300 font-light; }
+.blog-content > * + * { @apply mt-6; }
+.blog-content h2 { @apply mt-12 text-3xl font-display font-medium text-slate-900 dark:text-white; }
+.blog-content h3 { @apply mt-10 text-2xl font-display font-medium text-slate-900 dark:text-white; }
+.blog-content strong { @apply font-semibold text-slate-900 dark:text-white; }
+.blog-content a { @apply text-brand-blue dark:text-[#38bdf8] underline underline-offset-4; }
+.blog-content ul { @apply list-disc pl-6 space-y-2; }
+.blog-content ol { @apply list-decimal pl-6 space-y-2; }
+.blog-content li > p { @apply m-0; }
+.blog-content blockquote { @apply border-l-4 border-brand-cyan pl-6 italic text-slate-600 dark:text-slate-400; }
+.blog-content img { @apply w-full h-auto rounded-3xl my-10; }
+.blog-content hr { @apply my-12 border-slate-200 dark:border-slate-800; }
+.blog-content div[data-youtube-video] { @apply my-10; }
+.blog-content iframe { @apply w-full h-auto aspect-video rounded-3xl; }

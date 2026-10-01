@@ -3,81 +3,25 @@ import { Compass, Droplets, PenTool, Wrench, Settings, RotateCcw } from 'lucide-
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../../config/images';
 import { usePageMeta } from '../../hooks/usePageMeta';
+import { Lines, usePageContent } from '../../lib/pageContent';
+import { turnkeyPage } from '../../content/pages/services';
+
+// Icon and colours for each scope step position
+const SCOPE_STYLES = [
+  { icon: Compass, color: "text-rose-500", borderColor: "border-rose-400", dotColor: "text-rose-400" },
+  { icon: Wrench, color: "text-amber-500", borderColor: "border-amber-400", dotColor: "text-amber-400" },
+  { icon: Droplets, color: "text-teal-500", borderColor: "border-teal-400", dotColor: "text-teal-400" },
+  { icon: Settings, color: "text-blue-500", borderColor: "border-blue-400", dotColor: "text-blue-400" },
+  { icon: PenTool, color: "text-green-500", borderColor: "border-green-400", dotColor: "text-green-400" },
+  { icon: RotateCcw, color: "text-indigo-500", borderColor: "border-indigo-400", dotColor: "text-indigo-400" },
+];
 
 export default function TurnkeyProjects() {
-  usePageMeta(
-    'Turnkey Swimming Pool Construction',
-    'Crystal Pools delivers end-to-end swimming pool construction services in Pune and across India — from design and civil works to hydraulic engineering and commissioning, all from one swimming pool contractor.',
-  );
-  const benefits = [
-    {
-      title: "Accelerated Project Rollouts",
-      description: "Seamless scheduling and in-house coordination mean swift project lifecycles."
-    },
-    {
-      title: "Consistent, High-Caliber Quality",
-      description: "A single team ensures uniform standards of excellence from the initial sketch to the final polish."
-    },
-    {
-      title: "Cost-Effectiveness",
-      description: "We deliver highly effective, economical solutions within your given cost-and-time framework."
-    },
-    {
-      title: "Greater Convenience",
-      description: "You deal with one dedicated partner for design, engineering, construction, and beyond."
-    }
-  ];
+  const c = usePageContent(turnkeyPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const benefits = c.list('philosophy.benefits');
 
-  const scopeItems = [
-    {
-      title: "Design",
-      description: "Aesthetic visions and robust hydraulic plans.",
-      icon: Compass,
-      color: "text-rose-500",
-      borderColor: "border-rose-400",
-      dotColor: "text-rose-400"
-    },
-    {
-      title: "Engineering",
-      description: "Advanced excavation to total structural works.",
-      icon: Wrench,
-      color: "text-amber-500",
-      borderColor: "border-amber-400",
-      dotColor: "text-amber-400"
-    },
-    {
-      title: "Filtration",
-      description: "Energy-efficient treatment and sanitation.",
-      icon: Droplets,
-      color: "text-teal-500",
-      borderColor: "border-teal-400",
-      dotColor: "text-teal-400"
-    },
-    {
-      title: "Equipment",
-      description: "Modern heating and mechanical systems.",
-      icon: Settings,
-      color: "text-blue-500",
-      borderColor: "border-blue-400",
-      dotColor: "text-blue-400"
-    },
-    {
-      title: "Finishing",
-      description: "Premium mosaics and luxurious accessories.",
-      icon: PenTool,
-      color: "text-green-500",
-      borderColor: "border-green-400",
-      dotColor: "text-green-400"
-    },
-    {
-      title: "Support",
-      description: "Lifecycle maintenance and spares supply.",
-      icon: RotateCcw,
-      color: "text-indigo-500",
-      borderColor: "border-indigo-400",
-      dotColor: "text-indigo-400"
-    }
-  ];
+  const scopeItems = c.list('scope.items').map((item, i) => ({ ...SCOPE_STYLES[i % SCOPE_STYLES.length], title: item.title, description: item.description }));
 
   return (
     <div className="bg-[#fbfbfb] dark:bg-[#060F1A] min-h-screen text-slate-900 dark:text-slate-50 transition-colors duration-500">
@@ -86,8 +30,8 @@ export default function TurnkeyProjects() {
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <img
-            src={IMAGES.services.turnkeyHero}
-            alt="Turnkey pool project"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover"
           />
         </div>
@@ -107,7 +51,7 @@ export default function TurnkeyProjects() {
               transition={{ duration: 0.7 }}
               className="text-xs sm:text-sm font-bold tracking-[0.35em] uppercase text-[#f9c80e] mb-3 md:mb-4"
             >
-              Crafting
+              {c.text('hero.eyebrow')}
             </motion.p>
 
             {/* Main heading */}
@@ -118,13 +62,13 @@ export default function TurnkeyProjects() {
               className="font-display font-bold leading-none tracking-tight"
             >
               <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white dark:text-brand-gold uppercase">
-                Unforgettable
+                {c.text('hero.line1')}
               </span>
               <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif italic font-normal normal-case text-[#f9c80e]">
-                Aquatic
+                {c.text('hero.line2')}
               </span>
               <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif italic font-normal normal-case text-[#f9c80e]">
-                Experiences.
+                {c.text('hero.line3')}
               </span>
             </motion.h1>
 
@@ -143,8 +87,8 @@ export default function TurnkeyProjects() {
               transition={{ duration: 0.7, delay: 0.5 }}
               className="text-base sm:text-lg text-white/80 leading-relaxed max-w-md"
             >
-              Premier Turnkey Swimming Pool Construction &amp; Total Lifecycle Support across{' '}
-              <span className="text-[#f9c80e]">India.</span>
+              {c.text('hero.subtitle')}{' '}
+              <span className="text-[#f9c80e]">{c.text('hero.subtitleHighlight')}</span>
             </motion.p>
           </div>
         </div>
@@ -159,14 +103,12 @@ export default function TurnkeyProjects() {
           <div className="relative">
             <div className="md:sticky md:top-32">
               <h2 className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-6 tracking-tight">
-                Total Aquatic Solutions.
+                {c.text('philosophy.heading')}
                 <br />
-                <span className="font-serif italic text-cyan-700 dark:text-brand-gold font-normal">Unifying Expertise, Eliminating Complexity.</span>
+                <span className="font-serif italic text-cyan-700 dark:text-brand-gold font-normal">{c.text('philosophy.highlight')}</span>
               </h2>
               <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed max-w-md">
-                Instead of navigating the complexities of multiple vendors for your aquatic vision, you can partner with a single, reliable entity. Crystal Pools offers integrated, turnkey solutions that eliminate multivendor dependency. By choosing an end-to-end partnership, we optimize every facet of your project.
-                <br /><br />
-                Our integrated approach directly leads to:
+                <Lines text={c.text('philosophy.text')} />
               </p>
             </div>
           </div>
@@ -193,10 +135,10 @@ export default function TurnkeyProjects() {
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-24">
             <h2 className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-6 tracking-tight">
-              Our Full-Spectrum <span className="font-serif italic text-cyan-700 dark:text-brand-gold font-normal">Project Scope</span>
+              {c.text('scope.heading')} <span className="font-serif italic text-cyan-700 dark:text-brand-gold font-normal">{c.text('scope.highlight')}</span>
             </h2>
             <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-              Our partnership encompasses anything and everything related to swimming pools, from the initial consultation to decommissioning. We manage the entire lifecycle with single-point accountability.
+              {c.text('scope.intro')}
             </p>
           </div>
 
@@ -265,19 +207,19 @@ export default function TurnkeyProjects() {
 
       {/* 5. The Footer / Call to Action (The Conversion) */}
       <section className="h-[50vh] flex flex-col justify-center items-center text-center px-4 sm:px-6 bg-[#fbfbfb] dark:bg-[#060F1A] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/services/hub/swimming-pool.png')] bg-cover bg-center opacity-[0.03] dark:opacity-10 grayscale pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[url('/images/services/hub/swimming-pool.webp')] bg-cover bg-center opacity-[0.03] dark:opacity-10 grayscale pointer-events-none"></div>
         <div className="relative z-10 flex flex-col items-center">
           <h2 className="font-display text-4xl md:text-5xl font-bold text-[#0a5c86] dark:text-white mb-6 tracking-tight">
-            Transform Your Vision into Reality
+            {c.text('cta.heading')}
           </h2>
           <p className="text-lg text-slate-700 dark:text-slate-300 mb-10 max-w-2xl leading-relaxed">
-            Do not settle for the ordinary. Engage the trustworthy team at Crystal Pools to get on-time, on-budget project delivery from initial concept to handover and beyond, with absolute peace of mind at every stage.
+            {c.text('cta.text')}
           </p>
           <Link 
             to="/contact-swimming-pool-contractor#inquiry" 
             className="group relative inline-flex items-center justify-center bg-black dark:bg-white text-white dark:text-slate-900 px-8 py-4 uppercase tracking-[0.2em] text-sm hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors duration-300 overflow-hidden"
           >
-            <span className="relative z-10 pt-[2px] group-hover:text-white transition-colors duration-300">Start Your Project</span>
+            <span className="relative z-10 pt-[2px] group-hover:text-white transition-colors duration-300">{c.text('cta.button')}</span>
             <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-full bg-cyan-900 dark:bg-[#0a5c86] transition-all duration-300 ease-out z-0"></div>
             <span className="relative z-10 pt-[2px] ml-3 mt-[-2px] group-hover:text-white transition-colors duration-300">{`→`}</span>
           </Link>

@@ -3,66 +3,21 @@ import { usePageMeta } from '../../hooks/usePageMeta';
 import { motion } from 'motion/react';
 import { ArrowUp, Cloud, Bell, Aperture, Droplets, ArrowDown, Activity, Layers, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { IMAGES } from '../../config/images';
+import { Lines, usePageContent, pageImage } from '../../lib/pageContent';
+import { waterFeaturesPage } from '../../content/pages/services';
 
-const signatureCollection = [
-  {
-    title: "Geyser Jets",
-    description: "Crafted from solid gunmetal, these highly efficient nozzles deliver robust, dramatic vertical water columns perfect for making a bold architectural statement.",
-    icon: ArrowUp,
-    image: IMAGES.waterFeatures.geyser,
-  },
-  {
-    title: "Foam Jets",
-    description: "Creating a highly visible, textured water display, these nozzles produce an eye-catching, foggy cascade. Paired with LED lighting, they are ideal for luxury mall exteriors and corporate lobbies.",
-    icon: Cloud,
-    image: IMAGES.waterFeatures.foam,
-  },
-  {
-    title: "Bell Jets",
-    description: "Serene and virtually splash-free. Cast from premium bronze and brass, this adjustable nozzle delivers a crystal-clear, wind-resistant sheet of water in the elegant shape of a bell.",
-    icon: Bell,
-    image: IMAGES.waterFeatures.bell,
-  },
-  {
-    title: "Dandelion Spheres",
-    description: "An elegant, multi-directional display. These innovative nozzles create captivating, perfectly spherical water patterns that brilliantly capture integrated LED lighting.",
-    icon: Aperture,
-    image: IMAGES.waterFeatures.dandelion,
-  },
-  {
-    title: "Bubbler Jets",
-    description: "Engineered for tranquil indoor and outdoor environments, these high-quality nozzles provide a highly aesthetic look accompanied by a gentle, soothing acoustic presence.",
-    icon: Droplets,
-    image: IMAGES.waterFeatures.bubbler,
-  },
-  {
-    title: "Architectural Water Curtains",
-    description: "Delivering a seamless, cascading sheet of water, these features serve as stunning spatial dividers or focal points, blending ambient sound with captivating modern design.",
-    icon: ArrowDown,
-    image: IMAGES.waterFeatures.curtains,
-  },
-  {
-    title: "Laminar Jumping Jets",
-    description: "Creating a flawless, glass-like rod of water that arched gracefully into the air, these jets add a dramatic, interactive element with optional RGB lighting synchronization.",
-    icon: Activity,
-    image: IMAGES.waterFeatures.laminar,
-  },
-  {
-    title: "Tiered Cascade Fountains",
-    description: "A testament to classic architectural beauty, cascading tiered fountains produce a rich, highly visible water flow that significantly enhances the prestige of grand entrances.",
-    icon: Layers,
-    image: IMAGES.waterFeatures.tiered,
-  },
-  {
-    title: "Floating Musical Fountains",
-    description: "Perfect for lakes and large water bodies, these dynamic floating systems offer fully choreographed displays, synchronizing soaring water patterns with majestic music and light.",
-    icon: Music,
-    image: IMAGES.waterFeatures.musical,
-  },
-];
+// Icon for each fountain card position
+const ICONS = [ArrowUp, Cloud, Bell, Aperture, Droplets, ArrowDown, Activity, Layers, Music];
 
 export default function WaterFeatures() {
+  const c = usePageContent(waterFeaturesPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const signatureCollection = c.list('collection.items').map((item, i) => ({
+    title: item.title,
+    description: item.description,
+    image: pageImage(item.image),
+    icon: ICONS[i % ICONS.length],
+  }));
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -101,8 +56,8 @@ export default function WaterFeatures() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src={IMAGES.waterFeatures.hero}
-            alt="Architectural Waterscape"
+            src={c.image('hero.image')}
+            alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-80"
           />
           {/* Left-side vignette so text stays readable */}
@@ -117,7 +72,7 @@ export default function WaterFeatures() {
             transition={{ duration: 1.2, ease: "easeOut" }}
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-light text-white dark:text-brand-gold leading-none mb-6"
           >
-            The<br />Aquascape<br />Experience.
+            <Lines text={c.text('hero.title')} />
           </motion.h1>
 
           {/* Gold rule */}
@@ -134,7 +89,7 @@ export default function WaterFeatures() {
             transition={{ duration: 1, delay: 0.9 }}
             className="text-base md:text-lg font-light text-slate-200 leading-relaxed max-w-sm"
           >
-            Bespoke fountains, waterfalls, and architectural waterscapes for commercial and residential spaces.
+            {c.text('hero.subtitle')}
           </motion.p>
         </div>
 
@@ -161,7 +116,7 @@ export default function WaterFeatures() {
             transition={{ duration: 0.8 }}
             className="text-3xl md:text-5xl font-display font-bold tracking-tight text-[#0a5c86] dark:text-white mb-10"
           >
-            End-to-End <span className="font-serif italic font-normal text-cyan-700 dark:text-white">Waterscape Construction</span>
+            {c.text('statement.heading')} <span className="font-serif italic font-normal text-cyan-700 dark:text-white">{c.text('statement.highlight')}</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -170,7 +125,7 @@ export default function WaterFeatures() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed font-light"
           >
-            Elevate the architectural finesse of your property with custom aquatic features. Recognized as India’s premier manufacturer and contractor for waterscapes, Crystal Pools specializes in the design and construction of breathtaking fountains, indoor and outdoor waterfalls, and immersive rain dance installations. From striking entrance fountains to serene indoor cascades, we engineer water features in any scale, shape, or configuration. Our dedicated team assumes absolute responsibility for the entire construction lifecycle, expertly managing structural formwork, complex plumbing, electrical integration, premium tile finishing, and flawless waterproofing.
+            {c.text('statement.text')}
           </motion.p>
         </div>
       </section>
@@ -179,11 +134,11 @@ export default function WaterFeatures() {
       <section className="py-24 md:py-32 bg-white dark:bg-[#09090b]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-16 text-center md:text-left">
           <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-[#0a5c86] dark:text-white mb-4">
-            Our Signature Collection: <br className="hidden md:block" />
-            <span className="font-serif italic font-normal text-cyan-700 dark:text-white">Precision Fountain Jets</span>
+            {c.text('collection.heading')} <br className="hidden md:block" />
+            <span className="font-serif italic font-normal text-cyan-700 dark:text-white">{c.text('collection.highlight')}</span>
           </h2>
           <p className="text-lg text-slate-500 dark:text-slate-400 tracking-wide uppercase max-w-2xl">
-            Engineered for high efficiency, durability, and spectacular visual impact.
+            {c.text('collection.intro')}
           </p>
         </div>
 
@@ -241,9 +196,9 @@ export default function WaterFeatures() {
       {/* 4. The Call to Action (The Final Anchor) */}
       <section className="py-32 md:py-48 px-6 lg:px-8 bg-[#EEF5FF] dark:bg-[#060F1A] text-center">
         <div className="flex flex-col items-center">
-          <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6">Let's build together</p>
+          <p className="text-xs tracking-[0.3em] uppercase font-bold text-[#f9c80e] mb-6">{c.text('cta.eyebrow')}</p>
           <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-[#0a5c86] dark:text-white mb-12">
-            Elevate Your Landscape.
+            {c.text('cta.heading')}
           </h2>
           <Link
             to="/contact-swimming-pool-contractor#inquiry"
@@ -251,7 +206,7 @@ export default function WaterFeatures() {
           >
             <span className="absolute inset-0 w-full h-full bg-[#0a5c86] dark:bg-[#38bdf8] translate-y-[101%] group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
             <span className="relative z-10 group-hover:text-white dark:group-hover:text-slate-900 transition-colors duration-300 font-medium">
-              Consult Our Waterscape Engineers
+              {c.text('cta.button')}
             </span>
           </Link>
         </div>

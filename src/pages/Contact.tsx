@@ -4,7 +4,9 @@ import { motion } from 'motion/react';
 import { Send, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import ContactMap from '../components/ContactMap';
-import { IMAGES } from '../config/images';
+import { supabase } from '../lib/supabase';
+import { usePageContent } from '../lib/pageContent';
+import { contactPage } from '../content/pages/contact';
 
 import LiquidWaterEffect from '../components/LiquidWaterEffect';
 import ContactFAQSection from '../components/ContactFAQSection';
@@ -38,16 +40,17 @@ function validate(f: FormFields): Partial<Record<keyof FormFields, string>> {
 }
 
 export default function Contact() {
-  usePageMeta(
-    'Contact Crystal Pools — Get a Free Quote',
-    'Reach out to Crystal Pools, a trusted swimming pool consultant and contractor in Pune, for luxury pool construction, renovation, and equipment across Pune, Mumbai, Nashik, and all India. Call or send an inquiry today.',
-  );
+  const c = usePageContent(contactPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'), c.image('hero.image'));
+  const projectTypes = c.list('form.projectTypes').map(p => p.option).filter(Boolean);
 
   const { hash } = useLocation();
 
   const [fields, setFields]   = useState<FormFields>(EMPTY_FORM);
   const [errors, setErrors]   = useState<Partial<Record<keyof FormFields, string>>>({});
   const [status, setStatus]   = useState<FormStatus>('idle');
+  // Specific message from the server (e.g. the spam limit); otherwise the generic error is shown
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -62,26 +65,49 @@ export default function Contact() {
     const fieldErrors = validate(fields);
     if (Object.keys(fieldErrors).length > 0) { setErrors(fieldErrors); return; }
 
+    // Honeypot: real visitors never see this field, bots fill it in.
+    const honeypot = (e.currentTarget.elements.namedItem('company') as HTMLInputElement | null)?.value;
+    if (honeypot) {
+      setStatus('success');
+      setFields(EMPTY_FORM);
+      return;
+    }
+
     setStatus('submitting');
+    setErrorMessage(null);
     try {
-      const res = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          access_key: import.meta.env.VITE_WEB3FORMS_KEY ?? '',
-          subject: `New Pool Inquiry — ${fields.projectType}`,
-          ...fields,
-        }),
+      // Save the lead — this is what appears in the admin panel.
+      const { error } = await supabase.from('leads').insert({
+        name: fields.name.trim(),
+        email: fields.email.trim(),
+        phone: fields.phone.trim(),
+        project_type: fields.projectType,
+        message: fields.message.trim(),
+        source_page: window.location.pathname,
       });
-      const data = await res.json();
-      if (data.success) {
-        setStatus('success');
-        setFields(EMPTY_FORM);
-        setErrors({});
-      } else {
-        setStatus('error');
+      if (error) throw error;
+
+      // Email notification to the sales inbox (best effort; the lead is already saved).
+      const web3formsKey = import.meta.env.VITE_WEB3FORMS_KEY;
+      if (web3formsKey) {
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            access_key: web3formsKey,
+            subject: `New Pool Inquiry — ${fields.projectType}`,
+            ...fields,
+          }),
+        }).catch(() => {});
       }
-    } catch {
+
+      setStatus('success');
+      setFields(EMPTY_FORM);
+      setErrors({});
+    } catch (err) {
+      // Database rate-limit errors (code P0001) carry a message written for visitors
+      const e = err as { code?: string; message?: string };
+      setErrorMessage(e?.code === 'P0001' && e.message ? e.message : null);
       setStatus('error');
     }
   };
@@ -105,8 +131,8 @@ export default function Contact() {
       <section className="relative min-h-screen pt-24 pb-12 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={IMAGES.services.swimmingPool} 
-            alt="Luxury Pool at Sunset" 
+            src={c.image('hero.image')} 
+            alt={c.text('hero.alt')} 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-[#070d14] dark:to-[#070d14] bg-[#f8fcfd]/0 dark:bg-transparent"></div>
@@ -119,8 +145,8 @@ export default function Contact() {
             viewport={{ once: true }}
             className="text-3xl md:text-5xl lg:text-7xl font-display font-bold text-white dark:text-brand-gold mb-6 leading-[1.2] drop-shadow-lg"
           >
-            Let's Build Your<br />
-            <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-[80px]">Dream Pool.</span>
+            {c.text('hero.title')}<br />
+            <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-[80px]">{c.text('hero.highlight')}</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -129,7 +155,7 @@ export default function Contact() {
             transition={{ delay: 0.2 }}
             className="text-xl md:text-2xl text-white font-medium drop-shadow-xl"
           >
-            Reach out to our experts across India for luxury pool construction, renovation, and premium equipment.
+            {c.text('hero.subtitle')}
           </motion.p>
         </div>
       </section>
@@ -158,8 +184,8 @@ export default function Contact() {
                 viewport={{ once: true }}
                 className="text-5xl md:text-6xl lg:text-7xl font-serif text-white mb-6 drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)] leading-tight"
               >
-                Dive into your<br/>
-                <span className="italic text-cyan-100 font-light">dream project.</span>
+                {c.text('inquiry.heading')}<br/>
+                <span className="italic text-cyan-100 font-light">{c.text('inquiry.highlight')}</span>
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -168,7 +194,7 @@ export default function Contact() {
                 transition={{ delay: 0.1 }}
                 className="text-lg md:text-xl text-cyan-50 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] max-w-lg mx-auto lg:mx-0 font-sans font-light leading-relaxed"
               >
-                Reach out to our experts for luxury pool construction, renovation, and premium equipment.
+                {c.text('inquiry.text')}
               </motion.p>
             </div>
 
@@ -183,8 +209,8 @@ export default function Contact() {
               <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent opacity-50 pointer-events-none"></div>
 
               <div className="text-center sm:text-left mb-8 relative z-10">
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">Send an Inquiry</h3>
-                <p className="text-cyan-100 text-sm md:text-base font-light">Fill out the form below and our team will get back to you promptly.</p>
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">{c.text('form.title')}</h3>
+                <p className="text-cyan-100 text-sm md:text-base font-light">{c.text('form.subtitle')}</p>
               </div>
 
               {/* Success state */}
@@ -195,9 +221,9 @@ export default function Contact() {
                   className="flex flex-col items-center justify-center py-12 gap-4 text-center relative z-10"
                 >
                   <CheckCircle className="w-14 h-14 text-emerald-400" />
-                  <h4 className="text-xl font-display font-bold text-white">Inquiry Sent!</h4>
+                  <h4 className="text-xl font-display font-bold text-white">{c.text('form.successTitle')}</h4>
                   <p className="text-cyan-100 text-sm font-light max-w-xs">
-                    Thank you — our team will get back to you within 24 hours.
+                    {c.text('form.successText')}
                   </p>
                   <button
                     onClick={() => setStatus('idle')}
@@ -212,9 +238,15 @@ export default function Contact() {
                   {status === 'error' && (
                     <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
                       <AlertCircle className="w-5 h-5 shrink-0" />
-                      Something went wrong. Please try again or contact us directly.
+                      {errorMessage ?? c.text('form.error')}
                     </div>
                   )}
+
+                  {/* Honeypot (spam trap) — hidden from people and screen readers */}
+                  <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
+                    <label htmlFor="company">Company</label>
+                    <input type="text" id="company" name="company" tabIndex={-1} autoComplete="off" defaultValue="" />
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                     <div>
@@ -274,11 +306,9 @@ export default function Contact() {
                         className={`w-full px-5 py-3.5 rounded-2xl border bg-white/5 text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all outline-none shadow-sm appearance-none [&>option]:bg-slate-900 ${errors.projectType ? 'border-red-400/60' : 'border-white/20'}`}
                       >
                         <option value="" disabled className="text-slate-500">Select Type</option>
-                        <option value="New Pool Construction">New Pool Construction</option>
-                        <option value="Renovation">Renovation</option>
-                        <option value="Premium Equipment">Premium Equipment</option>
-                        <option value="Commercial Pool">Commercial Pool</option>
-                        <option value="Other">Other</option>
+                        {projectTypes.map(option => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
                       </select>
                       {errors.projectType && <p id="type-error" className="mt-1 text-xs text-red-300">{errors.projectType}</p>}
                     </div>
@@ -309,7 +339,7 @@ export default function Contact() {
                       {status === 'submitting' ? (
                         <><Loader size={20} className="mr-3 animate-spin" />Sending…</>
                       ) : (
-                        <><Send size={20} className="mr-3" />Submit Inquiry</>
+                        <><Send size={20} className="mr-3" />{c.text('form.submit')}</>
                       )}
                     </button>
                   </div>

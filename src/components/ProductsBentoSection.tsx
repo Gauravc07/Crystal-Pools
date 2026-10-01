@@ -3,30 +3,11 @@ import { motion, useInView, type Variants } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import TiltCard from './TiltCard';
-import { IMAGES } from '../config/images';
+import { usePageContent, pageImage } from '../lib/pageContent';
+import { homePage } from '../content/pages/home';
 
-const products = [
-  {
-    id: 'equipment',
-    num: '01',
-    category: 'Filtration & Circulation',
-    title: 'Equipment Catalogue',
-    description:
-      'Commercial-grade sand filters, high-efficiency pumps, and intelligent disinfection systems — the backbone of every world-class pool.',
-    image: IMAGES.equipment.hero,
-    path: '/products',
-  },
-  {
-    id: 'specialty',
-    num: '02',
-    category: 'Wellness & Lifestyle',
-    title: 'Specialty Installations',
-    description:
-      'Jacuzzis, sunbath decks, and premium adhesive systems crafted for total aquatic wellness.',
-    image: IMAGES.specialty.hero,
-    path: '/products/specialty-installations',
-  },
-];
+// Link for each card position (text and images are edited in the admin panel).
+const PRODUCT_PATHS = ['/products', '/products/specialty-installations'];
 
 const containerVariants: Variants = {
   hidden: {},
@@ -45,6 +26,16 @@ const itemVariants: Variants = {
 export default function ProductsBentoSection() {
   const containerRef = useRef<HTMLElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.1 });
+  const c = usePageContent(homePage);
+  const products = c.list('products.items').map((item, i) => ({
+    id: String(i),
+    num: String(i + 1).padStart(2, '0'),
+    category: item.category,
+    title: item.title,
+    description: item.description,
+    image: pageImage(item.image),
+    path: PRODUCT_PATHS[i] ?? '/products',
+  }));
 
   return (
     <section
@@ -55,10 +46,10 @@ export default function ProductsBentoSection() {
         {/* Section header */}
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16 px-4">
           <h2 className="text-xs md:text-sm font-bold text-[#f9c80e] uppercase tracking-[0.3em] mb-3 md:mb-4">
-            Premium Range
+            {c.text('products.eyebrow')}
           </h2>
           <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0a5c86] dark:text-white font-display">
-            Our Products
+            {c.text('products.heading')}
           </h3>
         </div>
 
@@ -145,7 +136,7 @@ export default function ProductsBentoSection() {
               text-[#0a5c86] dark:text-white hover:text-[#f9c80e] dark:hover:text-[#f9c80e]
               transition-colors duration-300"
           >
-            View Full Product Range
+            {c.text('products.linkText')}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </motion.div>

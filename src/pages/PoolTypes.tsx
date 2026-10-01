@@ -1,11 +1,11 @@
 import PoolBentoSection from '../components/PoolBentoSection';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { usePageContent } from '../lib/pageContent';
+import { poolTypesPage } from '../content/pages/hubs';
 
 export default function PoolTypes() {
-  usePageMeta(
-    'Swimming Pool Types',
-    'Explore all type of swimming pools in India — private, commercial, competition, vanishing edge, overflow, skimmer, and readymade FRP pools — from Crystal Pools.',
-  );
+  const c = usePageContent(poolTypesPage);
+  usePageMeta(c.text('seo.title'), c.text('seo.description'));
   return (
     <div className="w-full">
       <PoolBentoSection />
