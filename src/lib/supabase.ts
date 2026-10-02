@@ -2,9 +2,15 @@ import { createClient } from '@supabase/supabase-js';
 
 // Public website client: publishable key only, no login/session.
 // Row Level Security limits it to reading published content and submitting enquiries.
+// If the keys are missing (e.g. not set on the host), don't crash: requests simply fail and
+// every page falls back to its built-in content.
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+if (!url || !key) console.error('Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY). Showing built-in content only.');
+
 export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  url || 'https://not-configured.invalid',
+  key || 'not-configured',
   { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
 );
 
