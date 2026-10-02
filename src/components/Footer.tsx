@@ -38,9 +38,7 @@ export default function Footer() {
           {/* Col 1: Logo & Brand */}
           <div className="flex flex-col items-start">
             <Link to="/" className="flex items-center space-x-3 mb-4 group">
-              <div className="w-14 h-14 flex items-center justify-center transform transition-transform group-hover:scale-105">
-                <Logo className="w-full h-full" />
-              </div>
+              <Logo className="w-14 h-14 shrink-0 transform transition-transform group-hover:scale-105" />
               <span className="font-display font-bold text-xl tracking-tight text-white">Crystal Pools</span>
             </Link>
             <p className="text-slate-300 text-sm leading-relaxed mb-4">

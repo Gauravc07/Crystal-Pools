@@ -296,10 +296,8 @@ export default function Navbar() {
         >
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0" style={{ transform: 'translateZ(30px)' }}>
-            <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center mr-2 shrink-0 bg-white rounded-full p-1">
-              <Logo className="w-full h-full text-[#0a5c86]" />
-            </div>
-            <span className="text-slate-50 font-bold text-base sm:text-lg tracking-wide lg:hidden">Crystal Pools</span>
+            <Logo className="w-10 h-10 md:w-11 md:h-11 mr-2.5 shrink-0" />
+            <span className="text-slate-50 font-display font-bold text-base sm:text-lg tracking-wide whitespace-nowrap lg:hidden xl:inline xl:mr-3">Crystal Pools</span>
           </Link>
 
           {/* Desktop links — hidden below lg */}

@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 export function Wordmark({ light = false }: { light?: boolean }) {
   return (
     <div className="flex items-center gap-3">
-      <div className={`shrink-0 rounded-xl ${light ? 'bg-white p-1 shadow-sm' : ''}`}>
-        <img src="/logo.png" alt="Crystal Pools" className="w-11 h-11 object-contain" />
+      <div className="shrink-0 rounded-xl bg-white p-1 shadow-sm">
+        <img src="/logo-mark.png" alt="Crystal Pools" className="w-10 h-10 object-contain" />
       </div>
       <div className="leading-tight">
         <div className={`font-display font-semibold ${light ? 'text-white' : 'text-slate-900'}`}>Crystal Pools</div>
