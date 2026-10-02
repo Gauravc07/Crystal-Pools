@@ -21,6 +21,16 @@ export function usePageMeta(title: string, description: string, image?: string |
     setMeta('og:description', description, 'property');
     setMeta('twitter:title', `${title} | ${SITE_NAME}`, 'property');
     setMeta('twitter:description', description, 'property');
+    // Canonical URL for this page (on the www domain, without query strings)
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    canonical.href = `https://www.crystalpools.in${window.location.pathname.replace(/\/+$/, '') || '/'}`;
+    setMeta('og:url', canonical.href, 'property');
+
     if (image) {
       const absolute = new URL(image, window.location.origin).href;
       setMeta('og:image', absolute, 'property');
