@@ -17,7 +17,7 @@ export const homePage = {
       fields: {
         'hero.lead': { type: 'text', label: 'Headline (first line)', default: 'We build' },
         'hero.words': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Rotating words',
           help: 'These type out one after another in the headline.',
           item: { word: { type: 'text', label: 'Word / phrase' } },
@@ -59,7 +59,7 @@ export const homePage = {
       title: 'Company stats',
       fields: {
         'stats.items': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Counters',
           help: 'Number must be digits only, e.g. 2000. Suffix is optional, e.g. +',
           item: {
@@ -136,10 +136,10 @@ export const homePage = {
         'clients.eyebrow': { type: 'text', label: 'Small label', default: 'Trusted Worldwide' },
         'clients.heading': { type: 'text', label: 'Heading', default: 'Our Esteemed Clients' },
         'clients.items': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Client names',
-          help: 'The first half scrolls in the top row, the rest in the bottom row.',
-          item: { name: { type: 'text', label: 'Client name' } },
+          help: 'Add, remove or reorder clients. The first half scrolls in the top row, the rest in the bottom row. Logos look best as transparent PNG/SVG.',
+          item: { name: { type: 'text', label: 'Client name' }, logo: { type: 'image', label: 'Logo (optional — an icon is shown if empty)' } },
           default: [
             { name: 'Marriott' }, { name: 'Hilton' }, { name: 'Taj Hotels' }, { name: 'Ritz-Carlton' }, { name: 'Oberoi' },
             { name: 'Club Mahindra' }, { name: 'Four Seasons' }, { name: 'Hyatt' }, { name: 'ITC Hotels' }, { name: 'Leela Palaces' },

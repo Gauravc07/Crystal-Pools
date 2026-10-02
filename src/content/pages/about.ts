@@ -38,7 +38,7 @@ export const aboutPage = {
         'cornerstones.heading': { type: 'text', label: 'Heading', default: 'Our Cornerstones' },
         'cornerstones.intro': { type: 'text', label: 'Intro', default: 'The principles that guide our every endeavor.' },
         'cornerstones.items': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Cornerstones',
           item: { title: { type: 'text', label: 'Title' }, text: { type: 'text', label: 'Description', multiline: true } },
           default: [
@@ -66,7 +66,7 @@ export const aboutPage = {
         'leadership.heading': { type: 'text', label: 'Heading', default: 'The Architects of Fluidity' },
         'leadership.intro': { type: 'text', label: 'Intro', multiline: true, default: 'Behind every structure of technical perfection is a foundation of human vision. Meet the leadership driving the future of aquatic architecture.' },
         'leadership.people': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Leaders',
           item: {
             name: { type: 'text', label: 'Name' },
@@ -88,8 +88,8 @@ export const aboutPage = {
         'journey.heading': { type: 'text', label: 'Heading', default: 'Our Journey' },
         'journey.intro': { type: 'text', label: 'Intro', default: 'A legacy built on precision, spanning decades of redefining aquatic architecture.' },
         'journey.items': {
-          type: 'list',
-          label: 'Milestones (5)',
+          type: 'list', resizable: true,
+          label: 'Milestones',
           item: {
             year: { type: 'text', label: 'Year' },
             title: { type: 'text', label: 'Title' },

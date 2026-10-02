@@ -13,6 +13,7 @@ import type { Profile } from './lib/supabase';
 
 const PageList = lazy(() => import('./pages/content/PageList'));
 const PageEditor = lazy(() => import('./pages/content/PageEditor'));
+const Media = lazy(() => import('./pages/Media'));
 const BlogList = lazy(() => import('./pages/blogs/BlogList'));
 const BlogEditor = lazy(() => import('./pages/blogs/BlogEditor'));
 const ProjectList = lazy(() => import('./pages/projects/ProjectList'));
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="pages" element={<PageList />} />
               <Route path="pages/:id" element={<PageEditor />} />
             </Route>
+            <Route path="media" element={<Media />} />
             <Route element={<RequireAccess check={p => can(p, 'blogs')} />}>
               <Route path="blogs" element={<BlogList />} />
               <Route path="blogs/:id" element={<BlogEditor />} />

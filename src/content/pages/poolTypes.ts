@@ -47,7 +47,7 @@ function poolTypeSchema(d: PoolTypeDefaults) {
           'craft.heading': { type: 'text', label: 'Heading', default: d.craft.heading, multiline: true, help: 'Press Enter for a line break.' },
           'craft.intro': { type: 'text', label: 'Intro', default: d.craft.intro, multiline: true },
           'craft.features': {
-            type: 'list',
+            type: 'list', resizable: true,
             label: 'Feature points',
             item: {
               title: { type: 'text', label: 'Title' },

@@ -31,8 +31,8 @@ export const specialtyPage = {
         'adhesives.heading': { type: 'text', label: 'Heading', default: 'Advanced Tile Adhesive & Grout Systems' },
         'adhesives.intro': { type: 'text', label: 'Intro', multiline: true, default: 'The foundation of a flawless, enduring finish lies beneath the surface. Crystal Pools provides high-performance, polymer-modified white adhesives specifically engineered for the permanent installation of premium glass mosaics and tiles.' },
         'adhesives.benefits': {
-          type: 'list',
-          label: 'Benefit cards (3)',
+          type: 'list', resizable: true,
+          label: 'Benefit cards',
           item: { title: { type: 'text', label: 'Title' }, text: { type: 'text', label: 'Text', multiline: true } },
           default: [
             { title: 'Superior Adhesion', text: 'Highly flexible, non-shrink formulas that guarantee a permanent bond.' },

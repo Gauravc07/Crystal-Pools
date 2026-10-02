@@ -45,7 +45,7 @@ export const accessoriesPage = {
         'ladders.intro': { type: 'text', label: 'Intro', multiline: true, default: "Ladders are a critical safety and accessibility parameter for any aquatic space. Fabricated from premium stainless steel and high-grade polymers, our ladders are engineered to provide secure, effortless entry and exit. We offer customizable finishes to seamlessly match your pool's interior lining and architectural style." },
         'ladders.featuresHeading': { type: 'text', label: 'Features heading', default: 'Core Features' },
         'ladders.features': {
-          type: 'list', label: 'Features', item: feature,
+          type: 'list', resizable: true, label: 'Features', item: feature,
           default: [
             { title: 'Engineered Safety', desc: 'High-traction, non-skid grips on all steps to prevent slipping.' },
             { title: 'Ergonomic Design', desc: 'Appropriately spaced, comfortable steps with secure handrails.' },
@@ -82,7 +82,7 @@ export const accessoriesPage = {
         'pumps.seriesHeading': { type: 'text', label: 'Series heading', default: 'The Pump Series' },
         'pumps.seriesText': { type: 'text', label: 'Series text', multiline: true, default: 'A heavy-duty, self-priming pump designed to operate flawlessly under a vast array of conditions.' },
         'pumps.features': {
-          type: 'list', label: 'Features', item: feature,
+          type: 'list', resizable: true, label: 'Features', item: feature,
           default: [
             { title: 'Durable & Certified', desc: 'TUV GS Certified and rigorously pressure-tested prior to shipment.' },
             { title: 'Easy Maintenance', desc: 'Features a see-through lid, a large strainer, and easy-to-remove drain plugs for fast winterization.' },
@@ -92,7 +92,7 @@ export const accessoriesPage = {
         },
         'pumps.tableHeading': { type: 'text', label: 'Table heading', default: 'Pump Specifications' },
         'pumps.specs': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Specification table rows',
           item: {
             code: { type: 'text', label: 'Code' }, desc: { type: 'text', label: 'Description' },
@@ -118,7 +118,7 @@ export const accessoriesPage = {
         'filters.intro': { type: 'text', label: 'Intro', multiline: true, default: 'Recognized for their immense durability and reliance on the latest European technology, our laminated sand filters are the industry standard for maintaining crystal-clear water.' },
         'filters.featuresHeading': { type: 'text', label: 'Features heading', default: 'Filter Architecture & Features' },
         'filters.features': {
-          type: 'list', label: 'Features', item: feature,
+          type: 'list', resizable: true, label: 'Features', item: feature,
           default: [
             { title: 'Premium Construction', desc: 'Manufactured from heavy-duty polyester resin and fiberglass.' },
             { title: 'High-Gloss Finish', desc: 'An external colored-gel coating guarantees a watertight seal while providing a sleek, high-gloss surface.' },
@@ -129,7 +129,7 @@ export const accessoriesPage = {
         },
         'filters.lsmHeading': { type: 'text', label: 'Side-mount table heading', default: 'LSM Series – Side Mount Specifications' },
         'filters.lsmSpecs': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Side-mount table rows',
           item: {
             code: { type: 'text', label: 'Code' }, desc: { type: 'text', label: 'Description' }, sand: { type: 'text', label: 'Sand (Kgs)' },
@@ -148,7 +148,7 @@ export const accessoriesPage = {
         },
         'filters.ltmHeading': { type: 'text', label: 'Top-mount table heading', default: 'LTM Series – Top Mount Specifications' },
         'filters.ltmSpecs': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Top-mount table rows',
           item: {
             code: { type: 'text', label: 'Code' }, desc: { type: 'text', label: 'Description' }, sand: { type: 'text', label: 'Sand (Kgs)' },

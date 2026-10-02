@@ -1,4 +1,4 @@
-import { FileText, Image, Inbox, LayoutDashboard, LayoutTemplate, MessageSquareQuote, MonitorPlay, Settings, Users } from 'lucide-react';
+import { FileText, Image, Images, Inbox, LayoutDashboard, LayoutTemplate, MessageSquareQuote, MonitorPlay, Settings, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { can, canEditAnyPage } from './lib/supabase';
 import type { Profile } from './lib/supabase';
@@ -17,6 +17,7 @@ const superAdmin = (p: Profile | null | undefined) => !!p?.is_active && p.role =
 export const NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview of enquiries and content.', visible: p => !!p?.is_active },
   { to: '/pages', label: 'Pages', icon: LayoutTemplate, description: 'Edit the text and images on each website page.', visible: canEditAnyPage },
+  { to: '/media', label: 'Media', icon: Images, description: 'All website images by page, plus a shared image library.', visible: p => !!p?.is_active },
   { to: '/blogs', label: 'Blogs', icon: FileText, description: 'Write, edit and publish blog posts with SEO settings.', visible: p => can(p, 'blogs') },
   { to: '/projects', label: 'Projects', icon: Image, description: 'Manage completed projects and their photo galleries.', visible: p => can(p, 'projects') },
   { to: '/testimonials', label: 'Testimonials', icon: MessageSquareQuote, description: 'Add and edit client reviews and ratings.', visible: p => can(p, 'testimonials') },

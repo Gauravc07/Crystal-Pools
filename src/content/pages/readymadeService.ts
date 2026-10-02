@@ -37,8 +37,8 @@ export const readymadeServicePage = {
       title: 'Advantages',
       fields: {
         'advantages.items': {
-          type: 'list',
-          label: 'Advantages (5)',
+          type: 'list', resizable: true,
+          label: 'Advantages',
           item: {
             titleLine1: { type: 'text', label: 'Title' },
             titleLine2: { type: 'text', label: 'Title (gold italic line)' },

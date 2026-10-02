@@ -22,7 +22,8 @@ export default function Gallery() {
   const { isDarkMode } = useTheme();
   const c = usePageContent(galleryPage);
   usePageMeta(c.text('seo.title'), c.text('seo.description'));
-  const photos = c.list('grid.images').slice(0, spans.length);
+  // Photos can be added in the admin; the grid pattern repeats every 10 photos
+  const photos = c.list('grid.images').filter(p => p.light);
 
   return (
     <div className="bg-[#f8fcfd] dark:bg-[#070d14] min-h-screen pt-24 pb-20">
@@ -60,7 +61,7 @@ export default function Gallery() {
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
                 }}
-                className={`relative overflow-hidden rounded-[20px] group cursor-pointer bg-slate-200 dark:bg-slate-800 ${spans[idx]}`}
+                className={`relative overflow-hidden rounded-[20px] group cursor-pointer bg-slate-200 dark:bg-slate-800 ${spans[idx % spans.length]}`}
               >
                 {/* Light image */}
                 <img

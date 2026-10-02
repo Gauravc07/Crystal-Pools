@@ -12,17 +12,19 @@ import {
   Palmtree
 } from 'lucide-react';
 
-import { usePageContent } from '../lib/pageContent';
+import { pageImage, usePageContent } from '../lib/pageContent';
 import { homePage } from '../content/pages/home';
 
 // Decorative icons, cycled across the client names edited in the admin panel.
 const ICONS = [Building2, Hotel, Landmark, Home, Castle, Tent, Trees, Warehouse, MapPin, Landmark];
 
-const LogoCard: FC<{ Icon: ElementType, name: string }> = ({ Icon, name }) => {
+const LogoCard: FC<{ Icon: ElementType, name: string, logo?: string }> = ({ Icon, name, logo }) => {
   return (
     <div className="flex items-center space-x-3 px-12 py-6 cursor-pointer group transition-all duration-300">
       <div className="flex items-center space-x-3 opacity-60 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500">
-        <Icon className="w-8 h-8 text-[#0a5c86] dark:text-white" />
+        {logo
+          ? <img src={logo} alt={`${name} logo`} loading="lazy" className="h-10 w-auto max-w-[140px] object-contain" />
+          : <Icon className="w-8 h-8 text-[#0a5c86] dark:text-white" />}
         <span className="text-xl font-display font-bold text-slate-800 dark:text-slate-300 tracking-tight whitespace-nowrap">
           {name}
         </span>
@@ -35,7 +37,7 @@ export default function EsteemedClientsSection() {
   const c = usePageContent(homePage);
   const logos = c.list('clients.items')
     .filter(item => item.name.trim())
-    .map((item, i) => ({ id: i, Icon: ICONS[i % ICONS.length], name: item.name }));
+    .map((item, i) => ({ id: i, Icon: ICONS[i % ICONS.length], name: item.name, logo: item.logo ? pageImage(item.logo) : undefined }));
   const half = Math.ceil(logos.length / 2);
   const topRowLogos = logos.slice(0, half);
   const bottomRowLogos = logos.slice(half).length ? logos.slice(half) : topRowLogos;
@@ -57,7 +59,7 @@ export default function EsteemedClientsSection() {
         <div className="flex overflow-hidden">
           <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
             {[...topRowLogos, ...topRowLogos, ...topRowLogos, ...topRowLogos].map((logo, index) => (
-              <LogoCard key={`top-${index}`} Icon={logo.Icon} name={logo.name} />
+              <LogoCard key={`top-${index}`} Icon={logo.Icon} name={logo.name} logo={logo.logo} />
             ))}
           </div>
         </div>
@@ -66,7 +68,7 @@ export default function EsteemedClientsSection() {
         <div className="flex overflow-hidden">
           <div className="flex w-max animate-marquee-reverse hover:[animation-play-state:paused]">
              {[...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos].map((logo, index) => (
-              <LogoCard key={`bottom-${index}`} Icon={logo.Icon} name={logo.name} />
+              <LogoCard key={`bottom-${index}`} Icon={logo.Icon} name={logo.name} logo={logo.logo} />
             ))}
           </div>
         </div>

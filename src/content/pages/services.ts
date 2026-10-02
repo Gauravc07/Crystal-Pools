@@ -41,7 +41,7 @@ export const turnkeyPage = {
         'philosophy.highlight': { type: 'text', label: 'Heading (second line, italic)', default: 'Unifying Expertise, Eliminating Complexity.' },
         'philosophy.text': { type: 'text', label: 'Text', multiline: true, default: 'Instead of navigating the complexities of multiple vendors for your aquatic vision, you can partner with a single, reliable entity. Crystal Pools offers integrated, turnkey solutions that eliminate multivendor dependency. By choosing an end-to-end partnership, we optimize every facet of your project.\n\nOur integrated approach directly leads to:' },
         'philosophy.benefits': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Benefits',
           item: { title: { type: 'text', label: 'Title' }, description: { type: 'text', label: 'Description', multiline: true } },
           default: [
@@ -60,8 +60,8 @@ export const turnkeyPage = {
         'scope.highlight': { type: 'text', label: 'Heading (italic part)', default: 'Project Scope' },
         'scope.intro': { type: 'text', label: 'Intro', multiline: true, default: 'Our partnership encompasses anything and everything related to swimming pools, from the initial consultation to decommissioning. We manage the entire lifecycle with single-point accountability.' },
         'scope.items': {
-          type: 'list',
-          label: 'Scope steps (6)',
+          type: 'list', resizable: true,
+          label: 'Scope steps',
           item: { title: { type: 'text', label: 'Title' }, description: { type: 'text', label: 'Description' } },
           default: [
             { title: 'Design', description: 'Aesthetic visions and robust hydraulic plans.' },
@@ -116,8 +116,8 @@ export const waterFeaturesPage = {
         'collection.highlight': { type: 'text', label: 'Heading (italic part)', default: 'Precision Fountain Jets' },
         'collection.intro': { type: 'text', label: 'Intro', default: 'Engineered for high efficiency, durability, and spectacular visual impact.' },
         'collection.items': {
-          type: 'list',
-          label: 'Fountain types (9)',
+          type: 'list', resizable: true,
+          label: 'Fountain types',
           item: {
             title: { type: 'text', label: 'Title' },
             description: { type: 'text', label: 'Description', multiline: true },
@@ -180,7 +180,7 @@ export const poolTilesPage = {
         'mosaic.p2': { type: 'text', label: 'Paragraph 2', multiline: true, default: 'Crafted from superior raw materials under strict quality control, these tiles offer an exclusive aesthetic grace characterized by brilliant light reflection and vibrant, lasting color.' },
         'mosaic.advantagesHeading': { type: 'text', label: 'Advantages heading', default: 'The Element Mosaics Advantage' },
         'mosaic.advantages': {
-          type: 'list',
+          type: 'list', resizable: true,
           label: 'Advantages',
           item: { title: { type: 'text', label: 'Title' }, description: { type: 'text', label: 'Description', multiline: true } },
           default: [
@@ -269,8 +269,8 @@ export const renovationPage = {
         'scope.eyebrow': { type: 'text', label: 'Small label', default: 'What We Cover' },
         'scope.heading': { type: 'text', label: 'Heading', default: 'Our Renovation Scope' },
         'scope.items': {
-          type: 'list',
-          label: 'Scope cards (4)',
+          type: 'list', resizable: true,
+          label: 'Scope cards',
           item: { title: { type: 'text', label: 'Title' }, description: { type: 'text', label: 'Description', multiline: true } },
           default: [
             { title: 'Aesthetic Transformations', description: 'Replacing worn surfaces with premium glass mosaic tiling, modernizing deck coping, and integrating elegant, energy-efficient underwater lighting.' },

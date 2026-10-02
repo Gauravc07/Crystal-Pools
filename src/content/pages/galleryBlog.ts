@@ -23,8 +23,8 @@ export const galleryPage = {
       title: 'Photo grid',
       fields: {
         'grid.images': {
-          type: 'list',
-          label: 'Photos (10, in grid order)',
+          type: 'list', resizable: true,
+          label: 'Photos (in grid order)',
           help: 'The dark-mode photo is shown when visitors use dark mode; leave it empty to use the light photo.',
           item: {
             light: { type: 'image', label: 'Photo' },

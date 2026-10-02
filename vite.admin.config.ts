@@ -9,6 +9,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: path.resolve(__dirname, 'admin'),
   envDir: __dirname,
+  // Separate dependency cache so the website and admin dev servers can run side by side
+  cacheDir: path.resolve(__dirname, 'node_modules/.vite-admin'),
   publicDir: path.resolve(__dirname, 'admin/public'),
   plugins: [react(), tailwindcss()],
   build: {

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
-import { FileText, RefreshCw, RotateCcw, Trash2, Upload } from 'lucide-react';
+import { FileText, Images, RefreshCw, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { mediaUrl, uploadFile } from '../../lib/storage';
 import { useToast } from '../../components/Toast';
 import { Spinner } from '../../components/ui';
+import LibraryPicker from '../../components/LibraryPicker';
 
 interface Props {
   pageId: string;
@@ -23,6 +24,7 @@ export default function MediaField({ pageId, kind, value, defaultValue, onChange
   const notify = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [picking, setPicking] = useState(false);
   const url = mediaUrl('pages', value);
   const isDefault = value === defaultValue;
 
@@ -68,6 +70,11 @@ export default function MediaField({ pageId, kind, value, defaultValue, onChange
           <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-blue hover:underline">
             {url ? <RefreshCw className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />} {url ? 'Replace' : 'Upload'}
           </button>
+          {kind === 'image' && (
+            <button type="button" onClick={() => setPicking(true)} className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-blue hover:underline">
+              <Images className="w-3.5 h-3.5" /> Choose from library
+            </button>
+          )}
           {!isDefault && defaultValue && (
             <button type="button" onClick={() => onChange(defaultValue)} className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:underline">
               <RotateCcw className="w-3.5 h-3.5" /> Use built-in
@@ -81,6 +88,7 @@ export default function MediaField({ pageId, kind, value, defaultValue, onChange
         </div>
       )}
       <input ref={inputRef} type="file" accept={ACCEPT[kind]} hidden onChange={e => handleFile(e.target.files?.[0])} />
+      {kind === 'image' && <LibraryPicker open={picking} onClose={() => setPicking(false)} onSelect={onChange} />}
     </div>
   );
 }
