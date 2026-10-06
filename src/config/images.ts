@@ -109,8 +109,8 @@ export const IMAGES = {
     dandelion:'/images/services/water-features/dandelion.webp',
     bubbler:  '/images/services/water-features/bubbler-jet-fountain.webp',
     curtains: '/images/services/water-features/water-curtains.webp',
-    laminar:  'https://images.unsplash.com/photo-1543881477-8d022b70f032?auto=format&fit=crop&w=800&q=80',
-    tiered:   'https://images.unsplash.com/photo-1549480017-d7741829e1eb?auto=format&fit=crop&w=800&q=80',
+    laminar:  '/images/services/water-features/laminar-jets.webp',
+    tiered:   '/images/services/water-features/tiered-cascade-fountain.webp',
     musical:  'https://images.unsplash.com/photo-1510006851064-e6056cd0e3a8?auto=format&fit=crop&w=800&q=80',
   },
   specialty: {
