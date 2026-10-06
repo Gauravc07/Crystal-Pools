@@ -32,7 +32,7 @@ npm run db:migrate        # applies supabase/migrations/*.sql (once each)
 
 ## How the admin panel is kept separate
 
-- **Separate app.** `admin/` has its own entry page, Vite config (`vite.admin.config.ts`) and build folder. The website never imports it, so no admin code ships to visitors. The website has no login, no admin link and no `/admin` route.
+- **Separate app.** `admin/` has its own entry page, Vite config (`vite.admin.config.ts`) and build folder. The website never imports it, so no admin code ships to visitors, and the website has no login or link to the admin.
 - **Served at /admin.** The admin is built into `dist/admin` and served at `/admin` by the same Vercel project (see `vercel.json`). It is `noindex` (meta tag and X-Robots-Tag header) and `robots.txt` disallows `/admin`. The website has no link to it.
 - **Real security is in the database.** Every table and storage bucket has Row Level Security. Visitors can only read published content and submit enquiries; everything else depends on the signed-in user's role and permissions.
 
