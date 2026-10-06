@@ -305,6 +305,12 @@ async function startServer() {
     app.use("/assets", express.static(path.join(distPath, "assets"), { immutable: true, maxAge: "1y", index: false }));
     app.use(express.static(distPath, { index: false, maxAge: "7d" }));
 
+    // Admin panel (built into dist/admin): every /admin route loads its app shell
+    const adminHtml = path.join(distPath, "admin", "index.html");
+    app.get(/^\/admin(\/.*)?$/, (req, res) => {
+      res.set({ "X-Robots-Tag": "noindex, nofollow, noarchive", "Cache-Control": "no-cache" }).sendFile(adminHtml);
+    });
+
     app.get('*all', async (req, res) => {
       const site = await getSiteData();
       const known = req.path === "/" || PAGES.some(p => p.path === req.path.replace(/\/+$/, ""));

@@ -5,7 +5,7 @@ export function Wordmark({ light = false }: { light?: boolean }) {
   return (
     <div className="flex items-center gap-3">
       <div className="shrink-0 rounded-xl bg-white p-1 shadow-sm">
-        <img src="/logo-mark.png" alt="Crystal Pools" className="w-10 h-10 object-contain" />
+        <img src={`${import.meta.env.BASE_URL}logo-mark.png`} alt="Crystal Pools" className="w-10 h-10 object-contain" />
       </div>
       <div className="leading-tight">
         <div className={`font-display font-semibold ${light ? 'text-white' : 'text-slate-900'}`}>Crystal Pools</div>
@@ -19,7 +19,7 @@ export function Wordmark({ light = false }: { light?: boolean }) {
 function BrandLogo() {
   return (
     <div className="flex flex-col items-center">
-      <img src="/logo.png" alt="Crystal Pools — Committed to excellence" className="w-44 h-auto" />
+      <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Crystal Pools — Committed to excellence" className="w-44 h-auto" />
       <span className="mt-1 text-xs font-medium uppercase tracking-[0.25em] text-slate-400">Admin Panel</span>
     </div>
   );
