@@ -6,7 +6,7 @@ All content (page text and images, blogs, projects, testimonials, enquiries, ban
 | App | Folder | Dev URL | Build output | Deployed at |
 |---|---|---|---|---|
 | Public website | `src/`, `index.html`, `server.ts` | http://localhost:5173 | `dist/` (+ `dist/server.cjs`) | www.crystalpools.in |
-| Admin panel | `admin/` | http://localhost:5174 | `dist-admin/` | its own host, e.g. admin.crystalpools.in |
+| Admin panel | `admin/` | http://localhost:5174/admin/ | `dist/admin/` | www.crystalpools.in/admin |
 
 ## Setup
 
@@ -22,8 +22,8 @@ npm run db:migrate        # applies supabase/migrations/*.sql (once each)
 |---|---|
 | `npm run dev` | Public website dev server |
 | `npm run dev:admin` | Admin panel dev server |
-| `npm run build` | Builds the website and its Node server |
-| `npm run build:admin` | Builds the admin panel (static files) |
+| `npm run build` | Builds the website, the admin panel (into `dist/admin`) and the Node server |
+| `npm run build:admin` | Builds only the admin panel into `dist/admin` |
 | `npm start` | Runs the production website server (port 3000, or `PORT`) |
 | `npm run db:migrate` | Applies new database migrations |
 | `npm run admin:create -- --email x@y.com --name "Full Name" --role super_admin` | Creates an admin user from the command line (normally done in the panel) |
@@ -33,7 +33,7 @@ npm run db:migrate        # applies supabase/migrations/*.sql (once each)
 ## How the admin panel is kept separate
 
 - **Separate app.** `admin/` has its own entry page, Vite config (`vite.admin.config.ts`) and build folder. The website never imports it, so no admin code ships to visitors. The website has no login, no admin link and no `/admin` route.
-- **Separate host.** Deploy `dist-admin/` to its own domain as a static single-page app (rewrite all paths to `index.html`). It is `noindex` and has its own `robots.txt`; the website's `robots.txt` does not mention it.
+- **Served at /admin.** The admin is built into `dist/admin` and served at `/admin` by the same Vercel project (see `vercel.json`). It is `noindex` (meta tag and X-Robots-Tag header) and `robots.txt` disallows `/admin`. The website has no link to it.
 - **Real security is in the database.** Every table and storage bucket has Row Level Security. Visitors can only read published content and submit enquiries; everything else depends on the signed-in user's role and permissions.
 
 ## Roles and access
