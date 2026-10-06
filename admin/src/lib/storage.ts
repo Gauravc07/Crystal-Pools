@@ -1,7 +1,12 @@
 import { supabase } from './supabase';
 
-/** Public website URL — the website's own images (/images/...) are loaded from there. */
-const PUBLIC_SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://www.crystalpools.in').replace(/\/$/, '');
+/**
+ * Where the website's own images (/images/...) are loaded from. The built admin is served
+ * from the website's domain (/admin), so they are same-origin; the admin dev server is not.
+ */
+const SITE_ASSETS_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_PUBLIC_SITE_URL || 'https://www.crystalpools.in').replace(/\/$/, '')
+  : '';
 
 export type Bucket = 'blog' | 'projects' | 'testimonials' | 'site' | 'pages';
 
@@ -14,7 +19,7 @@ export function isExternal(value: string) {
 export function mediaUrl(bucket: Bucket, value: string | null | undefined): string | null {
   if (!value) return null;
   if (/^https?:\/\//.test(value)) return value;
-  if (value.startsWith('/')) return PUBLIC_SITE_URL + value;
+  if (value.startsWith('/')) return SITE_ASSETS_URL + value;
   return supabase.storage.from(bucket).getPublicUrl(value).data.publicUrl;
 }
 
