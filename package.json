@@ -6,14 +6,14 @@
   "scripts": {
     "dev": "vite",
     "dev:admin": "vite --config vite.admin.config.ts",
-    "build": "vite build && vite build --config vite.admin.config.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "vite build && vite build --config vite.admin.config.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs",
     "build:admin": "vite build --config vite.admin.config.ts",
-    "start": "node --env-file-if-exists=.env dist/server.cjs",
+    "start": "node --env-file-if-exists=.env dist-server/server.cjs",
     "preview": "vite preview",
     "preview:admin": "vite preview --config vite.admin.config.ts",
     "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
     "admin:create": "node --env-file=.env scripts/create-admin.mjs",
-    "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
+    "clean": "node -e \"for (const d of ['dist','dist-server']) fs.rmSync(d,{recursive:true,force:true})\"",
     "lint": "tsc --noEmit && tsx scripts/check-content.ts",
     "check:content": "tsx scripts/check-content.ts",
     "images:optimize": "node --env-file=.env scripts/optimize-images.mjs"

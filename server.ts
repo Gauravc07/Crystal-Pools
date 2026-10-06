@@ -245,7 +245,8 @@ async function startServer() {
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "SAMEORIGIN",
       "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com https://raw.githubusercontent.com https://www.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.web3forms.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests",
     });
     if (req.secure || req.get("x-forwarded-proto") === "https") {
       res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -277,7 +278,8 @@ async function startServer() {
     }
   } else {
     // In production, serve static files
-    const distPath = typeof __dirname !== 'undefined' ? __dirname : path.join(process.cwd(), 'dist');
+    // The compiled server is dist-server/server.cjs; the website files are in dist/ (the server itself is never served)
+    const distPath = typeof __dirname !== 'undefined' ? path.join(__dirname, '..', 'dist') : path.join(process.cwd(), 'dist');
     console.log(`Serving static files from ${distPath}`);
     const indexHtml = fs.readFileSync(path.join(distPath, "index.html"), "utf8");
     const staticSitemap = fs.readFileSync(path.join(distPath, "sitemap.xml"), "utf8");
@@ -298,8 +300,6 @@ async function startServer() {
       res.status(404).send(renderHead(indexHtml, { ...pageMeta("/404", site), title: "Page Not Found" }, site));
     });
 
-    // dist/ also holds the compiled server; never serve it.
-    app.use(/^\/server\.cjs(\.map)?$/, (req, res) => { res.sendStatus(404); });
 
     // Fingerprinted build assets never change; images and documents change rarely.
     app.use("/assets", express.static(path.join(distPath, "assets"), { immutable: true, maxAge: "1y", index: false }));
