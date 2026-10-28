@@ -49,7 +49,7 @@ export async function pollMail(client, gmail, { fetchImpl = fetch } = {}) {
   const configured = gmailConfigured(gmail);
   const status = await rpc(client, 'mail_poll_begin', { p_configured: configured });
   if (!configured || !status?.due) return null;
-  let messages = 0, files = 0;
+  let messages = 0, files = 0, duplicates = 0;
   try {
     const token = await gmailAccessToken(gmail, fetchImpl);
     const get = async path => {
@@ -73,16 +73,17 @@ export async function pollMail(client, gmail, { fetchImpl = fetch } = {}) {
         try { entry.sheets = (await readXlsx(bytes)).sheets; } catch (error) { entry.error = error.message; }
         found.push(entry);
       }
-      await rpc(client, 'mail_record_message', {
+      const recorded = await rpc(client, 'mail_record_message', {
         p_id: id, p_from: header('from').slice(0, 300), p_subject: header('subject').slice(0, 300),
         p_received_at: message.internalDate ? new Date(Number(message.internalDate)).toISOString() : null, p_files: found,
       });
-      messages++; files += found.length;
+      // The same file sent again in another email is recognised by its fingerprint and not read twice.
+      messages++; files += found.length; duplicates += recorded?.duplicates || 0;
     }
-    await rpc(client, 'mail_poll_end', { p_error: null, p_summary: `${messages} new email${messages === 1 ? '' : 's'}, ${files} report file${files === 1 ? '' : 's'}` });
+    await rpc(client, 'mail_poll_end', { p_error: null, p_summary: `${messages} new email${messages === 1 ? '' : 's'}, ${files} report file${files === 1 ? '' : 's'}${duplicates ? ` (${duplicates} already imported, skipped)` : ''}` });
   } catch (error) {
     await client.rpc('mail_poll_end', { p_error: String(error.message).slice(0, 500), p_summary: null });
     return { messages, files, error: error.message };
   }
-  return { messages, files };
+  return { messages, files, duplicates };
 }
