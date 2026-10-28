@@ -61,6 +61,12 @@ export async function runOnce(client, options = {}) {
   return data;
 }
 
+// Paid AI runs only while an admin has switched it on (Agent studio); otherwise the free rules.
+export async function effectiveOptions(client, options = {}) {
+  const { data, error } = await client.rpc('worker_config');
+  return !error && data?.ai_enabled ? options : { ...options, mode: 'demo' };
+}
+
 export async function runAll(client, options = {}, { deadline = Date.now() + 50000, maxJobs = 25 } = {}) {
   const results = [];
   while (results.length < maxJobs && Date.now() < deadline) {

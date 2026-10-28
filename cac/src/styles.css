@@ -42,3 +42,8 @@
 .comment-form textarea{flex:1;border:1px solid var(--line);border-radius:7px;padding:9px 11px;resize:vertical;min-height:44px}
 .setting-form .wide-setting{flex-basis:100%}
 @media(max-width:760px){.person{flex-direction:column}.person-links{justify-content:flex-start;max-width:100%}.comment-form{flex-direction:column;align-items:stretch}}
+.agent-card.agent-off{opacity:.6}
+.agent-card footer .text-button+.text-button{margin-left:12px}
+.agent-controls{margin-bottom:22px}
+.section-toggles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:16px}
+.section-toggles .check-filter{font-size:11px}

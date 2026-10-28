@@ -48,6 +48,14 @@ Migration `0005` adds the parts of [Podium's automotive platform](https://automo
 
 Not adopted: autonomous 24/7 texting, a website chat widget, DMS/CRM integrations and call-recording coaching. These need WhatsApp Business API providers with customer consent, changes to the public website, or third-party systems. Autonomous replies would also bypass CAC's rule that a person approves every customer message.
 
+## Controls (Agent studio and Settings)
+
+- **Schedule.** The worker runs every Sunday at 9:00 AM IST (`supabase/cron.example.sql`), and whenever staff press **Run agent now** or start an assistant.
+- **Paid AI switch** (Agent studio, admin): off by default. While it is off the worker uses the free rules, whatever `CAC_AI_MODE` says, so no AI credits are used. Switched on, it uses the configured provider (Claude Haiku).
+- **Assistants on/off** (Agent studio, admin): a switched-off assistant cannot run by any route (workflows, uploads, Gmail, Read again). Prospect research and personalised outreach are off by default.
+- **Workspace sections** (Settings, admin): the sections follow the lead flow (enquiry → qualification → call → site visit → estimate → follow-up → proposal and BOQ → negotiation → closure → execution → handover → AMC). Prospect discovery, Outreach and Lifecycle lists are hidden by default; hidden sections keep their records and can be shown again.
+- **Follow-ups** follow the lead flow: Day 1, Day 3, Day 7, then a monthly reconnect (early-stage projects: day 1, then monthly).
+
 ## Project lead reports (Gmail → AI → leads)
 
 Crystal Pools receives a monthly spreadsheet of upcoming construction projects in Pune (builder, architect, purchase manager, construction stage, possession date, amenities). **Project leads** turns each report into leads with a follow-up plan.
