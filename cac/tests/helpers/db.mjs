@@ -78,7 +78,7 @@ export async function setup(t, { seed = true, agents = 'all' } = {}) {
   const admin = (await call(db, 'bootstrap_admin', { p_email: 'admin@cac.test', p_name: 'Pilot owner', p_password: 'cac-test-password' }, { role: 'service_role' })).user_id;
   if (seed) await call(db, 'seed_demo', { p_admin: admin }, { role: 'service_role' });
   const staff = {};
-  for (const role of ['sales', 'engineer', 'commercial', 'project', 'viewer']) {
+  for (const role of ['sales', 'engineer', 'commercial', 'project', 'store', 'viewer']) {
     staff[role] = (await db.query(`select (cac.ensure_staff($1, $2, $3, 'cac-test-password')->>'user_id') as id`, [`${role}@cac.test`, `${role} user`, role])).rows[0].id;
   }
   const one = async (sql, params) => (await db.query(sql, params)).rows[0];
