@@ -1,10 +1,10 @@
 // cac-worker: processes queued CAC workflow runs.
-// Woken by the staff app after it queues a run, and optionally every minute by
-// pg_cron (see supabase/cron.example.sql). Each pass also checks Gmail for new
-// lead reports (at most every 15 minutes unless staff ask for a check). Deploy with --no-verify-jwt; access is
+// Woken by the staff app after it queues a run or presses Run agent now, and
+// every Sunday at 9:00 AM IST by pg_cron (see supabase/cron.example.sql). Each
+// pass also checks Gmail for new lead reports. Deploy with --no-verify-jwt; access is
 // checked here: an active CAC staff session, or the CAC_WORKER_SECRET header.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { runAll } from '../_shared/worker.js';
+import { runAll, effectiveOptions } from '../_shared/worker.js';
 import { providerOptions, aiConfigured } from '../_shared/analysis.js';
 import { gmailOptions, pollMail } from '../_shared/mail.js';
 
@@ -30,8 +30,8 @@ Deno.serve(async req => {
     if (error || data !== true) return json({ error: 'Only active CAC staff can run the worker.' }, 403);
   }
 
-  const options = providerOptions((key: string) => Deno.env.get(key));
   const client = createClient(url, serviceKey, { db: { schema: 'cac' }, auth: { persistSession: false } });
+  const options = await effectiveOptions(client, providerOptions((key: string) => Deno.env.get(key)));
   await client.rpc('worker_heartbeat', { p_mode: options.mode, p_ai_configured: aiConfigured(options) });
   try {
     const mail = await pollMail(client, gmailOptions((key: string) => Deno.env.get(key)));

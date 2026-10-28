@@ -17,6 +17,8 @@ process.env.VITE_CAC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
 const output = fileURLToPath(new URL('../test-results/', import.meta.url)); mkdirSync(output, { recursive: true });
 
 const { db, one } = await setup(null);
+// Show every section so the whole app is exercised; hiding one is tested below.
+await db.query(`update cac.setting set value = '' where key = 'hidden_modules'`);
 await db.query(`insert into public.leads (name, email, project_type, message) values ('Website visitor', 'visitor@example.invalid', 'Residential pool', 'Please call me about a villa pool.')`);
 
 const b64 = value => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -182,6 +184,15 @@ try {
   await page.getByText('Appointment confirmed.').waitFor();
   await page.keyboard.press('Escape');
   assert.equal((await one(`select visit_confirmed from cac.opportunity where name = 'Meadow · private pool'`)).visit_confirmed, true);
+
+  // Sections an admin hides leave the navigation (records are kept).
+  await page.locator('aside.sidebar').getByRole('button', { name: 'Settings' }).click();
+  await page.locator('.section-toggles label', { hasText: 'Lifecycle lists' }).locator('input').click();
+  await page.getByText('Workspace sections updated.').waitFor();
+  assert.equal(await page.locator('aside.sidebar').getByRole('button', { name: 'Lifecycle lists' }).count(), 0);
+  await page.locator('aside.sidebar').getByRole('button', { name: 'Agent studio' }).click();
+  await page.getByRole('heading', { name: 'How the assistants run' }).waitFor();
+  await page.getByText('Free rules: no AI credits are used').waitFor();
 
   // Admin business settings and reports.
   await page.locator('aside.sidebar').getByRole('button', { name: 'Settings' }).click();

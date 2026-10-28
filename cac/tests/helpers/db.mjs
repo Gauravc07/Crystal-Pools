@@ -69,10 +69,12 @@ export function serviceClient(db) {
   };
 }
 
-export async function setup(t, { seed = true } = {}) {
+// agents: 'all' turns every assistant on (most tests exercise one); 'defaults' keeps the installed on/off state.
+export async function setup(t, { seed = true, agents = 'all' } = {}) {
   template ??= buildTemplate();
   const db = await (await template).clone();
   t?.after(() => db.close());
+  if (agents === 'all') await db.query('update cac.agent set active = true');
   const admin = (await call(db, 'bootstrap_admin', { p_email: 'admin@cac.test', p_name: 'Pilot owner', p_password: 'cac-test-password' }, { role: 'service_role' })).user_id;
   if (seed) await call(db, 'seed_demo', { p_admin: admin }, { role: 'service_role' });
   const staff = {};

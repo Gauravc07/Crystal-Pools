@@ -1,7 +1,7 @@
 // Optional: runs the same queue worker as the cac-worker Edge Function, from
 // this machine. Useful before the function is deployed. Reads cac/.env.
 import { createClient } from '@supabase/supabase-js';
-import { runAll } from '../supabase/functions/_shared/worker.js';
+import { runAll, effectiveOptions } from '../supabase/functions/_shared/worker.js';
 import { providerOptions, aiConfigured } from '../supabase/functions/_shared/analysis.js';
 import { gmailOptions, gmailConfigured, pollMail } from '../supabase/functions/_shared/mail.js';
 
@@ -26,12 +26,13 @@ process.on('SIGTERM', () => { stopping = true; });
 const ref = new URL(url).hostname.split('.')[0];
 while (!stopping) {
   try {
-    const { error } = await client.rpc('worker_heartbeat', { p_mode: mode, p_ai_configured: aiConfigured(options) });
+    const pass = await effectiveOptions(client, options);
+    const { error } = await client.rpc('worker_heartbeat', { p_mode: pass.mode, p_ai_configured: aiConfigured(pass) });
     if (error) throw error;
     if (lastError) { console.log('Worker connected.'); lastError = ''; }
     const mail = await pollMail(client, gmail);
     if (mail) console.log(mail.error ? `Gmail: ${mail.error}` : `Gmail: ${mail.messages} new email(s), ${mail.files} report file(s)`);
-    for (const result of await runAll(client, options)) console.log(`run ${result.id}: ${result.status}${result.error ? ` · ${result.error}` : ''}`);
+    for (const result of await runAll(client, pass)) console.log(`run ${result.id}: ${result.status}${result.error ? ` · ${result.error}` : ''}`);
   } catch (error) {
     // Report each distinct problem once instead of every 3 seconds.
     if (error.message !== lastError) {

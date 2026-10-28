@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setup, serviceClient, as } from './helpers/db.mjs';
+import { setup, serviceClient, as, call } from './helpers/db.mjs';
 import { buildXlsx, report, reportRows } from './helpers/xlsx.mjs';
 import { readXlsx, sha256Hex } from '../supabase/functions/_shared/xlsx.js';
 import { reportBlocks, extractLeads, normalizeLead, stageBucket } from '../supabase/functions/_shared/leads.js';
 import { providerOptions } from '../supabase/functions/_shared/analysis.js';
 import { pollMail } from '../supabase/functions/_shared/mail.js';
-import { runOnce } from '../supabase/functions/_shared/worker.js';
+import { runOnce, effectiveOptions } from '../supabase/functions/_shared/worker.js';
 
 const sheetsOf = async options => (await readXlsx(report(options))).sheets;
 const dayOffset = (iso, days) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
@@ -109,7 +109,7 @@ test('report upload → leads with a stage-based schedule; same file once; roles
   assert.deepEqual([riverside.status, riverside.priority, riverside.owner, riverside.follow_up_step], ['New', 'Cold', 'Sales', 1]);
   const [early] = await openTasks(ctx, riverside.id);
   assert.equal(early.name, 'Introduce Crystal Pools to the architect · RIVERSIDE PH-II');
-  assert.equal(early.due, dayOffset(today, 7));
+  assert.equal(early.due, dayOffset(today, 1));
   assert.match(early.notes, /Architect: Demo Associates · Vinay Rao · 020 4000 2002/);
   const [late] = await openTasks(ctx, (await lead(ctx, 'NEEL PRABHA')).id);
   assert.equal(late.name, 'Call the purchase manager: pool and tile decisions are close · NEEL PRABHA');
@@ -170,7 +170,7 @@ test('logging contact: retries, next steps, completing from Tasks, closing and r
   open = await openTasks(ctx, id);
   assert.equal(open.length, 1);
   assert.match(open[0].name, /^Follow up with the purchase manager/);
-  assert.equal(open[0].due, dayOffset(today, 3)); // late plan: 1, 3, 7, 14
+  assert.equal(open[0].due, dayOffset(today, 2)); // lead flow: Day 1, Day 3, Day 7, then monthly (1, 2, 4, 30 days apart)
   const contacted = await lead(ctx, 'NEEL PRABHA');
   assert.deepEqual([contacted.status, contacted.follow_up_step, contacted.last_outcome], ['Contacted', 2, 'Reached']);
 
@@ -178,7 +178,7 @@ test('logging contact: retries, next steps, completing from Tasks, closing and r
   const task = await ctx.one(`select id from cac.task where project_lead_id = $1 and status = 'open'`, [id]);
   await ctx.rpc('sales', 'complete_task', { p_task: task.id });
   open = await openTasks(ctx, id);
-  assert.equal(open.length, 1); assert.equal(open[0].due, dayOffset(today, 7));
+  assert.equal(open.length, 1); assert.equal(open[0].due, dayOffset(today, 4));
 
   await assert.rejects(ctx.rpc('sales', 'log_lead_contact', { p_lead: id, p_outcome: 'Reached', p_note: '', p_next: '2020-01-01' }), /past/);
   await assert.rejects(ctx.rpc('sales', 'set_lead_status', { p_lead: id, p_status: 'Lost', p_reason: '' }), /reason/);
@@ -373,4 +373,38 @@ test('duplicates: the same file in a second email is not read again; Read again 
   const again = (await ctx.one(`select result from cac.lead_import`)).result;
   assert.deepEqual([again.created, again.updated], [0, 3]);
   assert.equal((await ctx.all(`select id from cac.task where project_lead_id is not null and status = 'open'`)).length, 3);
+});
+
+test('controls: assistants on/off, paid AI off by default, sections, lead-flow follow-ups', async t => {
+  const ctx = await setup(t, { seed: false, agents: 'defaults' });
+  const state = await ctx.rpc('sales', 'workspace_state');
+  assert.deepEqual(state.agents.filter(a => !a.active).map(a => a.id).sort(), ['outreach', 'research']);
+  assert.equal(state.settings.ai_enabled, 'false');
+  assert.equal(state.settings.hidden_modules, 'prospect,outreach,lifecycle');
+  assert.deepEqual(JSON.parse(state.settings.lead_cadence), { early: [1, 30, 30], mid: [1, 2, 4, 30], late: [1, 2, 4, 30] });
+
+  // Paid AI off: the worker uses the free rules even when a provider key is configured.
+  const client = serviceClient(ctx.db);
+  const paid = { mode: 'anthropic', anthropic: { apiKey: 'sk-ant-test', model: 'claude-haiku-5-5' } };
+  assert.equal((await effectiveOptions(client, paid)).mode, 'demo');
+  await assert.rejects(ctx.rpc('sales', 'set_setting', { p_key: 'ai_enabled', p_value: 'true' }), /role/);
+  await ctx.rpc('admin', 'set_setting', { p_key: 'ai_enabled', p_value: 'true' });
+  assert.equal((await effectiveOptions(client, paid)).mode, 'anthropic');
+  await assert.rejects(ctx.rpc('admin', 'set_setting', { p_key: 'ai_enabled', p_value: 'maybe' }), /on \(true\) or off/);
+
+  // Sections: validated and normalised.
+  await assert.rejects(ctx.rpc('admin', 'set_setting', { p_key: 'hidden_modules', p_value: 'prospect,nonsense' }), /Unknown workspace section/);
+  assert.equal((await ctx.rpc('admin', 'set_setting', { p_key: 'hidden_modules', p_value: ' outreach , prospect,outreach' })).hidden_modules, 'outreach,prospect');
+
+  // A turned-off assistant cannot run by any route.
+  await assert.rejects(ctx.rpc('sales', 'set_agent_active', { p_agent: 'leadimport', p_active: false }), /role/);
+  await ctx.rpc('admin', 'set_agent_active', { p_agent: 'leadimport', p_active: false });
+  const sheets = await sheetsOf();
+  await assert.rejects(ctx.rpc('sales', 'upload_lead_report', { p_name: 'r.xlsx', p_sha256: 'b'.repeat(64), p_sheets: sheets }), /Lead report reader assistant is turned off/);
+  assert.equal((await ctx.all(`select id from cac.lead_import`)).length, 0); // nothing half-saved
+  await assert.rejects(ctx.rpc('sales', 'request_mail_check'), /turned off/);
+  assert.deepEqual(await ctx.rpc('sales', 'mail_poll_begin', { p_configured: true }).catch(() => 'denied'), 'denied');
+  assert.equal((await call(ctx.db, 'mail_poll_begin', { p_configured: true }, { role: 'service_role' })).due, false);
+  await ctx.rpc('admin', 'set_agent_active', { p_agent: 'leadimport', p_active: true });
+  assert.equal((await ctx.rpc('sales', 'upload_lead_report', { p_name: 'r.xlsx', p_sha256: 'b'.repeat(64), p_sheets: sheets })).status, 'queued');
 });
