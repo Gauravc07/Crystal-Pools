@@ -363,7 +363,9 @@ function ProjectLeads({state,search,show,act,busy,canWrite}){
     .filter(l=>filter==='all'||(filter==='open'?isOpen(l):filter==='due'?due.includes(l):l.status===filter)).filter(l=>!poolOnly||l.poolMentioned)
     .sort((a,b)=>(a.nextFollowUp||'9999').localeCompare(b.nextFollowUp||'9999')||rank(a.priority)-rank(b.priority));
   const gmail=s.leadMailConfigured==='true';
-  const upload=file=>act(()=>uploadLeadReport(file),result=>result.duplicate?'This report was already imported.':'Report received. Its leads appear here once it has been read.');
+  const upload=file=>act(()=>uploadLeadReport(file),result=>result.duplicate?`This exact file was already imported on ${date(result.createdAt)}, so it was not read twice. To read it again, use Read again under Reports.`:'Report received. Its leads appear here once it has been read.');
+  const runAgent=()=>act(async()=>{const result=await rpc('request_mail_check');wakeWorker();return result;},result=>result.gmail?'Agent started: checking Gmail and reading new reports. New leads appear here in about a minute.':result.queued?`Agent started: reading ${result.queued} waiting report${result.queued===1?'':'s'}.`:'Agent started. Gmail is not connected, so it only reads uploaded reports.');
+  const worker=state.config.worker;
   return <>
     <div className="stats-grid">{[
       ['Open leads',leads.filter(isOpen).length,`${leads.length} projects from ${r.leadImport.filter(i=>i.status==='imported').length} reports`,Building2,'all','open'],
@@ -373,9 +375,10 @@ function ProjectLeads({state,search,show,act,busy,canWrite}){
     ].map(([label,value,sub,Icon,p,f])=><button className="stat-card" key={label} onClick={()=>{setView('leads');setPriority(p);setFilter(f);}}><div><span>{label}</span><Icon size={17}/></div><strong>{value}</strong><small>{sub}</small></button>)}</div>
     <div className="info-strip"><Mail size={20}/><div><strong>{gmail?'New reports are read from Gmail automatically.':'Gmail is not connected yet.'}</strong>
       <span>{gmail?`Checked every 15 minutes · last check ${s.leadMailLastPoll?dateTime(s.leadMailLastPoll):'not yet'}${s.leadMailLastResult?` · ${s.leadMailLastResult}`:''} · search: ${s.leadMailQuery}`:'Upload a report here, or connect the mailbox under Settings → Lead reports.'}</span>
+      <span>Agent last ran {worker?.lastSeen?dateTime(worker.lastSeen):'never'}{worker?` · ${aiLabel(worker)}`:''}. Duplicates are recognised: an email or file already read is skipped, and a project seen again is merged into its lead.</span>
       {s.leadMailLastError&&<span className="overdue-text">Gmail: {s.leadMailLastError}</span>}</div>
       {canWrite&&<label className={`button ${busy?'disabled-look':''}`}><Upload size={14}/>Upload report<input className="file-button-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)upload(file);}}/></label>}
-      {canWrite&&gmail&&<Button disabled={busy} onClick={()=>act(async()=>{const result=await rpc('request_mail_check');wakeWorker();return result;},'Checking Gmail now.')}>Check Gmail now</Button>}</div>
+      {canWrite&&<Button primary disabled={busy} onClick={runAgent}><Sparkles size={14}/>Run agent now</Button>}</div>
     <div className="tabs">{[['leads','Leads',leads.length],['reports','Reports',r.leadImport.length]].map(([key,label,n])=><button key={key} className={view===key?'active':''} onClick={()=>setView(key)}>{label}<span>{n}</span></button>)}</div>
     {view==='leads'?<div className="panel table-panel"><div className="table-toolbar"><div className="table-title">Project leads <span className="count">{rows.length}</span></div><div className="toolbar-actions">
       <select aria-label="Filter leads" value={filter} onChange={e=>setFilter(e.target.value)}><option value="open">Open leads</option><option value="due">Follow-up due</option><option value="all">All leads</option>{['New','Contacted','Meeting','Interested','Converted','Not relevant','Lost'].map(x=><option key={x}>{x}</option>)}</select>
@@ -403,8 +406,8 @@ function LeadReports({state,act,busy,canWrite}){
     const res=i.result;
     return <tr key={i.id}><td><strong className="record-link">{i.name}</strong><small>{i.source==='gmail'?[i.mailFrom,i.mailSubject].filter(Boolean).join(' · '):`Uploaded by ${state.users.find(u=>u.id===i.createdBy)?.name||'staff'}`}</small></td>
       <td className="muted">{dateTime(i.receivedAt||i.createdAt)}<small>{i.rowCount} rows</small></td>
-      <td>{res?`${res.created} new · ${res.updated} updated${res.advanced?` · ${res.advanced} moved stage`:''}${res.skipped?` · ${res.skipped} skipped`:''}`:'—'}{res?.missing?.map(m=><small key={m} className="muted">{m}</small>)}{error&&<small className="overdue-text">{error}</small>}</td>
-      <td><Badge tone={status==='imported'?'green':status==='failed'?'red':'amber'}>{status}</Badge>{canWrite&&job?.status==='failed'&&job.attempts<job.maxAttempts&&<Button disabled={busy} onClick={()=>act(async()=>{const result=await rpc('retry_run',{p_job:job.id});wakeWorker();return result;},'Reading the report again.')}>Retry</Button>}</td></tr>;
+      <td>{res?`${res.created} new · ${res.updated} already in CAC (merged)${res.duplicates?` · ${res.duplicates} repeated in the file (merged)`:''}${res.merged?` · new contacts for ${res.merged}`:''}${res.advanced?` · ${res.advanced} moved stage`:''}${res.skipped?` · ${res.skipped} skipped`:''}`:'—'}{res?.missing?.map(m=><small key={m} className="muted">{m}</small>)}{error&&<small className="overdue-text">{error}</small>}</td>
+      <td><Badge tone={status==='imported'?'green':status==='failed'?'red':'amber'}>{status}</Badge>{canWrite&&!i.error&&!['queued','reading'].includes(status)&&<Button disabled={busy} onClick={()=>act(async()=>{const result=await rpc('reread_lead_report',{p_import:i.id});wakeWorker();return result;},'Reading the report again. Its projects are merged into the existing leads.')}>Read again</Button>}</td></tr>;
   })}</tbody></table></div></div>;
 }
 function LeadDetails({lead,state,show}){

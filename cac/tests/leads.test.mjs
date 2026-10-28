@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setup, serviceClient, as } from './helpers/db.mjs';
-import { buildXlsx, report } from './helpers/xlsx.mjs';
+import { buildXlsx, report, reportRows } from './helpers/xlsx.mjs';
 import { readXlsx, sha256Hex } from '../supabase/functions/_shared/xlsx.js';
 import { reportBlocks, extractLeads, normalizeLead, stageBucket } from '../supabase/functions/_shared/leads.js';
 import { providerOptions } from '../supabase/functions/_shared/analysis.js';
@@ -60,6 +60,10 @@ test('contacts and pool demand must appear in the project text: invented values 
   assert.deepEqual(result.contacts, [{ name: 'Mr.Sunil Desai', role: 'Purchase Manager', phone: '9800000101', email: '' }]);
   assert.equal(result.pool_mentioned, false);
   assert.equal(normalizeLead({ project_name: '  ' }, source), null);
+  // Two people on one line become two contacts, so a later report that lists them separately matches both.
+  const pair = normalizeLead({ project_name: 'X', contacts: [{ name: 'Mr.Vivek Ghanekar/Prashant Padwal', role: 'Purchase Manager', phone: '9800000101', email: '' }, { name: 'Mr.Sachin Puri & Prakash Mahadik', role: 'Purchase', phone: '', email: '' }] }, source);
+  assert.deepEqual(pair.contacts.map(c => [c.name, c.role, c.phone]), [['Mr.Vivek Ghanekar', 'Purchase Manager', '9800000101'], ['Prashant Padwal', 'Purchase Manager', ''], ['Mr.Sachin Puri', 'Purchase', ''], ['Prakash Mahadik', 'Purchase', '']]);
+  assert.deepEqual(normalizeLead({ project_name: 'X', contacts: [{ name: 'Girish Naik-DGM-Contracts & Procurement', role: '', phone: '', email: '' }] }, source).contacts.map(c => c.name), ['Girish Naik-DGM-Contracts & Procurement']);
 });
 
 test('live AI extraction: batches by project, maps by serial, verifies each against its own block', async t => {
@@ -253,10 +257,10 @@ test('Gmail: polls every 15 minutes, reads new .xlsx attachments once, reports e
 
   assert.equal(await pollMail(client, { clientId: '' }, { fetchImpl }), null);
   assert.equal((await ctx.one(`select value from cac.setting where key = 'lead_mail_configured'`)).value, 'false');
-  await assert.rejects(ctx.rpc('sales', 'request_mail_check'), /not connected/);
+  assert.deepEqual(await ctx.rpc('sales', 'request_mail_check'), { ok: true, gmail: false, queued: 0 });
 
   const first = await pollMail(client, gmail, { fetchImpl });
-  assert.deepEqual(first, { messages: 1, files: 2 });
+  assert.deepEqual(first, { messages: 1, files: 2, duplicates: 0 });
   assert.match(requests[1], /q=from%3Aprathamesh\.meraki2025%40gmail\.com%20has%3Aattachment%20filename%3Axlsx%20newer_than%3A14d/);
   const imports = await ctx.all(`select name, source, status, error, mail_from, mail_subject from cac.lead_import order by lower(name)`);
   assert.deepEqual(imports.map(i => [i.name, i.status]), [['old.xls', 'failed'], ['Pune.xlsx', 'queued']]);
@@ -271,7 +275,7 @@ test('Gmail: polls every 15 minutes, reads new .xlsx attachments once, reports e
   assert.equal(await pollMail(client, gmail, { fetchImpl }), null);
   assert.equal(requests.length, 0);
   await ctx.rpc('sales', 'request_mail_check');
-  assert.deepEqual(await pollMail(client, gmail, { fetchImpl }), { messages: 0, files: 0 });
+  assert.deepEqual(await pollMail(client, gmail, { fetchImpl }), { messages: 0, files: 0, duplicates: 0 });
   assert.equal(requests.filter(u => /format=full/.test(u)).length, 0);
 
   // Revoked access is reported in Settings, not thrown.
@@ -294,4 +298,79 @@ test('lead settings are validated; worker-only settings and functions are protec
   await assert.rejects(ctx.rpc('sales', 'mail_poll_begin', { p_configured: true }), /permission denied/);
   await assert.rejects(ctx.rpc('sales', 'complete_lead_import', { p_job: ctx.admin }), /permission denied/);
   await assert.rejects(as(ctx.db, { role: 'anon' }, tx => tx.query(`select cac.upload_lead_report('x', 'y', '[]')`)), /permission denied/);
+});
+
+const HEAD = ['Sr. No.', 'Project', 'Builder', 'Architect', 'Other Professional Details'];
+const sheet = rows => [{ name: 'Report', rows: rows.map(r => r.map(v => String(v ?? ''))) }];
+
+test('duplicates: a project repeated in one report, or seen again with a spelling variant, is merged into one lead', async t => {
+  const ctx = await setup(t, { seed: false });
+  // The same project twice in one file; the repeat lists another person and no stage line.
+  const first = sheet([...reportRows(),
+    HEAD, [4, 'RIVERSIDE PH-II', 'Demo Lifespace Developers Ltd', '', 'Purchase Manager:'], ['', 'Residential', '', '', 'Ms.Rita Shah'], ['', '', '', '', 'M: 9800000999.'],
+    ['', 'Landmark: Sector R-33,Nande,Mulshi,Pune-412115.']]);
+  const { run } = await importReport(ctx, first);
+  assert.equal(run.status, 'completed');
+  const imported = await ctx.one(`select result from cac.lead_import`);
+  assert.deepEqual([imported.result.created, imported.result.duplicates, imported.result.updated], [3, 1, 0]);
+  let lead = await ctx.one(`select * from cac.project_lead where name = 'RIVERSIDE PH-II'`);
+  assert.equal((await ctx.all(`select id from cac.project_lead where name = 'RIVERSIDE PH-II'`)).length, 1);
+  assert.deepEqual(lead.contacts.map(c => c.name), ['Mr.Sunil Desai', 'Mr.Arun Mehta', 'Ms.Rita Shah']);
+  assert.deepEqual([lead.stage, lead.possession, lead.history.length], ['Prelaunch', 'December 2028', 1]); // the repeat's blanks did not wipe them
+  assert.equal((await ctx.all(`select id from cac.task where project_lead_id = $1 and status = 'open'`, [lead.id])).length, 1);
+
+  // Next month: builder written without "Ltd", a known person with a new phone, a new person, and no possession date.
+  const next = sheet([HEAD, [1, 'RIVERSIDE PH-II', 'Demo Lifespace Developers', 'Demo Associates:Ar.Vinay Rao', 'Purchase Manager:'],
+    ['', 'Residential', 'T: 020 4000 1009.', '', 'Mr.Sunil Desai'], ['', '', '', '', 'M: 9800000102.'], ['', '', '', '', 'Mr.Kiran Rao (Director)'],
+    ['', 'Landmark: Sector R-33,Nande,Mulshi,Pune-412115.'], ['', 'Project Details: 3 Towers of G+36 Floors with 654 Flats,Excavation in Progress….'],
+    ['', 'Product Details: Swimming Pool,Clubhouse.']]);
+  await importReport(ctx, next, { name: 'november.xlsx' });
+  assert.equal((await ctx.all(`select id from cac.project_lead where name = 'RIVERSIDE PH-II'`)).length, 1);
+  lead = await ctx.one(`select * from cac.project_lead where name = 'RIVERSIDE PH-II'`);
+  const sunil = lead.contacts.find(c => c.name === 'Mr.Sunil Desai');
+  assert.deepEqual([sunil.email, sunil.phone], ['sunil.desai@demo-lifespace.example', '9800000102']); // filled in, nothing lost
+  assert.deepEqual(lead.contacts.map(c => c.name), ['Mr.Sunil Desai', 'Mr.Arun Mehta', 'Ms.Rita Shah', 'Mr.Kiran Rao']);
+  assert.deepEqual(lead.builder.phones, ['020 4000 1001', '9800000101', '020 4000 1009']);
+  assert.equal(lead.builder.name, 'Demo Lifespace Developers');
+  assert.deepEqual([lead.stage, lead.possession, lead.pool_mentioned], ['Excavation in Progress', 'December 2028', true]);
+  assert.ok(lead.products.includes('Paving Tiles') && lead.products.includes('Swimming Pool'));
+  const result = (await ctx.one(`select result from cac.lead_import where name = 'november.xlsx'`)).result;
+  assert.deepEqual([result.created, result.updated, result.merged], [0, 1, 1]);
+  const note = await ctx.one(`select body from cac.comment where target_id = $1 and body like '%new contact%' order by created_at desc limit 1`, [lead.id]);
+  assert.match(note.body, /november\.xlsx: 1 new contact\(s\) added: Mr\.Kiran Rao/);
+});
+
+test('duplicates: the same file in a second email is not read again; Read again re-merges without copies', async t => {
+  const ctx = await setup(t, { seed: false });
+  const client = serviceClient(ctx.db);
+  const file = Buffer.from(report()).toString('base64url');
+  const reply = body => new Response(JSON.stringify(body), { status: 200 });
+  let ids = ['m1'];
+  const fetchImpl = async url => {
+    url = String(url);
+    if (url.startsWith('https://oauth2.googleapis.com/token')) return reply({ access_token: 'token' });
+    if (/messages\?/.test(url)) return reply({ messages: ids.map(id => ({ id })) });
+    if (/format=full/.test(url)) return reply({ internalDate: '1793232000000', payload: { headers: [{ name: 'From', value: 'prathamesh.meraki2025@gmail.com' }], parts: [{ filename: 'Report copy.XLSX', body: { attachmentId: 'a1' } }] } });
+    if (/attachments/.test(url)) return reply({ data: file });
+    throw new Error(url);
+  };
+  const gmail = { clientId: 'id', clientSecret: 'secret', refreshToken: 'refresh' };
+  assert.deepEqual(await pollMail(client, gmail, { fetchImpl }), { messages: 1, files: 1, duplicates: 0 });
+  await runOnce(client);
+  ids = ['m1', 'm2']; // the same report forwarded again
+  await ctx.rpc('sales', 'request_mail_check');
+  assert.deepEqual(await pollMail(client, gmail, { fetchImpl }), { messages: 1, files: 1, duplicates: 1 });
+  assert.match((await ctx.one(`select value from cac.setting where key = 'lead_mail_last_result'`)).value, /1 already imported, skipped/);
+  assert.equal((await ctx.all(`select id from cac.lead_import`)).length, 1);
+  assert.equal(await runOnce(client), null); // nothing new to read
+
+  const { id } = await ctx.one(`select id from cac.lead_import`);
+  await assert.rejects(ctx.rpc('viewer', 'reread_lead_report', { p_import: id }), /role/);
+  const job = await ctx.rpc('sales', 'reread_lead_report', { p_import: id });
+  assert.equal(job.status, 'queued');
+  assert.equal((await runOnce(client)).status, 'completed');
+  assert.equal((await ctx.all(`select id from cac.project_lead`)).length, 3);
+  const again = (await ctx.one(`select result from cac.lead_import`)).result;
+  assert.deepEqual([again.created, again.updated], [0, 3]);
+  assert.equal((await ctx.all(`select id from cac.task where project_lead_id is not null and status = 'open'`)).length, 3);
 });
