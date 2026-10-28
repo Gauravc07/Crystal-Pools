@@ -1,0 +1,40 @@
+name: CAC checks
+
+on:
+  push:
+    paths: ['cac/**', '.github/workflows/cac.yml']
+  pull_request:
+    paths: ['cac/**', '.github/workflows/cac.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: cac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: cac/package-lock.json
+      - run: npm ci
+      # SQL rules, workflows, AI adapters (mocked) and run limits, on in-process Postgres.
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      # End-to-end: real UI against the real SQL through a fake Supabase endpoint. No secrets needed.
+      - run: npm run test:browser
+        env:
+          CAC_TEST_BROWSER: chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cac-screenshots
+          path: cac/test-results/
+          if-no-files-found: ignore

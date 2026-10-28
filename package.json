@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:admin": "vite --config vite.admin.config.ts",
-    "build": "vite build && vite build --config vite.admin.config.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs",
+    "build": "vite build && vite build --config vite.admin.config.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs && npm run build:cac",
     "build:admin": "vite build --config vite.admin.config.ts",
+    "build:cac": "npm --prefix cac ci --no-audit --no-fund && npm --prefix cac run build -- --base=/cac/ --outDir=../dist/cac --emptyOutDir",
     "start": "node --env-file-if-exists=.env dist-server/server.cjs",
     "preview": "vite preview",
     "preview:admin": "vite preview --config vite.admin.config.ts",

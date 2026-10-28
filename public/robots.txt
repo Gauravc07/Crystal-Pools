@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /cac
 
 Sitemap: https://www.crystalpools.in/sitemap.xml
