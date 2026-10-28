@@ -48,6 +48,23 @@ Migration `0005` adds the parts of [Podium's automotive platform](https://automo
 
 Not adopted: autonomous 24/7 texting, a website chat widget, DMS/CRM integrations and call-recording coaching. These need WhatsApp Business API providers with customer consent, changes to the public website, or third-party systems. Autonomous replies would also bypass CAC's rule that a person approves every customer message.
 
+## Drawings vault
+
+- **Drawings** (numbered `DRG/26-27/0001`) belong to an opportunity, site or project and have a discipline (Architectural, Structural (RCC), Filtration & plumbing, Electrical, Tiling & finishes, FRP, Landscape, Shop drawing, As-built, Other).
+- **Revisions** R0, R1, … are files in the private Storage bucket `cac-drawings` (PDF, DWG, DXF, PNG, JPEG, WebP; up to 50 MB). Type and size are taken from Storage, not the browser. Staff open files through 10-minute signed links; there is no public access.
+- **Workflow:** draft → submit → approved or rejected. One open revision at a time. Engineers check (admins may too), and nobody approves a revision they uploaded. Approving a revision supersedes the previous approved one. Revision files cannot be replaced or deleted.
+- Engineers, project and sales staff create drawings and upload revisions.
+
+## Warehouse and inventory
+
+- **Masters:** items (SKU, unit, category, HSN, GST rate, reorder level and quantity, batch tracking for tile shade lots), warehouses (warehouse, site store, factory, showroom) with free-text bins, and vendors (GSTIN validated). A Main warehouse (WH-01) is created.
+- **Stock ledger:** every receipt, issue, return, transfer and approved adjustment is an append-only ledger entry with its unit cost, value and the balance after it; entries cannot be changed or deleted. Stock is valued at **moving weighted average cost** per item, warehouse, bin and batch, and can never go negative.
+- **Purchasing:** Store or Project raise purchase orders (`PO/26-27/0001`, priced before GST with each item's GST rate) and submit them; **Commercial approves, and never the person who raised the order** (the control rule on the functional chart). The Store receives goods against approved orders (`GRN/…`), with the batch for batch-tracked items and over-receipt blocked; the order becomes partially received or received. Stock is valued at the PO rate (GST is recoverable input tax).
+- **Material requests** (`MR/…`): Project and engineering staff request material for a project or opportunity; the Store issues against the request (`ISS/…`) until it is complete. The Store can also issue directly to a project, take back unused material (`RET/…`, up to what that project received, at its issue cost) and transfer between warehouses or bins at average cost (`TRF/…`).
+- **Adjustments** (`ADJ/…`): opening stock, physical counts, damage, expiry, loss and found stock are requested by the Store and **posted only when Commercial approves** (not by the requester).
+- **Reorder:** items whose stock plus open orders falls below the reorder level are flagged, with a one-click purchase order.
+- **Store role:** receives, issues, returns, transfers and requests adjustments. Document numbers follow the Indian financial year (April–March).
+
 ## Controls (Agent studio and Settings)
 
 - **Schedule.** The worker runs every Sunday at 9:00 AM IST (`supabase/cron.example.sql`), and whenever staff press **Run agent now** or start an assistant.
@@ -165,6 +182,7 @@ Node 24+ is needed only for the build tools and setup script.
 | Engineer | Sites, surveys, photos, quote drafts, activities, tasks | Survey, quotation scope, survey review |
 | Commercial | Rates, quote drafts, payments, change billing, tasks | Rates, quotation price, payments, maintenance offers |
 | Project | Projects, change requests, maintenance, activities, tasks | Project coordination, scope changes |
+| Store | Items, warehouses, vendors, purchase orders, goods receipts, issues, returns, transfers, adjustment requests | None (purchase orders and adjustments are approved by Commercial) |
 | Viewer | Read-only | None |
 
 ## Ten bounded workflows

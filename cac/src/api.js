@@ -109,6 +109,25 @@ export async function uploadLeadReport(file) {
   return result;
 }
 
+// Drawings vault: files go to the private "cac-drawings" bucket, then are registered as the next revision.
+export const DRAWING_BUCKET = 'cac-drawings';
+const DRAWING_TYPES = { pdf: 'application/pdf', dwg: 'image/vnd.dwg', dxf: 'image/vnd.dxf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+export async function uploadDrawing(drawingId, file, note) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!DRAWING_TYPES[ext]) throw new Error('Use a PDF, DWG, DXF, PNG, JPEG or WebP file.');
+  if (file.size > 50 * 1024 * 1024) throw new Error('Use a file up to 50 MB.');
+  const path = `${drawingId}/${crypto.randomUUID().replaceAll('-', '')}.${ext}`;
+  const { error } = await supabase.storage.from(DRAWING_BUCKET).upload(path, file, { contentType: DRAWING_TYPES[ext], upsert: false });
+  if (error) throw new Error(error.message.includes('row-level security') ? 'Engineers, project and sales staff can add revisions to existing drawings.' : error.message);
+  return rpc('add_drawing_revision', { p_drawing: drawingId, p_path: path, p_name: file.name.slice(0, 200), p_note: note || '' });
+}
+// A 10-minute link to one revision's file.
+export async function drawingUrl(path) {
+  const { data, error } = await supabase.storage.from(DRAWING_BUCKET).createSignedUrl(path, 600);
+  if (error || !data?.signedUrl) throw new Error('Could not open the file. Try again.');
+  return data.signedUrl;
+}
+
 export async function photoUrls(paths) {
   if (!paths.length) return {};
   const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 600);

@@ -47,3 +47,20 @@
 .agent-controls{margin-bottom:22px}
 .section-toggles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:16px}
 .section-toggles .check-filter{font-size:11px}
+.lines-editor{display:grid;gap:8px}
+.lines-editor>label{font-size:12px}
+.line-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 40px;gap:8px;align-items:center}
+.line-row.with-rate{grid-template-columns:minmax(0,1fr) 100px 150px 40px}
+.line-row select,.line-row input{border:1px solid var(--line);border-radius:7px;padding:9px 10px;min-width:0}
+.receive-row{grid-template-columns:minmax(0,1fr) 120px 170px 140px;border-bottom:1px solid #edf1e6;padding:10px 0;font-size:11px;color:#5f774f}
+.receive-row small{font-size:9px;color:#a2b08e;margin-top:3px}
+.revision-row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:1px solid #edf1e6;padding:12px 0;font-size:11px;color:#5f774f}
+.revision-row small{font-size:9px;color:#a2b08e;margin-top:4px;line-height:1.6}
+.revision-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.setting-form .upload-button{flex:0 0 auto;min-width:0;display:inline-flex}
+.inv-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;max-width:55%}
+.reorder-cell{display:inline-flex;gap:8px;align-items:center}
+.lines-table td small{font-size:9px;color:#9fa993}
+.po-totals{font-size:12px;color:#5f774f;text-align:right;margin:12px 0}
+tr.static-row{cursor:default}
+@media(max-width:760px){.line-row,.line-row.with-rate,.receive-row{grid-template-columns:1fr 1fr}.inv-actions{max-width:100%;justify-content:flex-start}.revision-row{flex-direction:column}}

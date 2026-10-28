@@ -78,7 +78,7 @@ try {
   await page.getByRole('heading', { name: 'What needs attention' }).waitFor();
   await page.screenshot({ path: `${output}dashboard-desktop.png`, fullPage: true, animations: 'disabled' });
 
-  for (const label of ['My work', 'Prospect discovery', 'Lead inbox', 'Project leads', 'Sales pipeline', 'Outreach', 'Appointments', 'Approvals', 'Agent studio', 'Customers & sites', 'Surveys & quotes', 'Projects', 'Maintenance', 'Lifecycle lists', 'Reviews', 'Tasks & activity', 'Reports', 'Approved library', 'Audit trail', 'Settings']) {
+  for (const label of ['My work', 'Prospect discovery', 'Lead inbox', 'Project leads', 'Sales pipeline', 'Outreach', 'Appointments', 'Approvals', 'Agent studio', 'Customers & sites', 'Surveys & quotes', 'Projects', 'Drawings vault', 'Warehouse & inventory', 'Maintenance', 'Lifecycle lists', 'Reviews', 'Tasks & activity', 'Reports', 'Approved library', 'Audit trail', 'Settings']) {
     await page.locator('aside.sidebar').getByRole('button', { name: label, exact: label !== 'Approvals' }).click(); await page.locator('main h1').waitFor();
   }
   await page.getByText('Not in this Supabase project').or(page.getByText('Available · import from Lead inbox')).first().waitFor();
@@ -185,6 +185,37 @@ try {
   await page.keyboard.press('Escape');
   assert.equal((await one(`select visit_confirmed from cac.opportunity where name = 'Meadow · private pool'`)).visit_confirmed, true);
 
+  // Warehouse & inventory: add an item through the form; it appears in Items and Stock.
+  await page.locator('aside.sidebar').getByRole('button', { name: 'Warehouse & inventory' }).click();
+  await page.locator('.tabs').getByRole('button', { name: /^Items/ }).click();
+  await page.getByRole('button', { name: 'Add item' }).click();
+  const itemDialog = page.getByRole('dialog', { name: 'Add item' });
+  await itemDialog.getByLabel('Item name', { exact: true }).fill('Pool pump 1 HP');
+  await itemDialog.getByLabel('SKU (code)', { exact: true }).fill('pmp-10');
+  await itemDialog.getByLabel('Category', { exact: true }).selectOption('Filtration & pumps');
+  await itemDialog.getByLabel('Unit', { exact: true }).selectOption('nos');
+  await itemDialog.getByLabel('Reorder level', { exact: true }).fill('2');
+  await itemDialog.getByRole('button', { name: 'Save' }).click(); await itemDialog.waitFor({ state: 'hidden' });
+  await page.getByText('PMP-10').first().waitFor();
+  await page.locator('.tabs').getByRole('button', { name: /^Stock\s*\d+$/ }).click();
+  await page.getByText('Pool pump 1 HP').first().waitFor();
+  await page.screenshot({ path: `${output}inventory.png`, fullPage: true, animations: 'disabled' });
+  assert.equal((await one(`select sku from cac.inv_item where name = 'Pool pump 1 HP'`)).sku, 'PMP-10');
+
+  // Drawings vault: create a drawing for an opportunity; its sheet offers the first revision.
+  await page.locator('aside.sidebar').getByRole('button', { name: 'Drawings vault' }).click();
+  await page.getByRole('button', { name: 'New drawing' }).click();
+  const drawingDialog = page.getByRole('dialog', { name: 'New drawing' });
+  await drawingDialog.getByLabel('Title', { exact: true }).fill('Pool general arrangement');
+  await drawingDialog.getByLabel('Discipline', { exact: true }).selectOption('Structural (RCC)');
+  await drawingDialog.getByLabel('Opportunity', { exact: true }).selectOption({ label: 'Sahyadri · resort pool' });
+  await drawingDialog.getByRole('button', { name: 'Create drawing' }).click();
+  await page.getByRole('dialog', { name: 'Pool general arrangement' }).getByText('Upload R0').waitFor();
+  await page.screenshot({ path: `${output}drawing.png`, fullPage: false, animations: 'disabled' });
+  await page.keyboard.press('Escape');
+  await page.getByRole('dialog', { name: 'Pool general arrangement' }).getByRole('button', { name: 'Close dialog' }).click();
+  assert.match((await one(`select number from cac.drawing`)).number, /^DRG\/\d{2}-\d{2}\/0001$/);
+
   // Sections an admin hides leave the navigation (records are kept).
   await page.locator('aside.sidebar').getByRole('button', { name: 'Settings' }).click();
   await page.locator('.section-toggles label', { hasText: 'Lifecycle lists' }).locator('input').click();
@@ -226,7 +257,7 @@ try {
   await page.getByRole('heading', { name: 'A clearer path to your next project.' }).waitFor();
   assert.equal((await one(`select must_change_password from cac.staff where email = 'new.staff@cac.test'`)).must_change_password, false);
   assert.deepEqual(errors, []);
-  console.log('Browser smoke passed: sign-in (incl. wrong password), forced password change, 20 sections, project lead report upload + call log + comment, manual sending, lifecycle tasks, owner assistant plan → tasks, appointment booking + confirmation, review link setting, reports, website enquiry import, enquiry creation, queued workflow + worker, approval, mobile navigation, sign-out.');
+  console.log('Browser smoke passed: sign-in (incl. wrong password), forced password change, 22 sections, inventory item, drawing, project lead report upload + call log + comment, manual sending, lifecycle tasks, owner assistant plan → tasks, appointment booking + confirmation, review link setting, reports, website enquiry import, enquiry creation, queued workflow + worker, approval, mobile navigation, sign-out.');
   console.log(`Screenshots: ${output}`);
 } catch (error) {
   // Keep evidence for CI and local debugging.
