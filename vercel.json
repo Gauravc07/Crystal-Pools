@@ -34,7 +34,15 @@
       "destination": "/admin/index.html"
     },
     {
-      "source": "/((?!admin(?:/|$)|assets/|images/|documents/|.*\\.[a-z0-9]+$).*)",
+      "source": "/cac",
+      "destination": "/cac/index.html"
+    },
+    {
+      "source": "/cac/((?!assets/|.*\\.[a-z0-9]+$).*)",
+      "destination": "/cac/index.html"
+    },
+    {
+      "source": "/((?!admin(?:/|$)|cac(?:/|$)|assets/|images/|documents/|.*\\.[a-z0-9]+$).*)",
       "destination": "/index.html"
     }
   ],
@@ -84,6 +92,28 @@
     },
     {
       "source": "/admin(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/cac/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/cac(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",

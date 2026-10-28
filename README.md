@@ -1,12 +1,13 @@
 # Crystal Pools
 
-Marketing website for Crystal Pools, plus a separate admin panel for managing its content.
+Marketing website for Crystal Pools, plus a separate admin panel for managing its content and the CAC growth workspace (`cac/`, see [cac/README.md](cac/README.md)).
 All content (page text and images, blogs, projects, testimonials, enquiries, banner, settings) lives in Supabase.
 
 | App | Folder | Dev URL | Build output | Deployed at |
 |---|---|---|---|---|
 | Public website | `src/`, `index.html`, `server.ts` | http://localhost:5173 | `dist/` (+ `dist/server.cjs`) | www.crystalpools.in |
 | Admin panel | `admin/` | http://localhost:5174/admin/ | `dist/admin/` | www.crystalpools.in/admin |
+| CAC growth workspace | `cac/` | http://127.0.0.1:5185 | `dist/cac/` | www.crystalpools.in/cac |
 
 ## Setup
 
@@ -22,7 +23,8 @@ npm run db:migrate        # applies supabase/migrations/*.sql (once each)
 |---|---|
 | `npm run dev` | Public website dev server |
 | `npm run dev:admin` | Admin panel dev server |
-| `npm run build` | Builds the website, the admin panel (into `dist/admin`) and the Node server |
+| `npm run build` | Builds the website, the admin panel (into `dist/admin`), the Node server and CAC (into `dist/cac`) |
+| `npm run build:cac` | Installs CAC's own dependencies and builds only CAC into `dist/cac` |
 | `npm run build:admin` | Builds only the admin panel into `dist/admin` |
 | `npm start` | Runs the production website server (port 3000, or `PORT`) |
 | `npm run db:migrate` | Applies new database migrations |
