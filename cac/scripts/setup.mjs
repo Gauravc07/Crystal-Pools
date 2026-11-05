@@ -1,7 +1,6 @@
 // Prepares a Supabase project for CAC:
 //   1. applies cac/supabase/migrations/*.sql once each (tracked in cac.schema_migrations)
 //   2. creates the first CAC admin (CAC_ADMIN_EMAIL / CAC_ADMIN_PASSWORD)
-//   3. optionally adds synthetic demo records (CAC_SEED_DEMO=true)
 // Usage: npm --prefix cac run setup   (reads cac/.env)
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -43,10 +42,6 @@ try {
     const { rows } = await client.query('select cac.bootstrap_admin($1, $2, $3) as staff', [email, process.env.CAC_ADMIN_NAME || 'CAC admin', process.env.CAC_ADMIN_PASSWORD || null]);
     const admin = rows[0].staff;
     console.log(`Admin ready: ${admin.email}`);
-    if (process.env.CAC_SEED_DEMO === 'true') {
-      await client.query('select cac.seed_demo($1)', [admin.user_id]);
-      console.log('Synthetic demo records added (skipped if the workspace already had customers).');
-    }
   } else {
     console.log('CAC_ADMIN_EMAIL not set: no admin created. Set it to create the first CAC admin.');
   }
