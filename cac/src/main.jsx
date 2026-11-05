@@ -1,706 +1,264 @@
+// Crystal Pools workspace: requirement forms and the FRP quotation agent
+// (frp.jsx) and the drawings vault. Everything is enforced by cac.* functions
+// in Supabase; this app only signs staff in and calls them.
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, ArrowDownToLine, ArrowRight, ArrowUpRight, Bell, BookOpen, Bot, ArrowLeftRight, BriefcaseBusiness, Boxes, Building2, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, CircleHelp, ClipboardCheck, Clock3, DraftingCompass, FileText, FileUp, Filter, LayoutDashboard, Leaf, ListTodo, LoaderCircle, Lock, LogOut, Mail, MapPin, Megaphone, Menu, MessageSquare, PackageCheck, Phone, PhoneMissed, Star, TrendingUp, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Target, Upload, Users, Warehouse, Waves, X } from 'lucide-react';
-import { forms, labels, descriptions, parseCsv } from './schema.js';
-import { sendPasswordReset, changePassword, openedFromRecoveryLink, markActive, idleExpired, downloadBackup } from './api.js';
-import { configured, supabase, rpc, signIn, signOut, loadState, saveRecord, enqueueRun, wakeWorker, uploadSurveyPhoto, uploadLeadReport, uploadDrawing, drawingUrl, photoUrls, downloadCsv, toSnake } from './api.js';
+import { ArrowDownToLine, ArrowRight, Check, CheckCircle2, CircleHelp, ClipboardList, DraftingCompass, FileText, FileUp, LoaderCircle, Lock, LogOut, Menu, Plus, Search, Settings2, ShieldCheck, Waves, X, ChevronRight } from 'lucide-react';
+import { configured, supabase, rpc, signIn, signOut, loadState, sendPasswordReset, changePassword, openedFromRecoveryLink, markActive, idleExpired, downloadBackup, uploadDrawing, drawingUrl, toSnake } from './api.js';
+import { dateTime, nice, Badge, Button, Sheet, DataTable, cell } from './ui.jsx';
+import { RequirementsPage, FrpQuotesTab, FrpPriceSettings } from './frp.jsx';
 import './styles.css';
 
-const money = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(n)||0);
-const shortMoney = n => n>=100000 ? `₹${(n/100000).toFixed(1)}L` : money(n);
-const date = value => value ? new Date(value).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : 'Not scheduled';
-const dateTime = value => value ? new Date(value).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Kolkata'}) : 'Not scheduled';
-const localInput = value => { if(!value)return ''; const d=new Date(value); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16); };
-const aiLive = state => Boolean(state.config.worker) && state.config.worker.mode !== 'demo';
-const aiLabel = worker => worker?.mode === 'anthropic' ? 'Claude' : worker?.mode === 'huggingface' ? 'Hugging Face' : ['openai', 'live'].includes(worker?.mode) ? 'OpenAI' : 'Demo rules';
-const today = () => new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-const nice = value => String(value || '').replaceAll('_',' ').replace(/([a-z])([A-Z])/g,'$1 $2');
-function Badge({children,tone}) { const word=String(children||'draft');return <span className={`badge ${tone || (['approved','verified','completed','Won'].includes(word)?'green':['pending','waiting_approval','needs_estimation'].includes(word)?'amber':['failed','rejected','Lost'].includes(word)?'red':'')}`}><span/>{nice(word)}</span>; }
-function Empty({title='A clear workspace, ready for your next step.',text='Add your first record to get started.',action}){return <div className="empty"><div className="empty-icon"><Waves size={28}/></div><h3>{title}</h3><p>{text}</p>{action}</div>;}
-function Button({children,onClick,primary=false,className='',...props}){return <button className={`button ${primary?'primary':''} ${className}`} onClick={onClick} {...props}>{children}</button>;}
-// Only these sections are shown. Every other section (leads, pipeline, outreach,
-// inventory, agents, reports, ...) is hidden; its code and data are kept.
-const NAV=[['quotations',FileText,'Quotations'],['drawings',DraftingCompass,'Drawings vault']];
-const HOME='quotations';
-const PAGES=[...NAV.map(([key])=>key),'settings'];
-function App(){
-  const [recovery,setRecovery]=useState(openedFromRecoveryLink);
-  const [state,setState]=useState(null),[auth,setAuth]=useState(false),[loading,setLoading]=useState(true),[page,setPage]=useState(HOME),[search,setSearch]=useState(''),[modal,setModal]=useState(null),[detail,setDetail]=useState(null),[toast,setToast]=useState(null),[busy,setBusy]=useState(false),[mobile,setMobile]=useState(false),[tab,setTab]=useState(''),[status,setStatus]=useState('all');
-  const notify=(message,error=false)=>{setToast({message,error});};
-  const refresh=async()=>{if(!configured){setLoading(false);return;}try{const next=await loadState();setState(next);setAuth(true);}catch(error){if(error.status===401){setAuth(false);if(error.code)notify(error.message,true);}else notify(error.message,true);}finally{setLoading(false);}};
-  useEffect(()=>{refresh();if(!supabase)return;const {data}=supabase.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')setAuth(false);if(event==='PASSWORD_RECOVERY')setRecovery(true);});return()=>data.subscription.unsubscribe();},[]);
+// Field staff (customer visits) see only their requirement forms.
+const navFor = role => role === 'field' ? [['requirements', ClipboardList, 'Requirements']]
+  : [['quotations', FileText, 'Quotations'], ['requirements', ClipboardList, 'Requirements'], ['drawings', DraftingCompass, 'Drawings vault']];
+const ROLES = ['admin', 'sales', 'engineer', 'commercial', 'project', 'field', 'viewer'];
+const roleLabel = role => role === 'field' ? 'field (customer visits)' : role;
+const TITLES = {
+  quotations: ['Every quotation, in one place.', 'FRP proposals prepared by the quotation agent from requirement forms and the FRP price list.'],
+  drawings: ['Every drawing, every revision, checked.', 'RCC, filtration, tiling and FRP drawings for each client or requirement, with checked and approved revisions.'],
+  settings: ['Built around your way of working.', 'Your account, staff access and the FRP price list.'],
+};
+
+function App() {
+  const [recovery, setRecovery] = useState(openedFromRecoveryLink);
+  const [state, setState] = useState(null), [auth, setAuth] = useState(false), [loading, setLoading] = useState(true);
+  const [pageState, setPage] = useState('quotations'), [search, setSearch] = useState(''), [toast, setToast] = useState(null);
+  const [busy, setBusy] = useState(false), [mobile, setMobile] = useState(false), [adding, setAdding] = useState(false);
+  const notify = (message, error = false) => setToast({ message, error });
+  const refresh = async () => {
+    if (!configured) { setLoading(false); return; }
+    try { setState(await loadState()); setAuth(true); }
+    catch (error) { if (error.status === 401) { setAuth(false); if (error.code) notify(error.message, true); } else notify(error.message, true); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => {
+    refresh(); if (!supabase) return;
+    const { data } = supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') setAuth(false); if (event === 'PASSWORD_RECOVERY') setRecovery(true); });
+    return () => data.subscription.unsubscribe();
+  }, []);
   // A new sign-in always starts on the home page, never on the previous person's screen.
-  useEffect(()=>{if(!auth){setPage(HOME);setTab('');setSearch('');setStatus('all');setDetail(null);setModal(null);setMobile(false);}},[auth]);
-  useEffect(()=>{if(!auth)return;const timer=setInterval(()=>{if(document.visibilityState==='visible')refresh();},5000);const onVisible=()=>{if(document.visibilityState==='visible')refresh();};document.addEventListener('visibilitychange',onVisible);return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',onVisible);};},[auth]);
-  useEffect(()=>{if(!auth)return;
-    if(idleExpired()){signOut().then(()=>{setAuth(false);notify('Signed out after 12 hours without activity.',true);});return;}
-    markActive();let last=0;const touch=()=>{if(Date.now()-last>60000){last=Date.now();markActive();}};
-    const check=setInterval(()=>{if(idleExpired()){signOut().then(()=>{setAuth(false);notify('Signed out after 12 hours without activity.',true);});}},60000);
-    ['pointerdown','keydown'].forEach(e=>window.addEventListener(e,touch));
-    return()=>{clearInterval(check);['pointerdown','keydown'].forEach(e=>window.removeEventListener(e,touch));};},[auth]);
-  useEffect(()=>{if(toast){const timer=setTimeout(()=>setToast(null),7000);return()=>clearTimeout(timer);}},[toast]);
-  useEffect(()=>{const handler=e=>{if(e.key==='Escape'){setModal(null);setDetail(null);setMobile(false);}};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[]);
-  async function act(work,message='Saved successfully.'){setBusy(true);try{const result=await work();await refresh();notify(typeof message==='function'?message(result):message);return result;}catch(error){notify(error.message,true);return null;}finally{setBusy(false);}}
-  const navigate=next=>{setPage(PAGES.includes(next)?next:HOME);setTab('');setSearch('');setStatus('all');setDetail(null);setMobile(false);};
-  if(!configured)return <SetupNeeded/>;
-  if(loading)return <div className="loading"><Waves size={36}/><p>Opening your growth workspace…</p></div>;
-  if(!auth)return <Login onLogin={()=>{setToast(null);return refresh();}} notify={notify} toast={toast}/>;
-  if(recovery||state.user.mustChangePassword)return <SetPasswordScreen reason={recovery?'recovery':'temporary'} user={state.user} onDone={async()=>{setRecovery(false);if(location.hash)history.replaceState(null,'',location.pathname);await refresh();notify('Password changed.');}}/>;
-  const r=state.records;
-  const pending=r.approval.filter(a=>a.status==='pending');
-  const openTasks=r.task.filter(t=>t.status==='open');
-  const currentDetail=detail && (r[detail.kind]?.find(item=>item.id===detail.id)||detail);
-  const canWrite=state.user.role!=='viewer';
-  const title={quotations:'Every quotation, in one place.',overview:'A clearer path to your next project.',inbox:'Every enquiry, in one place.',pipeline:'Move the right opportunities forward.',agents:'Your team, with a little more capacity.',outreach:'Good conversations begin with context.',customers:'Relationships, with the full picture.',library:'The source of truth for your team.',settings:'Built around your way of working.',mywork:'Your day, in one place.',audit:'Every decision leaves a trace.',appointment:'Every visit booked, confirmed and kept.',lifecycle:'The right customer, at the right moment.',reviews:'Happy customers, heard by the next one.',reports:'How quickly and how well the team converts.',drawings:'Every drawing, every revision, checked.',inventory:'Stock you can count on.',leads:'Every new project, followed up at the right moment.'}[page]||labels[page]||nice(page);
-  const subtitle={quotations:'Quotations with their items, scope, exclusions and terms. Open one to print it or create a revision.',overview:'Your Crystal Pools growth workspace. From first signal to lasting relationship.',agents:'Focused assistants you can switch on or off. Free rules unless paid AI is switched on. A human at every important decision.',inbox:'Manual enquiries and customer replies, ready for qualification.',outreach:'Review researched prospects, tailored drafts and campaign performance.',settings:'Manage staff access and see exactly what is connected.',audit:'A chronological record of actions, approvals and workflow checkpoints.',lifecycle:'Warranty, renewal, service and re-engagement lists built from your records. Each creates reviewed follow-up tasks; nothing is sent automatically.',reviews:'Review requests are prepared at handover. Sending is simulated until a messaging channel is approved.',reports:'Speed to lead, conversion, appointments, reviews and lifecycle follow-up.',drawings:'RCC, filtration, tiling and FRP drawings for each opportunity, site and project, with checked and approved revisions.',inventory:'Items, warehouses and bins, purchase orders and goods receipts, issues to projects, and a stock ledger at moving average cost.',leads:'Builder and architect projects read from the monthly report emails. Each lead is scheduled by construction stage, and comments keep the history.'}[page]||descriptions[page]||'Keep the details connected and the next step clear.';
-  const run=(agent,target)=>{if(agent==='proposal'){setModal({type:'quote',opportunityId:target?.id,asAgent:true});return;}setModal({type:'run',agent,targetId:target?.id||''});};
-  const add=kind=>setModal({type:'record',kind});
-  const show=item=>setDetail(item);
-  function recordActions(item){return <>
-    {forms[item.kind]&&canWrite&&!['approved','verified'].includes(item.status)&&<Button onClick={()=>setModal({type:'record',kind:item.kind,record:item})}>Edit record</Button>}
-    {['prospect','survey','rate','portfolio','payment','change','knowledge'].includes(item.kind)&&!['approved','verified'].includes(item.status)&&canWrite&&<Button primary disabled={busy} onClick={()=>act(()=>rpc('submit_record',{p_kind:item.kind,p_id:item.id}),'Submitted for review.')}>Request approval</Button>}
-    {state.agents.filter(a=>a.kind===item.kind&&a.active).map(agent=><Button key={agent.id} disabled={busy} onClick={()=>run(agent.id,item)}><Sparkles size={14}/>{agent.name}</Button>)}
-    {item.kind==='opportunity'&&canWrite&&<Button onClick={()=>setModal({type:'stage',record:item})}>Move stage <ArrowRight size={14}/></Button>}
-    {item.kind==='task'&&['open','paused'].includes(item.status)&&canWrite&&<Button onClick={()=>setModal({type:'cancelTask',record:item})}>Cancel task</Button>}
-    {item.kind==='task'&&item.status==='open'&&canWrite&&<Button primary disabled={busy} onClick={()=>act(()=>rpc('complete_task',{p_task:item.id}),'Task completed.')}><Check size={14}/>Complete task</Button>}
-    {item.kind==='opportunity'&&canWrite&&<Button onClick={()=>setModal({type:'record',kind:'appointment',initial:{opportunityId:item.id,type:'Consultation',name:`Consultation · ${item.name}`,durationMinutes:60}})}><CalendarDays size={14}/>Book appointment</Button>}
-    {item.kind==='maintenance'&&canWrite&&<Button onClick={()=>setModal({type:'record',kind:'appointment',initial:{maintenanceId:item.id,type:'Service visit',name:`Service visit · ${item.name}`,durationMinutes:90}})}><CalendarDays size={14}/>Book service visit</Button>}
-    {item.kind==='maintenance'&&canWrite&&<Button onClick={()=>setModal({type:'record',kind:'serviceVisit',initial:{maintenanceId:item.id,name:`Service · ${item.name}`,visitDate:today(),decision:'None'}})}>Log service visit</Button>}
-    {item.kind==='appointment'&&['scheduled','confirmed'].includes(item.status)&&canWrite&&<>{item.status==='scheduled'&&<Button primary disabled={busy} onClick={()=>act(()=>rpc('set_appointment_status',{p_appointment:item.id,p_status:'confirmed'}),'Appointment confirmed.')}><Check size={14}/>Customer confirmed</Button>}<Button disabled={busy} onClick={()=>act(()=>rpc('set_appointment_status',{p_appointment:item.id,p_status:'completed'}),'Appointment completed.')}>Completed</Button><Button disabled={busy} onClick={()=>act(()=>rpc('set_appointment_status',{p_appointment:item.id,p_status:'no_show'}),'No-show recorded. A re-engagement task was created.')}>No-show</Button><Button onClick={()=>setModal({type:'reschedule',record:item})}>Reschedule</Button><Button disabled={busy} onClick={()=>act(()=>rpc('set_appointment_status',{p_appointment:item.id,p_status:'cancelled'}),'Appointment cancelled.')}>Cancel</Button></>}
-    {item.kind==='reviewRequest'&&canWrite&&<>{item.status==='to_send'?<SendActions item={item} records={r} onRecord={()=>setModal({type:'send',record:item})} notify={notify}/>:null}{item.status==='sent'&&<><Button primary onClick={()=>setModal({type:'rating',record:item})}><Star size={14}/>Record review</Button><Button disabled={busy} onClick={()=>act(()=>rpc('update_review',{p_review:item.id,p_status:'declined'}),'Marked as declined.')}>Customer declined</Button></>}</>}
-    {item.kind==='project'&&item.status==='completed'&&!r.reviewRequest.some(v=>v.projectId===item.id)&&canWrite&&<Button onClick={()=>act(()=>rpc('request_review',{p_project:item.id}),'Review request prepared.')}><Star size={14}/>Request review</Button>}
-    {item.kind==='project'&&item.status!=='completed'&&canWrite&&<Button onClick={()=>act(()=>rpc('complete_project',{p_project:item.id}),'Project handover completed.')}>Complete handover</Button>}
-    {item.kind==='prospect'&&item.status==='approved'&&!item.suppressed&&!item.convertedOpportunityId&&canWrite&&<Button primary disabled={busy} onClick={()=>act(()=>rpc('convert_prospect',{p_prospect:item.id}),'Opportunity created in the lead inbox.')}>Convert to opportunity <ArrowRight size={14}/></Button>}
-    {item.kind==='prospect'&&!item.suppressed&&canWrite&&<Button onClick={()=>act(()=>rpc('suppress_prospect',{p_prospect:item.id}),'Opt-out recorded. Outreach is blocked.')}>Record opt-out</Button>}
-    {item.kind==='projectLead'&&canWrite&&OPEN_LEAD.includes(item.status)&&<><Button primary onClick={()=>setModal({type:'leadContact',record:item})}><Phone size={14}/>Log call or visit</Button><Button onClick={()=>setModal({type:'leadConvert',record:item})}>Convert to opportunity <ArrowRight size={14}/></Button><Button onClick={()=>setModal({type:'leadAssign',record:item})}>Assign</Button><Button onClick={()=>setModal({type:'leadClose',record:item})}>Close lead</Button></>}
-    {item.kind==='projectLead'&&canWrite&&['Lost','Not relevant'].includes(item.status)&&<Button disabled={busy} onClick={()=>act(()=>rpc('set_lead_status',{p_lead:item.id,p_status:'Open',p_reason:''}),'Lead reopened with a follow-up tomorrow.')}>Reopen lead</Button>}
-    {item.kind==='projectLead'&&item.convertedOpportunityId&&<Button onClick={()=>{const o=r.opportunity.find(x=>x.id===item.convertedOpportunityId);if(o)show(o);}}>Open opportunity <ArrowRight size={14}/></Button>}
-    {item.kind==='quote'&&<Button onClick={()=>printQuote(item,r)}>Print / save PDF</Button>}
-    {item.kind==='quote'&&canWrite&&<Button onClick={()=>setModal({type:'quote',previous:item,opportunityId:item.opportunityId})}>Create revision</Button>}
-    {item.kind==='change'&&item.status==='approved'&&!item.invoiceRef&&canWrite&&<Button primary onClick={()=>setModal({type:'billing',record:item})}>Record invoice</Button>}
-    {item.kind==='survey'&&item.status!=='verified'&&canWrite&&<label className="button">Attach site photo<input className="file-button-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)act(()=>uploadSurveyPhoto(item.id,file),'Site photo attached.');}}/></label>}
-    {['quote','draft'].includes(item.kind)&&item.status==='approved'&&(!item.agent||['outreach','followup'].includes(item.agent))&&canWrite&&<SendActions item={item} records={r} onRecord={()=>setModal({type:'send',record:item})} notify={notify}/>}
-  </>;}
-  function table(kind, customRows){const rows=(customRows||r[kind]||[]).filter(item=>JSON.stringify(item).toLowerCase().includes(search.toLowerCase())).filter(item=>status==='all'||item.status===status||item.stage===status);return <div className="panel table-panel"><div className="table-toolbar"><div className="table-title">{labels[kind]} <span className="count">{rows.length}</span></div><div className="toolbar-actions"><select aria-label="Filter status" value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option>{[...new Set((customRows||r[kind]||[]).map(i=>i.stage||i.status).filter(Boolean))].map(s=><option key={s}>{s}</option>)}</select>{forms[kind]&&<button className="button icon-button" title="Export CSV" aria-label="Export CSV" onClick={()=>downloadCsv(kind,rows)}><ArrowDownToLine size={16}/></button>}{forms[kind]&&canWrite&&<Button primary onClick={()=>add(kind)}><Plus size={15}/>Add {kind}</Button>}</div></div>{rows.length?<div className="table-scroll"><table><thead><tr><th>{kind==='prospect'?'Organisation':'Record'}</th><th>{kind==='quote'?'Total':'Context'}</th><th>Status</th><th>Updated</th><th/></tr></thead><tbody>{rows.map(item=><tr key={item.id} onClick={()=>show(item)}><td><button className="record-link" onClick={e=>{e.stopPropagation();show(item);}}>{item.name}</button><small>{item.location||item.owner||item.role||item.id}</small></td><td>{kind==='quote'?money(item.total):kind==='appointment'?`${item.type} · ${dateTime(item.startsAt)}`:kind==='reviewRequest'?(item.rating?`${item.rating} / 5`:'—'):item.segment||item.route||item.agent||item.type||item.unit||item.nextAction||r.opportunity.find(o=>o.id===item.opportunityId)?.name||r.customer.find(c=>c.id===item.customerId)?.name||'—'}</td><td><Badge>{item.suppressed?'Opted out':item.stage||item.status}</Badge></td><td className="muted">{date(item.updatedAt)}</td><td><ChevronRight size={16}/></td></tr>)}</tbody></table></div>:<Empty text="Create a record or adjust your search to see it here."/>}</div>;}
-  function tabs(options){return <div className="tabs">{options.map(([key,label])=><button key={key} className={(tab||options[0][0])===key?'active':''} onClick={()=>{setTab(key);setStatus('all');}}>{label}<span>{r[key]?.length||0}</span></button>)}</div>;}
-  return <div className="app-shell">
-    {mobile&&<button className="sidebar-scrim" onClick={()=>setMobile(false)} aria-label="Close navigation"/>}
-    <aside className={`sidebar ${mobile?'open':''}`}><a className="brand" href="#" onClick={e=>{e.preventDefault();navigate(HOME);}}><span className="brand-mark"><Waves size={27}/></span><span>crystal pools<small>WORKSPACE</small></span></a><nav>{NAV.map(([key,Icon,label])=><button key={key} className={page===key?'active':''} onClick={()=>navigate(key)}><Icon size={18}/>{label}</button>)}</nav><div className="sidebar-bottom"><nav><button onClick={()=>navigate('settings')} className={page==='settings'?'active':''}><Settings2 size={17}/>Settings</button></nav><div className="profile"><span className="avatar">{state.user.name.slice(0,2).toUpperCase()}</span><span>{state.user.name}<small>{nice(state.user.role)}</small></span><button title="Sign out" className="icon-button" onClick={async()=>{await signOut();setAuth(false);}}><LogOut size={16}/></button></div></div></aside>
-    <div className="main-shell"><header className="topbar"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={()=>setMobile(true)}><Menu size={22}/></button><div className="breadcrumb">Workspace <ChevronRight size={13}/><strong>{NAV.find(([key])=>key===page)?.[2]||nice(page)}</strong></div><div className="topbar-right"><span className="avatar small">CP</span></div></header>
-    <main><div className="page-heading"><div><div className="eyebrow">{page==='overview'?'THE BIG PICTURE':page==='agents'?'HUMAN-LED. AGENT-ASSISTED.':'CRYSTAL POOLS / '+nice(page).toUpperCase()}</div><h1>{title}</h1><p>{subtitle}</p></div>{page==='overview'?<Button primary onClick={()=>add('opportunity')}><Plus size={16}/>New enquiry</Button>:page==='agents'?<span className="mode-tag"><Sparkles size={15}/>{aiLive(state)?'Live AI enabled':'Demo rules enabled'}</span>:null}</div>
-    {!PAGES.includes(page)?null:<>
-    {!['settings','audit','agents'].includes(page)&&<div className="search-row"><div className="search-field"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={`Search ${nice(page)}…`} aria-label="Search records"/>{search&&<button onClick={()=>setSearch('')} aria-label="Clear search"><X size={14}/></button>}</div><span className="muted small-text">{new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kolkata'})}</span></div>}
-    {page==='prospect'&&<><div className="info-strip"><Target size={20}/><div><strong>Evidence before outreach.</strong><span>Research organisations, review source links, then approve the ones that fit.</span></div><Button onClick={()=>setModal({type:'import',kind:'prospect'})}>Import CSV</Button></div>{table('prospect')}</>}
-    {page==='inbox'&&<>{state.config.websiteLeads&&<div className="info-strip"><Mail size={20}/><div><strong>Website enquiries.</strong><span>Bring new contact-form enquiries from the Crystal Pools website into this inbox. Each enquiry is imported once.</span></div><Button disabled={busy||!canWrite} onClick={()=>act(()=>rpc('import_website_leads'),result=>result.created?`${result.created} website ${result.created===1?'enquiry':'enquiries'} added to the inbox.`:'No new website enquiries.')}>Import website enquiries</Button></div>}{tabs([['opportunity','Enquiries'],['activity','Conversations'],['revision','Revision requests']])}{table(tab||'opportunity')}</>}
-    {page==='leads'&&<ProjectLeads state={state} search={search} show={show} act={act} busy={busy} canWrite={canWrite}/>}
-    {page==='quotations'&&<><div className="right-align"><Button primary onClick={()=>setModal({type:'quote'})}><Plus size={15}/>Build quotation</Button></div>{table('quote')}</>}
-    {page==='drawings'&&<DrawingsVault ctx={{state,act,busy,refresh,notify,canWrite}} search={search}/>}
-    {page==='inventory'&&<Inventory ctx={{state,act,busy,refresh,notify,canWrite}} search={search}/>}
-    {page==='pipeline'&&<><div className="pipeline-actions"><span className="muted">Stages are checked against your recorded approvals.</span><Button primary onClick={()=>add('opportunity')}><Plus size={15}/>New opportunity</Button></div><div className="kanban">{state.stages.map(stage=>{const items=r.opportunity.filter(o=>o.stage===stage&&JSON.stringify(o).toLowerCase().includes(search.toLowerCase()));return <section className="kanban-column" key={stage}><h3><span className="stage-dot"/>{stage}<span>{items.length}</span></h3>{items.map(item=><button className="opportunity-card" key={item.id} onClick={()=>show(item)}><Badge>{item.route}</Badge><h4>{item.name}</h4><p><MapPin size={13}/>{item.location||'Location to confirm'}</p><strong>{money(item.budget)}</strong><div className="card-footer"><span className="avatar tiny">{(item.owner||'?').slice(0,2)}</span><span>{date(item.nextActionDate)}</span></div></button>)}{!items.length&&<div className="empty-stage">No opportunities here</div>}</section>;})}</div></>}
-    {page==='outreach'&&<>{tabs([['draft','Message drafts'],['campaign','Campaigns']])}<div className="info-strip"><ShieldCheck size={20}/><div><strong>Every message passes through review.</strong><span>Approved messages can be simulated. No email or WhatsApp account is connected.</span></div></div>{table(tab||'draft',tab==='campaign'?undefined:r.draft.filter(d=>['outreach','followup'].includes(d.agent)))}</>}
-    {page==='approval'&&<div className="review-list">{pending.length?pending.filter(a=>JSON.stringify(a).toLowerCase().includes(search.toLowerCase())).map(item=><div className="panel review-card" key={item.id}><div className="review-icon"><ShieldCheck size={22}/></div><div className="review-copy"><div className="eyebrow">{nice(item.type)} · {item.role} review</div><h3>{item.name}</h3><p>Requested {date(item.createdAt)} · Review the source record and supporting details.</p></div><Badge>pending</Badge><Button primary onClick={()=>setModal({type:'approval',record:item})}>Review <ArrowRight size={15}/></Button></div>):<Empty title="You're all caught up." text="New agent drafts and submitted records will appear here for review."/>}<h3 className="section-heading">Recently resolved</h3>{r.approval.filter(a=>a.status!=='pending').slice(0,8).map(item=><div className="resolved" key={item.id}><CheckCircle2 size={17}/><span>{item.name}</span><Badge>{item.status}</Badge><span className="muted">{date(item.reviewedAt)}</span></div>)}</div>}
-    {page==='agents'&&<><AgentControls state={state} busy={busy} act={act}/><div className="agent-grid">{state.agents.map((agent,i)=><article className={`panel agent-card ${agent.active?'':'agent-off'}`} key={agent.id}><div className="agent-top"><span className={`agent-icon tone-${i%3}`}><Bot size={23}/></span><Badge tone={agent.active?'green':undefined}>{agent.active?'On':'Off'}</Badge></div><h3>{agent.name}</h3><p>{agent.description}</p><div className="tool-tags">{agent.tools.map(tool=><span key={tool}>{tool}</span>)}</div><footer><span><ShieldCheck size={14}/>{agent.role} review</span>{state.user.role==='admin'&&<button className="text-button" disabled={busy} onClick={()=>act(()=>rpc('set_agent_active',{p_agent:agent.id,p_active:!agent.active}),`${agent.name} turned ${agent.active?'off':'on'}.`)}>{agent.active?'Turn off':'Turn on'}</button>}{agent.active&&(agent.id==='leadimport'?<button className="text-button" onClick={()=>navigate('leads')}>Open project leads <ArrowRight size={14}/></button>:<button className="text-button" onClick={()=>run(agent.id)}>Run workflow <ArrowRight size={14}/></button>)}</footer></article>)}</div><div className="section-title"><h2>Workflow runs</h2><span className="muted">Saved checkpoints · maximum 3 attempts</span></div><div className="panel">{state.jobs.length?state.jobs.map(job=><div className="run-row" key={job.id}><span className="agent-icon"><Activity size={18}/></span><div><strong>{state.agents.find(a=>a.id===job.agent)?.name}</strong><small>{job.id} · {job.step} · attempt {job.attempts}/{job.maxAttempts}{job.analysis?.model?` · ${job.analysis.model}`:job.analysis?.mode?` · ${job.analysis.mode}`:''}{job.analysis?.usage?.output!=null?` · ${job.analysis.usage.input}+${job.analysis.usage.output} tokens`:''}</small>{job.error&&<p className="error-inline">{job.error}</p>}<div className="trace">{job.trace.map((step,i)=><span key={i}>{nice(step.step)}<ChevronRight size={11}/></span>)}</div></div><Badge>{job.status}</Badge>{job.status==='failed'&&job.attempts<job.maxAttempts&&<Button onClick={()=>act(async()=>{const result=await rpc('retry_run',{p_job:job.id});wakeWorker();return result;},'Retry queued.')}>Retry</Button>}</div>):<Empty title="Ready when you are." text="Run an assistant above to see its steps and review checkpoint."/>}</div></>}
-    {page==='customers'&&<>{tabs([['customer','Customers'],['contact','Contacts'],['site','Sites']])}{(tab||'customer')==='customer'&&<div className="right-align"><Button onClick={()=>setModal({type:'import',kind:'customer'})}>Import customers</Button></div>}{table(tab||'customer')}</>}
-    {page==='survey'&&<>{tabs([['survey','Site surveys'],['quote','Quotations'],['revision','Revision requests']])}{tab==='quote'&&<div className="right-align"><Button primary onClick={()=>setModal({type:'quote'})}><Plus size={15}/>Build quotation</Button></div>}{table(tab||'survey')}</>}
-    {page==='project'&&<>{tabs([['project','Projects'],['change','Change requests'],['payment','Payments']])}{table(tab||'project')}</>}
-    {page==='maintenance'&&<>{tabs([['maintenance','Contracts'],['serviceVisit','Service visits']])}{table(tab||'maintenance')}</>}
-    {page==='mywork'&&<MyWork state={state} show={show} navigate={navigate}/>}
-    {page==='appointment'&&<><Agenda appointments={r.appointment} show={show}/><div className="info-strip"><CalendarDays size={20}/><div><strong>Reminders are automatic.</strong><span>Each upcoming appointment has a reminder task the day before. No-shows create a re-engagement task. Confirming a site visit updates the opportunity.</span></div></div>{table('appointment',[...r.appointment].sort((a,b)=>a.startsAt.localeCompare(b.startsAt)))}</>}
-    {page==='lifecycle'&&<Lifecycle state={state} busy={busy} canWrite={canWrite} act={act}/>}
-    {page==='reviews'&&<><ReviewStats metrics={state.metrics.reviews} navigate={navigate}/>{table('reviewRequest')}</>}
-    {page==='reports'&&<Reports state={state}/>}
-    {page==='task'&&<>{tabs([['task','Tasks'],['activity','Activity']])}{table(tab||'task')}</>}
-    {page==='library'&&<>{tabs([['rate','Rate cards'],['portfolio','Portfolio'],['knowledge','Knowledge base']])}<div className="info-strip"><BookOpen size={20}/><div><strong>Agents use approved material only.</strong><span>Sample rates and portfolio text are clearly marked DEMO. Replace them before real use.</span></div></div>{table(tab||'rate')}</>}
-    {page==='audit'&&<div className="panel audit-panel">{state.events.map(event=><div className="audit-row" key={event.id}><span className="audit-dot"/><div><strong>{nice(event.action)}</strong><p>{state.users.find(u=>u.id===event.actor)?.name||event.actor} · {event.target}</p><small>{JSON.stringify(event.detail)}</small></div><time>{new Date(event.at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}</time></div>)}</div>}
-    {page==='settings'&&<Settings state={state} busy={busy} onSetting={(key,value,message)=>act(()=>rpc('set_setting',{p_key:key,p_value:value}),message)} onAdd={()=>setModal({type:'user'})} onToggle={user=>act(()=>rpc('set_staff',{p_user:user.id,p_role:user.role,p_active:!user.active}),user.active?'Staff member deactivated.':'Staff member reactivated.')}/>}
-    </>}
-    <footer className="page-footer"><span><Waves size={15}/> Crystal Pools · Growth workspace</span><span>Pilot · Human decisions, connected work.</span></footer></main></div>
-    {currentDetail&&<div className="overlay" onClick={()=>setDetail(null)}><aside className="drawer" onClick={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-label={currentDetail.name}><div className="drawer-header"><span className="eyebrow">{labels[currentDetail.kind]||currentDetail.kind}</span><button className="icon-button" onClick={()=>setDetail(null)} aria-label="Close details"><X size={21}/></button></div><h2>{currentDetail.name}</h2><Badge tone={currentDetail.kind==='projectLead'?leadTone(currentDetail.status):undefined}>{currentDetail.kind==='projectLead'?currentDetail.status:currentDetail.stage||currentDetail.status}</Badge><div className="detail-actions">{recordActions(currentDetail)}</div>{currentDetail.kind==='projectLead'?<LeadDetails lead={currentDetail} state={state} show={show}/>:<RecordDetails record={currentDetail} records={r}/>}{currentDetail.kind==='opportunity'&&<><h3 className="section-heading">Connected records</h3>{['survey','quote','task','revision','activity','project','payment'].map(kind=>r[kind].filter(i=>i.opportunityId===currentDetail.id).map(item=><button className="linked-record" key={item.id} onClick={()=>show(item)}><span><small>{labels[kind]}</small>{item.name}</span><ChevronRight size={15}/></button>))}</>}{commentKinds.includes(currentDetail.kind)&&<Comments record={currentDetail} state={state} act={act} busy={busy} canWrite={canWrite}/>}</aside></div>}
-    {modal&&<Modal modal={modal} state={state} close={()=>setModal(null)} refresh={refresh} notify={notify} act={act} busy={busy}/>}
-    {toast&&<div role="status" className={`toast ${toast.error?'error':''}`}>{toast.error?<CircleHelp size={18}/>:<CheckCircle2 size={18}/>}<span>{toast.message}</span><button onClick={()=>setToast(null)} aria-label="Dismiss notification"><X size={16}/></button></div>}
-  </div>;
-}
-
-function Overview({state,navigate,show,run}){
-  const r=state.records, m=state.metrics, pending=r.approval.filter(a=>a.status==='pending'),tasks=r.task.filter(t=>t.status==='open'),opps=r.opportunity;
-  const active=opps.filter(o=>!['Lost','Deferred','Won','Execution','Handover','Maintenance'].includes(o.stage));
-  const quoted=Object.values(r.quote.filter(q=>q.status==='approved').reduce((acc,q)=>{if(!acc[q.opportunityId]||q.version>acc[q.opportunityId].version)acc[q.opportunityId]=q;return acc;},{})).reduce((sum,q)=>sum+q.total,0);
-  const collected=r.payment.filter(p=>p.status==='verified').reduce((sum,p)=>sum+p.amount,0);
-  const overdue=tasks.filter(t=>t.dueDate&&t.dueDate<today());
-  const stages=['New enquiry','Qualified','Survey complete','Estimate sent','Won'];
-  // Owner checks from the pilot plan: each count links to the page that resolves it.
-  const responded=new Set(r.activity.filter(a=>a.type==='Human response').map(a=>a.opportunityId)),withTask=new Set(tasks.map(t=>t.opportunityId));
-  const live=o=>!['Lost','Deferred'].includes(o.stage)&&!o.suppressed;
-  const hidden=(state.settings.hiddenModules||'').split(',').filter(Boolean);
-  const attention=[
-    ['Enquiries awaiting a human response',opps.filter(o=>live(o)&&o.stage==='New enquiry'&&!responded.has(o.id)).length,'inbox'],
-    ['Qualified opportunities without a next action',opps.filter(o=>live(o)&&['Qualified','Site visit scheduled','Survey complete','Estimate sent','Detailed proposal','Negotiation'].includes(o.stage)&&!o.nextActionDate&&!withTask.has(o.id)).length,'pipeline'],
-    ['Verified surveys awaiting an estimate',r.survey.filter(s=>s.status==='verified'&&!r.quote.some(q=>q.surveyId===s.id)).length,'survey'],
-    ['Revision requests needing estimation',r.revision.filter(v=>v.status==='needs_estimation').length,'inbox'],
-    ['Quotes awaiting follow-up',tasks.filter(t=>t.category==='generic_followup').length,'task'],
-    ['Approved changes awaiting billing',r.change.filter(c=>c.status==='approved'&&c.billingStatus!=='Billed').length,'project'],
-    ['Maintenance renewals within 30 days',r.maintenance.filter(m=>m.renewalDate&&new Date(m.renewalDate)<new Date(Date.now()+30*86400000)).length,'maintenance'],
-    [`Enquiries past the ${m.response.targetMinutes}-minute response target`,m.response.awaitingOverTarget,'inbox'],
-    ['Missed calls to return',m.response.missedCallsOpen,'task'],
-    ['Appointments in 3 days to confirm',m.appointments.unconfirmed,'appointment'],
-    ['No-shows to re-engage',m.appointments.noShowFollowups,'task'],
-    ['Overdue services',m.lifecycle?.serviceOverdue||0,'lifecycle'],
-    ['Review requests to send',m.reviews.toSend,'reviews'],
-    ['Project lead follow-ups due',r.projectLead.filter(l=>OPEN_LEAD.includes(l.status)&&l.nextFollowUp&&l.nextFollowUp<=today()).length,'leads'],
-  ];
-  return <><div className="overview-banner"><div><span className="banner-icon"><Sparkles size={20}/></span><div><strong>A little attention. A lot of possibility.</strong><p>{pending.length} {pending.length===1?'decision needs':'decisions need'} your review{overdue.length?` and ${overdue.length} ${overdue.length===1?'task is':'tasks are'} overdue`:'. Your next actions are up to date.'}.</p></div></div><button onClick={()=>navigate('approval')}>Open review queue <ArrowRight size={17}/></button></div><div className="stats-grid">{[
-    ['Active opportunities',active.length,`${opps.filter(o=>o.stage==='New enquiry').length} awaiting qualification`,BriefcaseBusiness,'pipeline'],
-    ['Approved quoted value',shortMoney(quoted),'Latest approved version per opportunity',FileText,'survey'],
-    ['Verified collections',shortMoney(collected),'Recorded and verified payments',CheckCheck,'project'],
-    ['Needs your review',pending.length,'Your judgment moves work forward',ShieldCheck,'approval'],
-  ].map(([label,value,sub,Icon,target])=><button className="stat-card" key={label} onClick={()=>navigate(target)}><div><span>{label}</span><Icon size={17}/></div><strong>{value}</strong><small>{sub}</small></button>)}</div>
-  <section className="panel attention-list"><div className="panel-heading"><div><h2>What needs attention</h2><p>Owner checks across sales, estimation, billing and service.</p></div></div><div className="attention-grid">{attention.filter(([, , target])=>!hidden.includes(target)).map(([label,count,target])=><button key={label} className={`attention-item ${count?'has-items':''}`} onClick={()=>navigate(target)}><strong>{count}</strong><span>{label}</span><ChevronRight size={15}/></button>)}</div></section>
-  {state.user.role==='admin'&&<AskOwnerAssistant state={state} navigate={navigate}/>}
-  <div className="dashboard-grid"><section className="panel pipeline-panel"><div className="panel-heading"><div><h2>Your pipeline at a glance</h2><p>Conversations becoming projects.</p></div><button className="text-button" onClick={()=>navigate('pipeline')}>View pipeline <ArrowUpRight size={15}/></button></div><div className="pipeline-chart">{stages.map((stage,index)=>{const amount=opps.filter(o=>o.stage===stage).length;return <div className="chart-column" key={stage}><div className="chart-value">{amount}</div><div className="chart-track"><div className={`chart-bar bar-${index}`} style={{height:`${Math.max(5,amount/Math.max(1,...stages.map(s=>opps.filter(o=>o.stage===s).length))*100)}%`}}/></div><span>{stage}</span></div>;})}</div><div className="chart-note"><span className="live-dot"/>Current stage counts<span>All customer routes</span></div></section><section className="panel attention-panel"><div className="panel-heading"><div><h2>Make the next move</h2><p>Small actions that keep things flowing.</p></div><span className="count">{tasks.length}</span></div>{tasks.length?tasks.slice(0,4).map(task=><button className="attention-row" key={task.id} onClick={()=>show(task)}><span className={`task-icon ${task.dueDate<today()?'overdue':''}`}><Clock3 size={17}/></span><div><strong>{task.name}</strong><small>{task.owner} · {date(task.dueDate)}</small></div><ChevronRight size={16}/></button>):<Empty title="Nothing overdue." text="Your next actions will appear here."/>}<button className="panel-bottom-link" onClick={()=>navigate('task')}>See all tasks <ArrowRight size={15}/></button></section></div>
-  <div className="section-title"><div><div className="eyebrow">A HELPING HAND</div><h2>Start with a focused assistant.</h2></div><button className="text-button" onClick={()=>navigate('agents')}>Explore all assistants <ArrowRight size={15}/></button></div><div className="quick-agents">{[['leadimport','01','Read the lead report','Turn the monthly project report into leads with follow-ups.',Building2],['qualification','02','Understand the enquiry','Turn a customer’s message into a clear next step.',MessageSquare],['followup','03','Keep the conversation moving','Read the reply. Adapt the follow-up. Bring in your team.',Sparkles]].filter(([key])=>state.agents.find(a=>a.id===key)?.active).map(([key,num,title,description,Icon])=><button className="quick-agent" key={key} onClick={()=>key==='leadimport'?navigate('leads'):run(key)}><div><span className="agent-icon"><Icon size={22}/></span><span className="agent-number">{num}</span></div><h3>{title}</h3><p>{description}</p><span className="agent-cta">Open assistant <ArrowUpRight size={16}/></span></button>)}</div>
-  <div className="dashboard-grid bottom-grid"><section className="panel"><div className="panel-heading"><div><h2>Recent activity</h2><p>The latest across your workspace.</p></div><button className="text-button" onClick={()=>navigate('audit')}>View all</button></div>{state.events.slice(0,4).map(event=><div className="event-summary" key={event.id}><span className="event-dot"/><div><strong>{nice(event.action)}</strong><small>{state.users.find(u=>u.id===event.actor)?.name||'Workspace'} · {date(event.at)}</small></div></div>)}</section><section className="relationship-card"><Leaf size={30}/><div className="eyebrow">BEYOND THE BUILD</div><h2>The next project could start<br/>with a lasting relationship.</h2><p>{r.maintenance.filter(m=>m.renewalDate&&new Date(m.renewalDate)<new Date(Date.now()+30*86400000)).length} maintenance renewals within 30 days. Keep service history and your next conversation connected.</p><button onClick={()=>navigate('maintenance')}>Visit maintenance <ArrowRight size={16}/></button></section></div></>;
-}
-
-function RecordDetails({record,records}){return <><div className="record-details">{Object.entries(record).filter(([key,value])=>!['id','kind','name','status','createdBy','recordVersion','websiteHost','items','path'].includes(key)&&value!==undefined&&value!==null&&value!=='').map(([key,value])=><div className={`detail-field ${typeof value==='object'?'wide':''}`} key={key}><label>{nice(key)}</label>{typeof value==='object'?<><pre>{JSON.stringify(value,null,2)}</pre>{value?.facts?.filter(f=>f.sourceUrl?.startsWith('https://')).map((fact,i)=><a className="source-link" key={i} href={fact.sourceUrl} target="_blank" rel="noreferrer">{fact.claim}<ArrowUpRight size={13}/></a>)}</>:key.endsWith('Id')?<p>{Object.values(records).flat().find(r=>r.id===value)?.name||value}</p>:String(value).startsWith('https://')?<a href={String(value)} target="_blank" rel="noreferrer">{String(value)} <ArrowUpRight size={12}/></a>:<p>{typeof value==='boolean'?(value?'Yes':'No'):String(value)}</p>}</div>)}</div>{record.kind==='survey'&&<PhotoGrid photos={records.attachment.filter(a=>a.surveyId===record.id)}/>}{record.kind==='quote'&&record.previousId&&<QuoteCompare quote={record} previous={records.quote.find(q=>q.id===record.previousId)}/>}</>;}
-
-function PhotoGrid({photos}){
-  const [urls,setUrls]=useState({});const paths=photos.map(p=>p.path).join('|');
-  useEffect(()=>{let live=true;photoUrls(photos.map(p=>p.path)).then(next=>{if(live)setUrls(next);}).catch(()=>{});return()=>{live=false;};},[paths]);
-  if(!photos.length)return null;
-  return <div className="photo-grid">{photos.map(a=><a key={a.id} href={urls[a.path]} target="_blank" rel="noreferrer">{urls[a.path]?<img src={urls[a.path]} alt={a.name}/>:<span className="photo-loading"><LoaderCircle className="spin" size={18}/></span>}<small>{a.name}</small></a>)}</div>;
-}
-function QuoteCompare({quote,previous}){
-  if(!previous)return null;
-  const before=Object.fromEntries(previous.items.map(i=>[i.rateId,i])),after=Object.fromEntries(quote.items.map(i=>[i.rateId,i]));
-  const rows=[...new Set([...Object.keys(before),...Object.keys(after)])].map(id=>({name:(after[id]||before[id]).name,from:before[id]?.quantity,to:after[id]?.quantity})).filter(r=>r.from!==r.to);
-  const delta=quote.total-previous.total;
-  return <div className="quote-compare"><h3 className="section-heading">Changes from v{previous.version}</h3>{rows.map(r=><p key={r.name}>{r.name}: {r.from??'—'} → {r.to??'removed'}</p>)}{['scope','exclusions','terms'].filter(k=>quote[k]!==previous[k]).map(k=><p key={k}>{nice(k)} changed</p>)}<strong>Total {delta>=0?'+':'−'}{money(Math.abs(delta))} ({money(previous.total)} → {money(quote.total)})</strong></div>;
-}
-
-function Login({onLogin,notify,toast}){
-  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[working,setWorking]=useState(false);
-  return <div className="login-page"><div className="login-story"><div className="brand"><span className="brand-mark"><Waves size={30}/></span><span>crystal pools<small>GROWTH WORKSPACE</small></span></div><div><div className="eyebrow">FROM FIRST SIGNAL TO LASTING RELATIONSHIP</div><h1>Good work deserves<br/>room to grow.</h1><p>A connected workspace for the people who turn pool projects into reality.</p><div className="login-flow"><span>Discover</span><ArrowRight/><span>Connect</span><ArrowRight/><span>Deliver</span></div></div><small>Crystal Pools · Customer acquisition & operations</small></div><div className="login-form"><div className="eyebrow">WELCOME TO YOUR WORKSPACE</div><h2>Let’s get things flowing.</h2><p>Sign in with your Crystal Pools staff account.</p><form onSubmit={async e=>{e.preventDefault();setWorking(true);try{await signIn(email,password);await onLogin();}catch(error){notify(error.message,true);}finally{setWorking(false);}}}><label>Email address<input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>{toast?.error&&<p className="error-inline" role="alert">{toast.message}</p>}<Button primary disabled={working} type="submit">{working?<LoaderCircle className="spin" size={17}/>:<>Enter workspace <ArrowRight size={17}/></>}</Button></form><div className="login-note"><ShieldCheck size={20}/><span>Staff access only<br/><small>Accounts are created by a CAC admin in Settings.</small></span></div><button type="button" className="text-button forgot-link" onClick={async()=>{if(!email){notify('Enter your email address first.',true);return;}try{await sendPasswordReset(email);notify('If this email has an account, a reset link is on its way.');}catch(error){notify(error.message,true);}}}>Forgot password?</button></div></div>;
-}
-
-function SetPasswordScreen({reason,user,onDone}){
-  const [password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[error,setError]=useState(''),[working,setWorking]=useState(false);
-  async function save(e){e.preventDefault();setError('');if(password!==confirm){setError('The passwords do not match.');return;}setWorking(true);try{await changePassword(password);await onDone();}catch(err){setError(err.message);}finally{setWorking(false);}}
-  return <div className="login-page"><div className="login-story"><div className="brand"><span className="brand-mark"><Waves size={30}/></span><span>crystal pools<small>GROWTH WORKSPACE</small></span></div><div><div className="eyebrow">{reason==='recovery'?'PASSWORD RESET':'ONE MORE STEP'}</div><h1>Choose your<br/>own password.</h1><p>{reason==='recovery'?'Set a new password for your account.':'Your account was created with a temporary password. Replace it before you continue.'}</p></div><small>{user?.email}</small></div><div className="login-form"><h2>New password</h2><form onSubmit={save}><label>New password (12+ characters)<input type="password" autoComplete="new-password" minLength={12} required value={password} onChange={e=>setPassword(e.target.value)}/></label><label>Repeat new password<input type="password" autoComplete="new-password" minLength={12} required value={confirm} onChange={e=>setConfirm(e.target.value)}/></label>{error&&<p className="error-inline" role="alert">{error}</p>}<Button primary disabled={working} type="submit">{working?<LoaderCircle className="spin" size={17}/>:<>Save password <ArrowRight size={17}/></>}</Button></form></div></div>;
-}
-function AccountSettings({state}){
-  const [password,setPassword]=useState(''),[message,setMessage]=useState(''),[working,setWorking]=useState(false);
-  async function save(e){e.preventDefault();setWorking(true);setMessage('');try{await changePassword(password);setPassword('');setMessage('Password changed.');}catch(err){setMessage(err.message);}finally{setWorking(false);}}
-  return <section className="panel settings-card business-settings"><h2>My account</h2><p>{state.user.email} · {nice(state.user.role)} · sessions end after 12 hours without activity.</p><form className="setting-form" onSubmit={save}><label>New password (12+ characters)<input type="password" autoComplete="new-password" minLength={12} required value={password} onChange={e=>setPassword(e.target.value)}/></label><Button disabled={working} type="submit">Change password</Button></form>{message&&<p className="form-note">{message}</p>}{state.user.role==='admin'&&<div className="setting-form"><label>Full backup of every CAC table (JSON, no passwords)<span className="muted small-text">Photos stay in Supabase Storage. Supabase also keeps its own database backups.</span></label><Button onClick={()=>downloadBackup().catch(err=>setMessage(err.message))}><ArrowDownToLine size={15}/>Download backup</Button></div>}</section>;
-}
-function recipientFor(item,r){
-  const opp=r.opportunity.find(o=>o.id===item.opportunityId),contact=opp&&r.contact.find(c=>c.id===opp.contactId),customer=r.customer.find(c=>c.id===(item.customerId||opp?.customerId)),prospect=r.prospect.find(p=>p.id===item.prospectId);
-  const loose=prospect?.contact||'';
-  const email=contact?.email||customer?.email||loose.match(/[^\s@]+@[^\s@]+\.[^\s@]+/)?.[0]||'';
-  let digits=(contact?.phone||customer?.phone||loose.match(/\+?[\d][\d\s-]{8,}\d/)?.[0]||'').replace(/\D/g,'');
-  if(digits.length===10)digits='91'+digits;if(digits.length===11&&digits.startsWith('0'))digits='91'+digits.slice(1);
-  return {name:contact?.name||customer?.name||prospect?.name||'',email,phone:digits.length>=11&&digits.length<=15?digits:''};
-}
-function messageFor(item,r){
-  if(item.kind==='quote'){const site=r.site.find(s=>s.id===item.siteId);return `Dear customer,\n\nPlease find our quotation ${item.name}${site?` for ${site.name}`:''}.\nTotal including tax: ${money(item.total)}\n\nScope: ${item.scope}\nExclusions: ${item.exclusions}\nTerms: ${item.terms}\n\nThe detailed PDF follows separately. Please let us know if you have any questions.\n\nCrystal Pools`;}
-  return item.body||'';
-}
-function SendActions({item,records,onRecord,notify}){
-  if(item.sentAt)return <span className="sent-note"><CheckCircle2 size={15}/>Sent by {item.sentChannel} · {dateTime(item.sentAt)}</span>;
-  const to=recipientFor(item,records),text=messageFor(item,records),subject=item.kind==='quote'?`Quotation · ${item.name}`:item.kind==='reviewRequest'?'Thank you from Crystal Pools':'Crystal Pools';
-  return <div className="send-actions"><span className="muted small-text">Send it yourself, then record it{to.name?` · to ${to.name}`:''}:</span>
-    {to.phone?<a className="button" href={`https://wa.me/${to.phone}?text=${encodeURIComponent(text)}`} target="_blank" rel="noreferrer"><MessageSquare size={14}/>Open WhatsApp</a>:<span className="button disabled-look" title="Add a phone number to the customer or contact">No phone saved</span>}
-    {to.email?<a className="button" href={`mailto:${to.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}><Mail size={14}/>Open email</a>:<span className="button disabled-look" title="Add an email to the customer or contact">No email saved</span>}
-    <Button onClick={()=>navigator.clipboard?.writeText(text).then(()=>notify('Message copied.'),()=>notify('Copy failed; select the text instead.',true))}>Copy text</Button>
-    <Button primary onClick={onRecord}><Check size={14}/>Record as sent</Button></div>;
-}
-function MyWork({state,show,navigate}){
-  const r=state.records,me=state.user,todayIso=today(),stages=state.stages;
-  const myTasks=r.task.filter(t=>t.status==='open'&&t.owner===me.name).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
-  const myOpps=r.opportunity.filter(o=>o.ownerId===me.id&&!o.suppressed&&!['Lost','Deferred','Maintenance'].includes(o.stage)&&(!o.nextActionDate||o.nextActionDate<=todayIso));
-  const week=Date.now()+7*86400000;
-  const myVisits=r.appointment.filter(a=>['scheduled','confirmed'].includes(a.status)&&a.assignedTo===me.name&&new Date(a.startsAt).getTime()<=week).sort((a,b)=>a.startsAt.localeCompare(b.startsAt));
-  const myReviews=r.approval.filter(a=>a.status==='pending'&&(me.role==='admin'||a.role===me.role));
-  const section=(title,items,render,empty,target)=><section className="panel mywork-panel"><div className="panel-heading"><div><h2>{title}</h2></div><span className="count">{items.length}</span></div>{items.length?items.slice(0,12).map(item=><button className="linked-record" key={item.id} onClick={()=>item.kind==='approval'?navigate('approval'):show(item)}>{render(item)}<ChevronRight size={15}/></button>):<p className="muted small-text">{empty}</p>}{items.length>12&&<button className="text-button" onClick={()=>navigate(target)}>See all {items.length}</button>}</section>;
-  return <div className="mywork-grid">
-    {section('My open tasks',myTasks,t=><span><small className={t.dueDate<todayIso?'overdue-text':''}>{t.dueDate<todayIso?'Overdue · ':''}{date(t.dueDate)}</small>{t.name}</span>,'No open tasks assigned to you.','task')}
-    {section('My opportunities needing a next step',myOpps,o=><span><small>{o.stage} · {o.nextActionDate?`due ${date(o.nextActionDate)}`:'no next action set'}</small>{o.name}</span>,'Every opportunity you own has a future next step.','pipeline')}
-    {section('My appointments · next 7 days',myVisits,a=><span><small>{dateTime(a.startsAt)} · {a.type} · {nice(a.status)}</small>{a.name}</span>,'No appointments assigned to you this week.','appointment')}
-    {section(me.role==='admin'?'All reviews waiting':'Reviews waiting for your role',myReviews,a=><span><small>{nice(a.type)} · {a.role}</small>{a.name}</span>,'Nothing waiting for your review.','approval')}
-  </div>;
-}
-function Agenda({appointments,show}){
-  const days=Array.from({length:7},(_,i)=>{const d=new Date(Date.now()+i*86400000);return d.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});});
-  const dayOf=a=>new Date(a.startsAt).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-  const open=appointments.filter(a=>['scheduled','confirmed'].includes(a.status));
-  return <div className="agenda">{days.map(day=>{const items=open.filter(a=>dayOf(a)===day).sort((a,b)=>a.startsAt.localeCompare(b.startsAt));return <section key={day} className={`agenda-day ${items.length?'':'empty-day'}`}><h3>{new Date(day+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</h3>{items.map(a=><button key={a.id} className={`agenda-item ${a.status}`} onClick={()=>show(a)}><strong>{new Date(a.startsAt).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Kolkata'})}</strong><span>{a.name}</span><small>{a.type} · {nice(a.status)}{a.assignedTo?` · ${a.assignedTo}`:''}</small></button>)}{!items.length&&<small className="muted">Free</small>}</section>;})}</div>;
-}
-function AskOwnerAssistant({state,navigate}){
-  const [question,setQuestion]=useState(''),[working,setWorking]=useState(false),[message,setMessage]=useState('');
-  const examples=['What is slipping this week?','Which customers should we contact about renewals?','Where are we losing enquiries?'];
-  async function ask(e){e.preventDefault();setWorking(true);setMessage('');try{const briefing=await saveRecord('briefing',{name:question});await enqueueRun('operator',briefing.id);setQuestion('');setMessage('Working on it. The plan will appear in Approvals; approving it creates the tasks.');}catch(error){setMessage(error.message);}finally{setWorking(false);}}
-  return <section className="panel ask-panel"><div className="panel-heading"><div><h2>Ask the owner assistant</h2><p>It reads live workspace metrics, builds a prioritised plan and waits for your approval. {aiLive(state)?'Live AI.':'Demo rules.'}</p></div></div><form className="ask-form" onSubmit={ask}><input aria-label="Question for the owner assistant" required minLength={3} maxLength={500} value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ask in plain English…"/><Button primary disabled={working} type="submit">{working?<LoaderCircle className="spin" size={16}/>:<><Sparkles size={15}/>Ask</>}</Button></form><div className="ask-examples">{examples.map(x=><button key={x} type="button" onClick={()=>setQuestion(x)}>{x}</button>)}</div>{message&&<p className="form-note">{message} <button className="text-button" onClick={()=>navigate('approval')}>Open approvals</button></p>}</section>;
-}
-function Lifecycle({state,busy,canWrite,act}){
-  const [pattern,setPattern]=useState('');
-  return <div className="lifecycle-grid">{state.lifecycle.map(list=><article className="panel lifecycle-card" key={list.kind}><div className="lifecycle-count"><strong>{list.kind==='equipment_advisory'?'—':list.count}</strong><span>{list.openTasks} open follow-ups</span></div><h3>{list.label}</h3><p>{list.description}</p>{list.kind==='equipment_advisory'&&<input aria-label="Equipment model or part" placeholder="Model or part, e.g. SP2610" value={pattern} onChange={e=>setPattern(e.target.value)}/>}<Button disabled={busy||!canWrite||(list.kind!=='equipment_advisory'&&!list.count)} onClick={()=>act(()=>rpc('launch_lifecycle',{p_kind:list.kind,p_pattern:list.kind==='equipment_advisory'?pattern:null}),result=>`${result.created} follow-up ${result.created===1?'task':'tasks'} created${result.skipped?`, ${result.skipped} already open`:''}.`)}><Megaphone size={14}/>Create follow-up tasks</Button></article>)}</div>;
-}
-function ReviewStats({metrics,navigate}){
-  return <><div className="stats-grid">{[['To send',metrics.toSend],['Sent',metrics.sent],['Received',metrics.received],['Average rating',metrics.averageRating?`${metrics.averageRating} ★`:'—']].map(([label,value])=><div className="stat-card" key={label}><div><span>{label}</span><Star size={17}/></div><strong>{value}</strong><small>Review requests</small></div>)}</div>{!metrics.linkSet&&<div className="info-strip"><Star size={20}/><div><strong>Add your Google review link.</strong><span>Review requests cannot be sent until an admin sets the link in Settings.</span></div><Button onClick={()=>navigate('settings')}>Open settings</Button></div>}</>;
-}
-function Reports({state}){
-  const r=state.records,m=state.metrics,stages=state.stages,won=['Won','Execution','Handover','Maintenance'];
-  const reached=(o,stage)=>!['Lost','Deferred'].includes(o.stage)&&stages.indexOf(o.stage)>=stages.indexOf(stage);
-  const group=key=>Object.values(r.opportunity.reduce((acc,o)=>{const k=o[key]||'Not recorded';(acc[k]??={name:k,total:0,qualified:0,won:0,lost:0});acc[k].total++;if(reached(o,'Qualified')||won.includes(o.stage))acc[k].qualified++;if(won.includes(o.stage))acc[k].won++;if(o.stage==='Lost')acc[k].lost++;return acc;},{})).sort((a,b)=>b.total-a.total);
-  const pct=(a,b)=>b?`${Math.round(100*a/b)}%`:'—';
-  const lifecycle=state.lifecycle.map(l=>{const key=l.kind;const tasks=r.task.filter(t=>t.category==='lifecycle'&&t.lifecycleKey?.startsWith(key+':'));return {name:l.label,created:tasks.length,completed:tasks.filter(t=>t.status==='completed').length};});
-  const tableOf=(title,head,rows)=><section className="panel report-table"><h2>{title}</h2><div className="table-scroll"><table><thead><tr>{head.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.length?rows.map((row,i)=><tr key={i}>{row.map((c,j)=><td key={j}>{c}</td>)}</tr>):<tr><td colSpan={head.length} className="muted">No records yet.</td></tr>}</tbody></table></div></section>;
-  return <><div className="stats-grid">{[
-    ['Median first response',m.response.medianMinutes==null?'—':`${m.response.medianMinutes} min`,`Last 90 days · ${m.response.answered90d} answered`],
-    ['Within response target',m.response.withinTargetPct==null?'—':`${m.response.withinTargetPct}%`,`Target ${m.response.targetMinutes} minutes`],
-    ['Appointment show rate',m.appointments.showRatePct==null?'—':`${m.appointments.showRatePct}%`,'Completed vs no-show, 90 days'],
-    ['Average review',m.reviews.averageRating?`${m.reviews.averageRating} ★`:'—',`${m.reviews.received} reviews received`],
-  ].map(([label,value,sub])=><div className="stat-card" key={label}><div><span>{label}</span><TrendingUp size={17}/></div><strong>{value}</strong><small>{sub}</small></div>)}</div>
-  <div className="report-grid">
-    {tableOf('Conversion by enquiry source',['Source','Enquiries','Qualified+','Won','Lost','Win rate'],group('source').map(g=>[g.name,g.total,g.qualified,g.won,g.lost,pct(g.won,g.total)]))}
-    {tableOf('Conversion by customer route',['Route','Enquiries','Qualified+','Won','Win rate'],group('route').map(g=>[g.name,g.total,g.qualified,g.won,pct(g.won,g.total)]))}
-    {tableOf('Lifecycle follow-up',['List','Tasks created','Completed','Completion'],lifecycle.map(l=>[l.name,l.created,l.completed,pct(l.completed,l.created)]))}
-    {tableOf('Assistant usage · last 30 days',['Provider','Model','Runs','Failed','Input tokens','Output tokens'],(state.usage?.byModel30d||[]).map(u=>[nice(u.provider),u.model,u.runs,u.failed,Number(u.inputTokens).toLocaleString('en-IN'),Number(u.outputTokens).toLocaleString('en-IN')]))}
-    {tableOf('Campaign cost and effort',['Campaign','Type','Cost','Staff hours'],r.campaign.map(c=>[c.name,c.type||'—',money(c.cost),c.effortHours??'—']))}
-  </div></>;
-}
-function RunLimits({state,busy,admin,onSetting}){
-  const [hourly,setHourly]=useState(state.settings.userHourlyRunLimit||'30'),[daily,setDaily]=useState(state.settings.workspaceDailyRunLimit||'200');
-  return <form className="setting-form" onSubmit={e=>{e.preventDefault();onSetting('user_hourly_run_limit',String(hourly),'Hourly limit saved.');if(String(daily)!==state.settings.workspaceDailyRunLimit)onSetting('workspace_daily_run_limit',String(daily),'Daily limit saved.');}}><label>Assistant runs per person per hour<input type="number" min="1" max="500" value={hourly} disabled={!admin} onChange={e=>setHourly(e.target.value)}/></label><label>Assistant runs per day (workspace) · {state.usage?.runsToday??0} used today<input type="number" min="1" max="10000" value={daily} disabled={!admin} onChange={e=>setDaily(e.target.value)}/></label><Button disabled={!admin||busy} type="submit">Save limits</Button></form>;
-}
-function BusinessSettings({state,busy,onSetting}){
-  const [url,setUrl]=useState(state.settings.reviewUrl||''),[target,setTarget]=useState(state.settings.responseTargetMinutes||'60');
-  const admin=state.user.role==='admin';
-  return <section className="panel settings-card business-settings"><h2>Business settings</h2><p>Used by review requests and the speed-to-lead target.{admin?'':' Only an admin can change them.'}</p><form className="setting-form" onSubmit={e=>{e.preventDefault();onSetting('review_url',url,'Review link saved.');}}><label>Google review link<input type="url" placeholder="https://g.page/r/…/review" value={url} disabled={!admin} onChange={e=>setUrl(e.target.value)}/></label><Button disabled={!admin||busy} type="submit">Save link</Button></form><RunLimits state={state} busy={busy} admin={admin} onSetting={onSetting}/><form className="setting-form" onSubmit={e=>{e.preventDefault();onSetting('response_target_minutes',String(target),'Response target saved.');}}><label>First-response target (minutes)<input type="number" min="5" max="1440" value={target} disabled={!admin} onChange={e=>setTarget(e.target.value)}/></label><Button disabled={!admin||busy} type="submit">Save target</Button></form></section>;
-}
-
-function SetupNeeded(){return <div className="login-page"><div className="login-story"><div className="brand"><span className="brand-mark"><Waves size={30}/></span><span>crystal pools<small>GROWTH WORKSPACE</small></span></div><div><div className="eyebrow">SETUP REQUIRED</div><h1>Connect the workspace<br/>to Supabase.</h1></div><small>Crystal Pools · Customer acquisition & operations</small></div><div className="login-form"><h2>One step left.</h2><p>Copy <code>cac/.env.example</code> to <code>cac/.env</code>, set <code>VITE_CAC_SUPABASE_URL</code> and <code>VITE_CAC_SUPABASE_PUBLISHABLE_KEY</code>, then restart. The README walks through the full setup.</p></div></div>;}
-
-function Settings({state,onAdd,onToggle,busy}){return <><AccountSettings state={state}/><section className="panel"><div className="panel-heading"><div><h2>People & permissions</h2><p>Server-enforced roles for each important decision.</p></div>{state.user.role==='admin'&&<Button primary onClick={onAdd}><Plus size={15}/>Add staff member</Button>}</div>{state.users.map(user=><div className="staff-row" key={user.id}><span className="avatar">{user.name.slice(0,2)}</span><div><strong>{user.name}</strong><small>{user.email}</small></div><Badge tone={user.active?undefined:'red'}>{user.active?user.role:'inactive'}</Badge>{state.user.role==='admin'&&user.id!==state.user.id&&<Button disabled={busy} onClick={()=>onToggle(user)}>{user.active?'Deactivate':'Reactivate'}</Button>}</div>)}</section></>;}
-
-function Modal({modal,state,close,refresh,notify,act,busy}){
-  const [values,setValues]=useState(modal.record||modal.initial||{}),[saving,setSaving]=useState(false),[error,setError]=useState(''),[result,setResult]=useState(null);
-  const r=state.records;
-  const titles={record:`${modal.record?'Edit':'New'} ${modal.kind}`,run:'Run a focused workflow',quote:'Build a quotation',stage:'Move opportunity',approval:'Review & decide',user:'Add staff member',import:'Import CSV',billing:'Record approved change billing',reschedule:'Reschedule appointment',rating:'Record the customer review',send:'Record how it was sent',cancelTask:'Cancel task',leadContact:'Log a call or visit',leadAssign:'Assign lead',leadConvert:'Convert to opportunity',leadClose:'Close lead'};
-  async function submit(e){e.preventDefault();setSaving(true);setError('');try{
-    if(modal.type==='record'){await saveRecord(modal.kind,values,modal.record?.id);notify('Record saved.');}
-    if(modal.type==='stage'){await rpc('transition',{p_opportunity:modal.record.id,p_stage:values.newStage||modal.record.stage});notify('Opportunity moved.');}
-    if(modal.type==='user'){await rpc('create_staff',{p_email:values.email,p_name:values.name,p_role:values.role,p_password:values.password||null});notify('Staff member added.');}
-    if(modal.type==='reschedule'){await rpc('reschedule_appointment',{p_appointment:modal.record.id,p_starts_at:values.newStartsAt});notify('Appointment rescheduled. The customer needs to confirm again.');}
-    if(modal.type==='send'){await rpc('mark_sent',{p_kind:modal.record.kind==='reviewRequest'?'review_request':modal.record.kind,p_id:modal.record.id,p_channel:values.channel});notify('Recorded as sent.');}
-    if(modal.type==='cancelTask'){await rpc('cancel_task',{p_task:modal.record.id,p_reason:values.reason||''});notify('Task cancelled.');}
-    if(modal.type==='rating'){await rpc('update_review',{p_review:modal.record.id,p_status:'received',p_rating:Number(values.rating)});notify('Review recorded.');}
-    if(modal.type==='billing'){await rpc('bill_change',{p_change:modal.record.id,p_invoice_ref:values.invoiceRef});notify('Invoice reference recorded and billing task completed.');}
-    if(modal.type==='leadContact'){const result=await rpc('log_lead_contact',{p_lead:modal.record.id,p_outcome:values.outcome,p_note:values.note||'',p_next:values.next||null});notify(result.nextTask?`Logged. Next follow-up ${date(result.nextTask.dueDate)}.`:'Logged. No further follow-ups are scheduled.');}
-    if(modal.type==='leadAssign'){await rpc('assign_project_lead',{p_lead:modal.record.id,p_owner:values.owner});notify('Lead assigned, with its open follow-ups.');}
-    if(modal.type==='leadConvert'){await rpc('convert_project_lead',{p_lead:modal.record.id,p_contact:values.contact===undefined||values.contact===''?null:Number(values.contact)});notify('Opportunity created in the sales pipeline.');}
-    if(modal.type==='leadClose'){await rpc('set_lead_status',{p_lead:modal.record.id,p_status:values.closeAs,p_reason:values.reason||''});notify('Lead closed and its follow-ups cancelled.');}
-    if(modal.type==='import'){const rows=parseCsv(values.csv||'');const report=await rpc('import_rows',{p_kind:modal.kind,p_rows:toSnake(rows)});setResult(report);await refresh();return;}
-    await refresh();close();
-  }catch(err){setError(err.message);}finally{setSaving(false);}}
-  const set=(key,value)=>setValues(old=>({...old,[key]:value}));
-  return <div className="overlay modal-overlay" onClick={close}><section className={`modal ${['quote','approval'].includes(modal.type)?'large':''}`} role="dialog" aria-modal="true" aria-label={titles[modal.type]} onClick={e=>e.stopPropagation()}><div className="modal-heading"><div><div className="eyebrow">CRYSTAL POOLS WORKSPACE</div><h2>{titles[modal.type]}</h2></div><button className="icon-button" onClick={close} aria-label="Close dialog"><X size={21}/></button></div>
-    {modal.type==='run'?<RunForm modal={modal} state={state} close={close} refresh={refresh} notify={notify}/>:modal.type==='quote'?<QuoteForm modal={modal} state={state} close={close} refresh={refresh} notify={notify}/>:modal.type==='approval'?<ApprovalForm record={modal.record} state={state} close={close} refresh={refresh} notify={notify}/>:<form onSubmit={submit}><div className="form-grid">
-    {modal.type==='record'&&forms[modal.kind].map(field=><Field key={field.key} field={field} value={values[field.key]} onChange={value=>set(field.key,value)} state={state} values={values}/>)}
-    {modal.type==='reschedule'&&<Field field={{key:'newStartsAt',label:'New date and time',type:'datetime'}} value={values.newStartsAt} onChange={value=>set('newStartsAt',value)} state={state} values={values}/>}
-    {modal.type==='send'&&<><p className="wide muted">Record this only after you have sent it yourself. CAC does not send messages.</p><label className="wide">Sent by<select required value={values.channel||''} onChange={e=>set('channel',e.target.value)}><option value="">Choose channel</option>{['WhatsApp','Email','Phone','In person'].map(c=><option key={c}>{c}</option>)}</select></label></>}
-    {modal.type==='cancelTask'&&<label className="wide">Reason<input required minLength={3} value={values.reason||''} onChange={e=>set('reason',e.target.value)} placeholder="e.g. Customer already called us"/></label>}
-    {modal.type==='rating'&&<label className="wide">Star rating the customer left<select required value={values.rating||''} onChange={e=>set('rating',e.target.value)}><option value="">Choose rating</option>{[5,4,3,2,1].map(n=><option key={n} value={n}>{'★'.repeat(n)} {n}</option>)}</select></label>}
-    {modal.type==='billing'&&<label className="wide">Invoice reference<input required value={values.invoiceRef||''} onChange={e=>set('invoiceRef',e.target.value)}/></label>}
-    {modal.type==='leadContact'&&<><p className="wide muted">Record what happened after you called or visited. The next follow-up comes from the lead's schedule unless you choose a date.</p><label className="wide">Outcome<select required value={values.outcome||''} onChange={e=>set('outcome',e.target.value)}><option value="">Choose outcome</option>{['Reached','No answer','Call back later','Meeting booked','Interested','Not relevant'].map(o=><option key={o}>{o}</option>)}</select></label><label className="wide">Notes<textarea rows={3} maxLength={3000} value={values.note||''} onChange={e=>set('note',e.target.value)} placeholder="Who you spoke to and what they said"/></label><label>Next follow-up (optional)<input type="date" min={today()} value={values.next||''} onChange={e=>set('next',e.target.value)}/></label></>}
-    {modal.type==='leadAssign'&&<label className="wide">Owner<select required value={values.owner||''} onChange={e=>set('owner',e.target.value)}><option value="">Choose owner</option>{['Sales','Marketing'].map(q=><option key={q} value={q}>{q} queue</option>)}{state.users.filter(u=>u.active).map(u=><option key={u.id} value={u.name}>{u.name}</option>)}</select></label>}
-    {modal.type==='leadConvert'&&<><p className="wide muted">Adds the builder as a customer (or reuses them), the project as a site, the chosen person as a contact, and an opportunity you own in the sales pipeline. The lead's open follow-ups are closed.</p><label className="wide">Main contact<select value={values.contact??''} onChange={e=>set('contact',e.target.value)}><option value="">No contact yet</option>{modal.record.contacts.map((c,i)=><option key={i} value={i}>{[c.name,c.role,c.phone||c.email].filter(Boolean).join(' · ')}</option>)}</select></label></>}
-    {modal.type==='leadClose'&&<><label>Close as<select required value={values.closeAs||''} onChange={e=>set('closeAs',e.target.value)}><option value="">Choose</option><option>Not relevant</option><option>Lost</option></select></label><label className="wide">Reason<input required minLength={3} value={values.reason||''} onChange={e=>set('reason',e.target.value)} placeholder="e.g. Pool awarded to another contractor"/></label></>}
-    {modal.type==='stage'&&<><p className="wide muted">Stage requirements are checked on the server. Missing evidence will appear here.</p><label className="wide">Stage<select value={values.newStage||modal.record.stage} onChange={e=>set('newStage',e.target.value)}>{state.stages.map(stage=><option key={stage}>{stage}</option>)}</select></label></>}
-    {modal.type==='user'&&<>{[ ['name','Full name','text'],['email','Email','email'],['password','Initial password (12+ characters; leave blank for an existing Supabase account)','password'] ].map(([key,label,type])=><label key={key}>{label}<input required={key!=='password'} minLength={key==='password'?12:undefined} type={type} value={values[key]||''} onChange={e=>set(key,e.target.value)}/></label>)}<label>Role<select required value={values.role||''} onChange={e=>set('role',e.target.value)}><option value="">Choose role</option>{['admin','sales','engineer','commercial','project','store','viewer'].map(role=><option key={role}>{role}</option>)}</select></label></>}
-    {modal.type==='import'&&<><p className="wide muted">Import up to 200 rows. Successful rows are saved; errors are listed by row. Use these column headers:</p><code className="wide csv-hint">{modal.kind==='prospect'?'name,segment,location,website,sourceUrl,evidence,researchDate,existingPool':'name,segment,email,phone,notes'}</code><label className="wide">Choose a CSV file<input type="file" accept=".csv,text/csv" onChange={async e=>{const file=e.target.files?.[0];if(file){if(file.size>500000){setError('Use a file smaller than 500 KB.');return;}set('csv',await file.text());}}}/></label><label className="wide">CSV content<textarea rows={8} value={values.csv||''} onChange={e=>set('csv',e.target.value)}/></label>{result&&<div className="wide import-report"><strong>{result.created} records imported</strong>{result.errors.map(e=><p key={e.row}>Row {e.row}: {e.error}</p>)}</div>}</>}
-    </div>{error&&<p className="error-inline" role="alert">{error}</p>}<div className="form-footer"><Button type="button" onClick={close}>Cancel</Button><Button type="submit" primary disabled={saving}>{saving?'Saving…':modal.type==='import'?'Import records':'Save changes'}</Button></div></form>}
-  </section></div>;
-}
-function Field({field,value,onChange,state,values}){
-  let options=field.type==='relation'?state.records[field.options].filter(record=>!['site','contact'].includes(field.options)||!values.customerId||record.customerId===values.customerId).map(record=>[record.id,record.name]):field.type==='staff'?state.users.filter(user=>user.active).map(user=>[user.name,user.name]):field.type==='staffId'?state.users.filter(user=>user.active).map(user=>[user.id,user.name]):(field.options||[]).map?.(v=>[v,v])||[];
-  return <label className={field.type==='textarea'?'wide':''}>{field.label}{['select','relation','staff','staffId'].includes(field.type)?<select aria-label={field.label} value={value??''} onChange={e=>onChange(e.target.value)}><option value="">Choose {field.label.toLowerCase()}</option>{options.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select>:field.type==='textarea'?<textarea aria-label={field.label} rows={3} value={value??''} onChange={e=>onChange(e.target.value)}/>:field.type==='checkbox'?<input aria-label={field.label} type="checkbox" checked={Boolean(value)} onChange={e=>onChange(e.target.checked)}/>:field.type==='datetime'?<input aria-label={field.label} type="datetime-local" value={localInput(value)} onChange={e=>onChange(e.target.value?new Date(e.target.value).toISOString():'')}/>:<input aria-label={field.label} type={field.type} min={field.type==='number'?0:undefined} step={field.type==='number'?'any':undefined} required={field.key==='name'} value={value??''} onChange={e=>onChange(e.target.value)}/>}</label>;
-}
-function RunForm({modal,state,close,refresh,notify}){
-  const agent=state.agents.find(a=>a.id===modal.agent),[targetId,setTargetId]=useState(modal.targetId||''),[message,setMessage]=useState(''),[campaignId,setCampaign]=useState(''),[error,setError]=useState(''),[working,setWorking]=useState(false);
-  return <form onSubmit={async e=>{e.preventDefault();setWorking(true);try{await enqueueRun(agent.id,targetId,agent.id==='followup'?{message}:agent.id==='outreach'&&campaignId?{campaignId}:{});await refresh();notify('Workflow queued. Follow its progress in Agent studio.');close();}catch(err){setError(err.message);}finally{setWorking(false);}}}><div className="info-strip"><Sparkles size={22}/><div><strong>{agent.name}</strong><span>{agent.description}</span></div></div><label>Select {agent.kind}<select required value={targetId} onChange={e=>setTargetId(e.target.value)}><option value="">Choose a saved record</option>{state.records[agent.kind].map(record=><option key={record.id} value={record.id}>{record.name}</option>)}</select></label>{agent.id==='outreach'&&<label className="spaced">Campaign (optional)<select value={campaignId} onChange={e=>setCampaign(e.target.value)}><option value="">No campaign</option>{state.records.campaign.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}{agent.id==='followup'&&<label className="spaced">Customer reply<textarea required rows={5} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Paste the customer's reply here…"/><button type="button" className="text-button" onClick={()=>setMessage('Can you add heating and send a revised estimate? We plan to start in December.')}>Use the heating + December example</button></label>}<p className="form-note"><ShieldCheck size={16}/>{aiLive(state)?'This sends the selected record and its context to the configured AI provider.':'Demo rules will produce a review draft. No live research or AI call.'} A {agent.role} review is required.</p>{error&&<p className="error-inline">{error}</p>}<div className="form-footer"><Button type="button" onClick={close}>Cancel</Button><Button type="submit" primary disabled={working}>{working?'Queuing…':<><Sparkles size={15}/>Run workflow</>}</Button></div></form>;
-}
-function ApprovalForm({record,state,close,refresh,notify}){
-  const [note,setNote]=useState(''),[error,setError]=useState(''),[working,setWorking]=useState(false);
-  const target=Object.values(state.records).flat().find(r=>r.id===record.targetId);
-  const permitted=state.user.role==='admin'||state.user.role===record.role;
-  async function decide(decision){setWorking(true);try{await rpc('decide',{p_approval:record.id,p_decision:decision,p_note:note});await refresh();notify(`Review ${decision}.`);close();}catch(err){setError(err.message);}finally{setWorking(false);}}
-  return <><div className="approval-title"><h3>{record.name}</h3><Badge>{record.role}</Badge></div>{target&&<RecordDetails record={target} records={state.records}/>}<h3 className="section-heading">Supporting analysis</h3><pre className="analysis-block">{JSON.stringify(record.payload,null,2)}</pre><label>Review note (required to reject)<textarea rows={3} value={note} onChange={e=>setNote(e.target.value)}/></label>{!permitted&&<p className="form-note">Only {record.role} staff or the owner can resolve this review.</p>}{error&&<p className="error-inline">{error}</p>}<div className="form-footer"><Button disabled={!permitted||working} onClick={()=>decide('rejected')}>Reject with reason</Button><Button primary disabled={!permitted||working} onClick={()=>decide('approved')}><Check size={16}/>Approve</Button></div></>;
-}
-function QuoteForm({modal,state,close,refresh,notify}){
-  const [opportunityId,setOpportunity]=useState(modal.opportunityId||''),[surveyId,setSurvey]=useState(''),[lines,setLines]=useState(modal.previous?.items?.map(i=>({rateId:i.rateId,quantity:i.quantity}))||[{rateId:'',quantity:1}]),[scope,setScope]=useState(modal.previous?.scope||''),[exclusions,setExclusions]=useState(modal.previous?.exclusions||''),[terms,setTerms]=useState(modal.previous?.terms||''),[error,setError]=useState(''),[working,setWorking]=useState(false);
-  const rates=state.records.rate.filter(r=>r.status==='approved'),surveys=state.records.survey.filter(s=>s.opportunityId===opportunityId&&s.status==='verified');
-  const total=lines.reduce((sum,line)=>{const rate=rates.find(r=>r.id===line.rateId);return sum+(rate?rate.price*Number(line.quantity)*(1+rate.tax/100):0);},0);
-  const setLine=(index,field,value)=>setLines(old=>old.map((line,i)=>i===index?{...line,[field]:value}:line));
-  return <form onSubmit={async e=>{e.preventDefault();setWorking(true);try{const input={opportunityId,surveyId,items:lines.map(line=>({rateId:line.rateId,quantity:Number(line.quantity)})),scope,exclusions,terms,previousId:modal.previous?.id||null};if(modal.asAgent)await enqueueRun('proposal',opportunityId,input);else await rpc('create_quote',{p_input:toSnake(input)});await refresh();notify(modal.asAgent?'Proposal workflow queued. Track it in Agent studio.':'Quotation created. Engineering review is first, followed by commercial approval.');close();}catch(err){setError(err.message);}finally{setWorking(false);}}}><div className="form-grid"><label>Opportunity<select required value={opportunityId} disabled={Boolean(modal.previous)} onChange={e=>{setOpportunity(e.target.value);setSurvey('');}}><option value="">Choose opportunity</option>{state.records.opportunity.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label><label>Verified survey<select required value={surveyId} onChange={e=>setSurvey(e.target.value)}><option value="">Choose verified survey</option>{surveys.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label></div><p className="form-note">Rates are copied from the approved catalogue. No equipment or pricing is selected by the model.</p><div className="quote-lines">{lines.map((line,index)=><div className="quote-line" key={index}><label>Approved rate<select required value={line.rateId} onChange={e=>setLine(index,'rateId',e.target.value)}><option value="">Choose rate</option>{rates.map(rate=><option key={rate.id} value={rate.id}>{rate.name} · {money(rate.price)}/{rate.unit}</option>)}</select></label><label>Quantity<input type="number" min="0.01" step="any" required value={line.quantity} onChange={e=>setLine(index,'quantity',e.target.value)}/></label><button className="icon-button" type="button" aria-label="Remove line" disabled={lines.length===1} onClick={()=>setLines(old=>old.filter((_,i)=>i!==index))}><X size={18}/></button></div>)}</div><Button type="button" onClick={()=>setLines(old=>[...old,{rateId:'',quantity:1}])}><Plus size={15}/>Add item</Button><div className="quote-total"><span>Indicative total incl. tax</span><strong>{money(total)}</strong></div>{[['Scope',scope,setScope],['Exclusions',exclusions,setExclusions],['Payment & commercial terms',terms,setTerms]].map(([label,value,set])=><label className="spaced" key={label}>{label}<textarea required rows={3} value={value} onChange={e=>set(e.target.value)}/></label>)}{error&&<p className="error-inline">{error}</p>}<div className="form-footer"><Button type="button" onClick={close}>Cancel</Button><Button primary disabled={working} type="submit">Create & request review <ArrowRight size={15}/></Button></div></form>;
-}
-function printQuote(quote,records){
-  const win=window.open('','_blank');if(!win)return;
-  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const site=records.site.find(s=>s.id===quote.siteId);
-  win.document.write(`<!doctype html><html><head><title>${escape(quote.name)}</title><style>body{font:14px Arial;color:#183b39;max-width:850px;margin:45px auto;padding:20px}h1{font-size:30px}small{color:#687c78}table{width:100%;border-collapse:collapse;margin:30px 0}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}p{white-space:pre-wrap;line-height:1.7}aside{padding:15px;background:#f4eee2}footer{margin-top:35px;font-size:12px}@media print{button{display:none}}</style></head><body><small>CRYSTAL POOLS · LOCAL PILOT</small><h1>${escape(quote.name)}</h1><aside>PILOT DOCUMENT · ${escape(quote.status.toUpperCase())} · Replace all demonstration rates and terms before business use.</aside><p>Site: ${escape(site?.name)}<br>Version: ${escape(quote.version)} · ${escape(date(quote.createdAt))}</p><table><thead><tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Total</th></tr></thead><tbody>${quote.items.map(i=>`<tr><td>${escape(i.name)}</td><td>${escape(i.quantity)} ${escape(i.unit)}</td><td>${escape(money(i.price))}</td><td>${escape(i.tax)}%</td><td>${escape(money(i.total))}</td></tr>`).join('')}</tbody></table><p>Subtotal: ${escape(money(quote.subtotal))}<br>Tax: ${escape(money(quote.tax))}</p><h2>Total: ${escape(money(quote.total))}</h2><h3>Scope</h3><p>${escape(quote.scope)}</p><h3>Exclusions</h3><p>${escape(quote.exclusions)}</p><h3>Terms</h3><p>${escape(quote.terms)}</p><footer>Reference: ${escape(quote.id)} · Sent manually by Crystal Pools staff.</footer><button onclick="window.print()">Print / save PDF</button></body></html>`);win.document.close();
-}
-// ── Project leads (monthly builder/architect reports) ──────────────────────
-const OPEN_LEAD=['New','Contacted','Meeting','Interested'];
-const priorityTone={Hot:'red',Warm:'amber',Cold:undefined};
-const leadTone=s=>s==='Converted'?'green':['Lost','Not relevant'].includes(s)?'red':s==='New'?'amber':undefined;
-const bucketLabel={early:'Early · design stage',mid:'Mid · structure in progress',late:'Late · finishing'};
-const commentKinds=['projectLead','opportunity','customer','prospect'];
-function PhoneLink({phone}){
-  const digits=phone.replace(/\D/g,''),mobile=digits.length===10&&/^[6-9]/.test(digits)?'91'+digits:digits.length===12&&/^91[6-9]/.test(digits)?digits:'';
-  return <><a href={`tel:${phone.replace(/[^\d+]/g,'')}`}><Phone size={12}/>{phone}</a>{mobile&&<a href={`https://wa.me/${mobile}`} target="_blank" rel="noreferrer"><MessageSquare size={12}/>WhatsApp</a>}</>;
-}
-function Person({name,detail,phones=[],emails=[]}){
-  return <div className="person"><div><strong>{name||'Name not listed'}</strong>{detail&&<small>{detail}</small>}</div><div className="person-links">{phones.filter(Boolean).map(p=><PhoneLink key={p} phone={p}/>)}{emails.filter(Boolean).map(e=><a key={e} href={`mailto:${e}`}><Mail size={12}/>{e}</a>)}</div></div>;
-}
-function ProjectLeads({state,search,show,act,busy,canWrite}){
-  const r=state.records,s=state.settings,todayIso=today(),leads=r.projectLead;
-  const [view,setView]=useState('leads'),[priority,setPriority]=useState('all'),[filter,setFilter]=useState('open'),[poolOnly,setPoolOnly]=useState(false);
-  const isOpen=l=>OPEN_LEAD.includes(l.status),due=leads.filter(l=>isOpen(l)&&l.nextFollowUp&&l.nextFollowUp<=todayIso),rank=p=>['Hot','Warm','Cold'].indexOf(p);
-  const rows=leads.filter(l=>!search||JSON.stringify(l).toLowerCase().includes(search.toLowerCase())).filter(l=>priority==='all'||l.priority===priority)
-    .filter(l=>filter==='all'||(filter==='open'?isOpen(l):filter==='due'?due.includes(l):l.status===filter)).filter(l=>!poolOnly||l.poolMentioned)
-    .sort((a,b)=>(a.nextFollowUp||'9999').localeCompare(b.nextFollowUp||'9999')||rank(a.priority)-rank(b.priority));
-  const gmail=s.leadMailConfigured==='true';
-  const upload=file=>act(()=>uploadLeadReport(file),result=>result.duplicate?`This exact file was already imported on ${date(result.createdAt)}, so it was not read twice. To read it again, use Read again under Reports.`:'Report received. Its leads appear here once it has been read.');
-  const runAgent=()=>act(async()=>{const result=await rpc('request_mail_check');wakeWorker();return result;},result=>result.gmail?'Agent started: checking Gmail and reading new reports. New leads appear here in about a minute.':result.queued?`Agent started: reading ${result.queued} waiting report${result.queued===1?'':'s'}.`:'Agent started. Gmail is not connected, so it only reads uploaded reports.');
-  const worker=state.config.worker;
-  return <>
-    <div className="stats-grid">{[
-      ['Open leads',leads.filter(isOpen).length,`${leads.length} projects from ${r.leadImport.filter(i=>i.status==='imported').length} reports`,Building2,'all','open'],
-      ['Hot',leads.filter(l=>isOpen(l)&&l.priority==='Hot').length,'Finishing stage, or a pool listed mid-construction',Sparkles,'Hot','open'],
-      ['Follow-ups due',due.length,`${due.filter(l=>l.nextFollowUp<todayIso).length} overdue`,Clock3,'all','due'],
-      ['Converted',leads.filter(l=>l.status==='Converted').length,'Now in the sales pipeline',CheckCheck,'all','Converted'],
-    ].map(([label,value,sub,Icon,p,f])=><button className="stat-card" key={label} onClick={()=>{setView('leads');setPriority(p);setFilter(f);}}><div><span>{label}</span><Icon size={17}/></div><strong>{value}</strong><small>{sub}</small></button>)}</div>
-    <div className="info-strip"><Mail size={20}/><div><strong>{gmail?'New reports are read from Gmail automatically.':'Gmail is not connected yet.'}</strong>
-      <span>{gmail?`Read automatically every Sunday at 9:00 AM · last check ${s.leadMailLastPoll?dateTime(s.leadMailLastPoll):'not yet'}${s.leadMailLastResult?` · ${s.leadMailLastResult}`:''} · search: ${s.leadMailQuery}`:'Upload a report here, or connect the mailbox under Settings → Lead reports.'}</span>
-      <span>Agent last ran {worker?.lastSeen?dateTime(worker.lastSeen):'never'}{worker?` · ${aiLabel(worker)}`:''}. Duplicates are recognised: an email or file already read is skipped, and a project seen again is merged into its lead.</span>
-      {s.leadMailLastError&&<span className="overdue-text">Gmail: {s.leadMailLastError}</span>}</div>
-      {canWrite&&<label className={`button ${busy?'disabled-look':''}`}><Upload size={14}/>Upload report<input className="file-button-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)upload(file);}}/></label>}
-      {canWrite&&<Button primary disabled={busy} onClick={runAgent}><Sparkles size={14}/>Run agent now</Button>}</div>
-    <div className="tabs">{[['leads','Leads',leads.length],['reports','Reports',r.leadImport.length]].map(([key,label,n])=><button key={key} className={view===key?'active':''} onClick={()=>setView(key)}>{label}<span>{n}</span></button>)}</div>
-    {view==='leads'?<div className="panel table-panel"><div className="table-toolbar"><div className="table-title">Project leads <span className="count">{rows.length}</span></div><div className="toolbar-actions">
-      <select aria-label="Filter leads" value={filter} onChange={e=>setFilter(e.target.value)}><option value="open">Open leads</option><option value="due">Follow-up due</option><option value="all">All leads</option>{['New','Contacted','Meeting','Interested','Converted','Not relevant','Lost'].map(x=><option key={x}>{x}</option>)}</select>
-      <select aria-label="Filter priority" value={priority} onChange={e=>setPriority(e.target.value)}><option value="all">All priorities</option>{['Hot','Warm','Cold'].map(x=><option key={x}>{x}</option>)}</select>
-      <label className="check-filter"><input type="checkbox" checked={poolOnly} onChange={e=>setPoolOnly(e.target.checked)}/>Pool listed</label>
-      <button className="button icon-button" title="Export CSV" aria-label="Export CSV" onClick={()=>downloadCsv('project-leads',rows)}><ArrowDownToLine size={16}/></button></div></div>
-      {rows.length?<div className="table-scroll"><table><thead><tr><th>Project</th><th>Construction stage</th><th>Where we fit</th><th>Priority</th><th>Next follow-up</th><th>Status</th><th/></tr></thead><tbody>{rows.map(l=><tr key={l.id} onClick={()=>show(l)}>
-        <td><button className="record-link" onClick={e=>{e.stopPropagation();show(l);}}>{l.name}</button><small>{[l.builder?.name,l.area].filter(Boolean).join(' · ')}</small></td>
-        <td>{l.stage||'—'}<small>{l.possession?`Possession ${l.possession}`:''}</small></td>
-        <td><span className="chips">{l.fit.length?l.fit.map(f=><span key={f}>{f}</span>):<span>—</span>}</span></td>
-        <td><Badge tone={priorityTone[l.priority]}>{l.priority}</Badge></td>
-        <td className={l.nextFollowUp&&l.nextFollowUp<todayIso?'overdue-text':''}>{l.nextFollowUp?date(l.nextFollowUp):'—'}<small className="muted">{l.owner}</small></td>
-        <td><Badge tone={leadTone(l.status)}>{l.status}</Badge></td><td><ChevronRight size={16}/></td></tr>)}</tbody></table></div>
-      :<Empty title={leads.length?'No leads match these filters.':'No project leads yet.'} text={leads.length?'Change the filters or the search.':'Upload a report, or connect Gmail so each new report is read automatically.'}/>}</div>
-    :<LeadReports state={state} act={act} busy={busy} canWrite={canWrite}/>}
-  </>;
-}
-function LeadReports({state,act,busy,canWrite}){
-  const imports=state.records.leadImport;
-  if(!imports.length)return <div className="panel"><Empty title="No reports yet." text="Reports from Gmail and uploads are listed here with what was read from each."/></div>;
-  return <div className="panel table-panel"><div className="table-scroll"><table><thead><tr><th>Report</th><th>Received</th><th>Result</th><th>Status</th></tr></thead><tbody>{imports.map(i=>{
-    const job=state.jobs.find(j=>j.id===i.jobId);
-    const status=i.status!=='queued'?i.status:job?.status==='failed'?'failed':job?.status==='running'?'reading':'queued';
-    const error=i.error||(status==='failed'?job?.error:'');
-    const res=i.result;
-    return <tr key={i.id}><td><strong className="record-link">{i.name}</strong><small>{i.source==='gmail'?[i.mailFrom,i.mailSubject].filter(Boolean).join(' · '):`Uploaded by ${state.users.find(u=>u.id===i.createdBy)?.name||'staff'}`}</small></td>
-      <td className="muted">{dateTime(i.receivedAt||i.createdAt)}<small>{i.rowCount} rows</small></td>
-      <td>{res?`${res.created} new · ${res.updated} already in CAC (merged)${res.duplicates?` · ${res.duplicates} repeated in the file (merged)`:''}${res.merged?` · new contacts for ${res.merged}`:''}${res.advanced?` · ${res.advanced} moved stage`:''}${res.skipped?` · ${res.skipped} skipped`:''}`:'—'}{res?.missing?.map(m=><small key={m} className="muted">{m}</small>)}{error&&<small className="overdue-text">{error}</small>}</td>
-      <td><Badge tone={status==='imported'?'green':status==='failed'?'red':'amber'}>{status}</Badge>{canWrite&&!i.error&&!['queued','reading'].includes(status)&&<Button disabled={busy} onClick={()=>act(async()=>{const result=await rpc('reread_lead_report',{p_import:i.id});wakeWorker();return result;},'Reading the report again. Its projects are merged into the existing leads.')}>Read again</Button>}</td></tr>;
-  })}</tbody></table></div></div>;
-}
-function LeadDetails({lead,state,show}){
-  const r=state.records,todayIso=today();
-  const tasks=r.task.filter(t=>t.projectLeadId===lead.id).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
-  const source=r.leadImport.find(i=>i.id===lead.importId);
-  const field=(label,value,wide)=>value?<div className={`detail-field ${wide?'wide':''}`} key={label}><label>{label}</label><p>{value}</p></div>:null;
-  const architectName=[lead.architect?.firm,lead.architect?.name].filter(Boolean).join(' · ');
-  return <>
-    <div className="record-details">
-      {field('Priority',[lead.priority,lead.functionArea].filter(Boolean).join(' · '))}
-      {field('Construction stage',[lead.stage,bucketLabel[lead.stageBucket]].filter(Boolean).join(' · '))}
-      {field('Possession',lead.possession)}
-      {field('Location',[lead.area,lead.pincode].filter(Boolean).join(' · '))}
-      {field('Project',[lead.projectType,lead.details].filter(Boolean).join(' · '))}
-      {field('Owner',lead.owner)}
-      {field('Next follow-up',lead.nextFollowUp?`${lead.nextFollowUp<todayIso?'Overdue · ':''}${date(lead.nextFollowUp)}`:'None scheduled')}
-      {field('Last contact',lead.lastContactAt&&`${lead.lastOutcome} · ${dateTime(lead.lastContactAt)}`)}
-      {field('Closed because',lead.closeReason,true)}
-      {field('Landmark',lead.landmark,true)}
-    </div>
-    <h3 className="section-heading">Where Crystal Pools fits</h3><div className="chips large">{lead.fit.length?lead.fit.map(f=><span key={f}>{f}</span>):<span>No direct product fit listed</span>}</div>
-    {lead.products.length>0&&<><h3 className="section-heading">Amenities in the report</h3><div className="chips">{lead.products.map(p=><span key={p}>{p}</span>)}</div></>}
-    <h3 className="section-heading">People to contact</h3><div className="people">
-      {lead.contacts.map((c,i)=><Person key={i} name={c.name} detail={c.role} phones={[c.phone]} emails={[c.email]}/>)}
-      {lead.builder?.name&&<Person name={lead.builder.name} detail={['Builder',lead.builder.address].filter(Boolean).join(' · ')} phones={lead.builder.phones} emails={lead.builder.emails}/>}
-      {architectName&&<Person name={architectName} detail={['Architect',lead.architect.address].filter(Boolean).join(' · ')} phones={lead.architect.phones} emails={lead.architect.emails}/>}
-    </div>
-    <h3 className="section-heading">Follow-up schedule</h3>{tasks.length?tasks.map(t=><button className="linked-record" key={t.id} onClick={()=>show(t)}><span><small>{t.status==='open'?`${t.dueDate<todayIso?'Overdue':'Due'} ${date(t.dueDate)}`:`${nice(t.status)}${t.cancelReason?` · ${t.cancelReason}`:''}`} · {t.owner}</small>{t.name}</span><Badge>{t.status}</Badge></button>):<p className="muted small-text">No follow-ups scheduled.</p>}
-    <h3 className="section-heading">Seen in reports</h3>{lead.history.map((h,i)=><p className="history-row" key={i}><strong>{date(h.at)}</strong> {h.stage||'Stage not listed'}{h.possession?` · possession ${h.possession}`:''}<small>{h.report}</small></p>)}
-    {source&&<p className="muted small-text">Latest report: {source.name}{lead.reportSerial?` · project no. ${lead.reportSerial}`:''}</p>}
-  </>;
-}
-function Comments({record,state,act,busy,canWrite}){
-  const [body,setBody]=useState('');
-  const items=state.records.comment.filter(c=>c.targetId===record.id).sort((a,b)=>a.createdAt.localeCompare(b.createdAt));
-  const author=c=>state.users.find(u=>u.id===c.createdBy)?.name||(c.kind==='system'?'Lead report':'Staff');
-  async function post(e){e.preventDefault();const text=body.trim();if(!text)return;const saved=await act(()=>rpc('add_comment',{p_kind:record.kind==='projectLead'?'project_lead':record.kind,p_id:record.id,p_body:text}),'Comment added.');if(saved)setBody('');}
-  return <section className="comments"><h3 className="section-heading">Comments <span className="count">{items.length}</span></h3>
-    {items.length?<div className="comment-list">{items.map(c=><article key={c.id} className={`comment ${c.kind}`}><div><strong>{author(c)}</strong><small>{dateTime(c.createdAt)}{c.kind==='contact'?' · call or visit':c.kind==='system'?' · update':''}</small></div><p>{c.body}</p></article>)}</div>:<p className="muted small-text">No comments yet.</p>}
-    {canWrite&&<form className="comment-form" onSubmit={post}><textarea aria-label="Add a comment" rows={2} maxLength={4000} value={body} onChange={e=>setBody(e.target.value)} placeholder="Add a comment for the team"/><Button type="submit" primary disabled={busy||!body.trim()}>Post</Button></form>}
-  </section>;
-}
-function LeadSettings({state,busy,onSetting}){
-  const s=state.settings,admin=state.user.role==='admin',connected=s.leadMailConfigured==='true';
-  const plan=(()=>{try{return JSON.parse(s.leadCadence||'{}');}catch{return {};}})();
-  const [query,setQuery]=useState(s.leadMailQuery||''),[days,setDays]=useState({early:(plan.early||[]).join(', '),mid:(plan.mid||[]).join(', '),late:(plan.late||[]).join(', ')});
-  const [outreach,setOutreach]=useState(s.leadOwnerOutreach||''),[sales,setSales]=useState(s.leadOwnerSales||'');
-  const list=text=>text.split(/[\s,]+/).filter(Boolean).map(Number);
-  function save(e){e.preventDefault();
-    if(query.trim()!==s.leadMailQuery)onSetting('lead_mail_query',query.trim(),'Gmail search saved.');
-    if(['early','mid','late'].some(b=>String(list(days[b]))!==String(plan[b]||[])))onSetting('lead_cadence',JSON.stringify({early:list(days.early),mid:list(days.mid),late:list(days.late)}),'Follow-up schedule saved. New follow-ups use it.');
-    if(outreach!==s.leadOwnerOutreach)onSetting('lead_owner_outreach',outreach,'Early-stage owner saved.');
-    if(sales!==s.leadOwnerSales)onSetting('lead_owner_sales',sales,'Sales owner saved.');
+  useEffect(() => { if (!auth) { setPage('quotations'); setSearch(''); setAdding(false); setMobile(false); } }, [auth]);
+  useEffect(() => {
+    if (!auth) return;
+    const timer = setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 5000);
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
+  }, [auth]);
+  // Sessions end after 12 hours without activity on this device.
+  useEffect(() => {
+    if (!auth) return;
+    const expire = () => signOut().then(() => { setAuth(false); notify('Signed out after 12 hours without activity.', true); });
+    if (idleExpired()) { expire(); return; }
+    markActive(); let last = 0; const touch = () => { if (Date.now() - last > 60000) { last = Date.now(); markActive(); } };
+    const check = setInterval(() => { if (idleExpired()) expire(); }, 60000);
+    ['pointerdown', 'keydown'].forEach(e => window.addEventListener(e, touch));
+    return () => { clearInterval(check); ['pointerdown', 'keydown'].forEach(e => window.removeEventListener(e, touch)); };
+  }, [auth]);
+  useEffect(() => { if (toast) { const timer = setTimeout(() => setToast(null), 7000); return () => clearTimeout(timer); } }, [toast]);
+  useEffect(() => { const handler = e => { if (e.key === 'Escape') { setAdding(false); setMobile(false); } }; window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler); }, []);
+  async function act(work, message = 'Saved successfully.') {
+    setBusy(true);
+    try { const result = await work(); await refresh(); notify(typeof message === 'function' ? message(result) : message); return result; }
+    catch (error) { notify(error.message, true); return null; }
+    finally { setBusy(false); }
   }
-  const staff=state.users.filter(u=>u.active);
-  const owner=(value,setValue,label)=><label>{label}<select value={value} disabled={!admin} onChange={e=>setValue(e.target.value)}><option value="">Sales queue</option>{staff.map(u=><option key={u.id} value={u.name}>{u.name}</option>)}</select></label>;
-  const bucket=(key,label)=><label key={key}>{label}<input value={days[key]} disabled={!admin} onChange={e=>setDays(old=>({...old,[key]:e.target.value}))} placeholder="e.g. 3, 14, 30"/></label>;
-  return <section className="panel settings-card business-settings"><h2>Lead reports</h2><p>Project report spreadsheets are read into Project leads. Each lead gets follow-ups by construction stage; the days are counted from the previous step.{admin?'':' Only an admin can change these settings.'}</p>
-    <div className="setting-row"><span>Gmail</span><strong>{connected?`Connected (read-only) · last check ${s.leadMailLastPoll?dateTime(s.leadMailLastPoll):'not yet'}`:'Not connected'}</strong></div>
-    {s.leadMailLastError&&<p className="error-inline">{s.leadMailLastError}</p>}
-    {!connected&&<ol className="checklist"><li>Create a Google Cloud OAuth client (type Desktop app) with the Gmail API enabled.</li><li>Put GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in cac/.env.</li><li>Run <code>npm --prefix cac run gmail:auth</code> and sign in with the mailbox that receives the reports.</li><li>Run <code>npm --prefix cac run deploy:worker</code> (or keep <code>npm run dev</code> open).</li></ol>}
-    <form className="setting-form" onSubmit={save}>
-      <label className="wide-setting">Gmail search for report emails<input value={query} disabled={!admin} onChange={e=>setQuery(e.target.value)} placeholder="from:reports@example.com has:attachment filename:xlsx"/></label>
-      {bucket('early','Early stage (prelaunch, excavation): days')}{bucket('mid','Mid stage (plinth, slabs): days')}{bucket('late','Late stage (RCC done, finishing): days')}
-      {owner(outreach,setOutreach,'Owner of early-stage leads (Marketing · outreach)')}{owner(sales,setSales,'Owner of mid and late-stage leads (Sales)')}
-      <Button disabled={!admin||busy} type="submit">Save lead settings</Button>
-    </form></section>;
+  const navigate = next => { setPage(next); setSearch(''); setMobile(false); };
+  if (!configured) return <SetupNeeded/>;
+  if (loading) return <div className="loading"><Waves size={36}/><p>Opening your workspace…</p></div>;
+  if (!auth) return <Login onLogin={() => { setToast(null); return refresh(); }} notify={notify} toast={toast}/>;
+  if (recovery || state.user.mustChangePassword) return <SetPasswordScreen reason={recovery ? 'recovery' : 'temporary'} user={state.user}
+    onDone={async () => { setRecovery(false); if (location.hash) history.replaceState(null, '', location.pathname); await refresh(); notify('Password changed.'); }}/>;
+  const field = state.user.role === 'field';
+  const NAV = navFor(state.user.role), pages = [...NAV.map(([key]) => key), 'settings'];
+  const page = pages.includes(pageState) ? pageState : NAV[0][0];
+  const ctx = { state, act, busy, refresh, notify, canWrite: state.user.role !== 'viewer' };
+  const [title, subtitle] = page === 'requirements'
+    ? (field ? ['Every customer visit, ready to quote.', 'Fill in a requirement after each visit. The quotation is prepared for you.']
+      : ['What customers asked for, ready to quote.', 'Requirements from customer visits, each with the quotation the FRP agent prepared.'])
+    : TITLES[page];
+  return <div className="app-shell">
+    {mobile && <button className="sidebar-scrim" onClick={() => setMobile(false)} aria-label="Close navigation"/>}
+    <aside className={`sidebar ${mobile ? 'open' : ''}`}>
+      <a className="brand" href="#" onClick={e => { e.preventDefault(); navigate(NAV[0][0]); }}><span className="brand-mark"><Waves size={27}/></span><span>crystal pools<small>WORKSPACE</small></span></a>
+      <nav>{NAV.map(([key, Icon, label]) => <button key={key} className={page === key ? 'active' : ''} onClick={() => navigate(key)}><Icon size={18}/>{label}</button>)}</nav>
+      <div className="sidebar-bottom"><nav><button onClick={() => navigate('settings')} className={page === 'settings' ? 'active' : ''}><Settings2 size={17}/>Settings</button></nav>
+        <div className="profile"><span className="avatar">{state.user.name.slice(0, 2).toUpperCase()}</span><span>{state.user.name}<small>{nice(state.user.role)}</small></span>
+          <button title="Sign out" className="icon-button" onClick={async () => { await signOut(); setAuth(false); }}><LogOut size={16}/></button></div></div>
+    </aside>
+    <div className="main-shell">
+      <header className="topbar"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMobile(true)}><Menu size={22}/></button>
+        <div className="breadcrumb">Workspace <ChevronRight size={13}/><strong>{NAV.find(([key]) => key === page)?.[2] || nice(page)}</strong></div><div className="topbar-right"><span className="avatar small">CP</span></div></header>
+      <main>
+        <div className="page-heading"><div><div className="eyebrow">CRYSTAL POOLS / {nice(page).toUpperCase()}</div><h1>{title}</h1><p>{subtitle}</p></div></div>
+        {page !== 'settings' && <div className="search-row"><div className="search-field"><Search size={17}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${nice(page)}…`} aria-label="Search records"/>
+          {search && <button onClick={() => setSearch('')} aria-label="Clear search"><X size={14}/></button>}</div>
+          <span className="muted small-text">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span></div>}
+        {page === 'quotations' && <FrpQuotesTab ctx={ctx} search={search}/>}
+        {page === 'requirements' && <RequirementsPage ctx={ctx} search={search}/>}
+        {page === 'drawings' && <DrawingsVault ctx={ctx} search={search}/>}
+        {page === 'settings' && <><AccountSettings state={state}/><StaffSettings ctx={ctx} onAdd={() => setAdding(true)}/>{['admin', 'commercial'].includes(state.user.role) && <FrpPriceSettings ctx={ctx}/>}</>}
+        <footer className="page-footer"><span><Waves size={15}/> Crystal Pools · Workspace</span><span>Requirements, quotations and drawings.</span></footer>
+      </main>
+    </div>
+    {adding && <AddStaff ctx={ctx} close={() => setAdding(false)}/>}
+    {toast && <div role="status" className={`toast ${toast.error ? 'error' : ''}`}>{toast.error ? <CircleHelp size={18}/> : <CheckCircle2 size={18}/>}<span>{toast.message}</span><button onClick={() => setToast(null)} aria-label="Dismiss notification"><X size={16}/></button></div>}
+  </div>;
 }
-// ── Assistants: paid AI switch and schedule ────────────────────────────────
-function AgentControls({state,busy,act}){
-  const admin=state.user.role==='admin',paid=state.settings.aiEnabled==='true',worker=state.config.worker;
-  return <section className="panel settings-card business-settings agent-controls"><h2>How the assistants run</h2>
-    <div className="setting-row"><span>Schedule</span><strong>Every Sunday at 9:00 AM IST, plus Run agent now on Project leads</strong></div>
-    <div className="setting-row"><span>Last run</span><strong>{worker?.lastSeen?`${dateTime(worker.lastSeen)} · ${aiLabel(worker)}`:'Not yet'}</strong></div>
-    <div className="setting-row"><span>AI</span><strong>{paid?'Paid AI is on: Claude Haiku (about a cent per report)':'Free rules: no AI credits are used'}</strong></div>
-    {admin?<div className="setting-form"><Button primary={!paid} disabled={busy} onClick={()=>act(()=>rpc('set_setting',{p_key:'ai_enabled',p_value:paid?'false':'true'}),paid?'Paid AI switched off. Assistants use the free rules.':'Paid AI switched on. The next runs use Claude.')}>{paid?'Switch paid AI off':'Switch paid AI on'}</Button></div>:<p className="small-text muted">Only an admin can change these.</p>}
-  </section>;
+
+// ── Sign-in and passwords ──────────────────────────────────────────────────
+const Story = ({ eyebrow, children, footer }) => <div className="login-story"><div className="brand"><span className="brand-mark"><Waves size={30}/></span><span>crystal pools<small>WORKSPACE</small></span></div>
+  <div><div className="eyebrow">{eyebrow}</div>{children}</div><small>{footer || 'Crystal Pools · Requirements, quotations and drawings'}</small></div>;
+
+function Login({ onLogin, notify, toast }) {
+  const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [working, setWorking] = useState(false);
+  return <div className="login-page"><Story eyebrow="FROM CUSTOMER VISIT TO SIGNED QUOTATION"><h1>Good work deserves<br/>room to grow.</h1><p>Requirements from site visits, quotations prepared in minutes, and every drawing checked.</p>
+      <div className="login-flow"><span>Visit</span><ArrowRight/><span>Quote</span><ArrowRight/><span>Build</span></div></Story>
+    <div className="login-form"><div className="eyebrow">WELCOME TO YOUR WORKSPACE</div><h2>Let’s get things flowing.</h2><p>Sign in with your Crystal Pools staff account.</p>
+      <form onSubmit={async e => { e.preventDefault(); setWorking(true); try { await signIn(email, password); await onLogin(); } catch (error) { notify(error.message, true); } finally { setWorking(false); } }}>
+        <label>Email address<input type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required/></label>
+        <label>Password<input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required/></label>
+        {toast?.error && <p className="error-inline" role="alert">{toast.message}</p>}
+        <Button primary disabled={working} type="submit">{working ? <LoaderCircle className="spin" size={17}/> : <>Enter workspace <ArrowRight size={17}/></>}</Button></form>
+      <div className="login-note"><ShieldCheck size={20}/><span>Staff access only<br/><small>Accounts are created by an admin in Settings.</small></span></div>
+      <button type="button" className="text-button forgot-link" onClick={async () => { if (!email) { notify('Enter your email address first.', true); return; } try { await sendPasswordReset(email); notify('If this email has an account, a reset link is on its way.'); } catch (error) { notify(error.message, true); } }}>Forgot password?</button></div></div>;
 }
-// ── Settings: which sections the workspace shows ──────────────────────────
-const SECTIONS=[['mywork','My work'],['inbox','Lead inbox'],['leads','Project leads'],['pipeline','Sales pipeline'],['appointment','Appointments'],['approval','Approvals'],['agents','Agent studio'],['customers','Customers & sites'],['survey','Surveys & quotes'],['project','Projects'],['drawings','Drawings vault'],['inventory','Warehouse & inventory'],['maintenance','Maintenance'],['reviews','Reviews'],['task','Tasks & activity'],['reports','Reports'],['library','Approved library'],['prospect','Prospect discovery'],['outreach','Outreach'],['lifecycle','Lifecycle lists']];
-function SectionSettings({state,busy,onSetting}){
-  const admin=state.user.role==='admin',hidden=(state.settings.hiddenModules||'').split(',').filter(Boolean);
-  const toggle=key=>onSetting('hidden_modules',(hidden.includes(key)?hidden.filter(k=>k!==key):[...hidden,key]).join(','),'Workspace sections updated.');
-  return <section className="panel settings-card business-settings"><h2>Workspace sections</h2><p>Show only what the team uses, following the lead flow from enquiry to AMC. A hidden section keeps its records and can be shown again.{admin?'':' Only an admin can change this.'}</p>
-    <div className="section-toggles">{SECTIONS.map(([key,label])=><label key={key} className="check-filter"><input type="checkbox" checked={!hidden.includes(key)} disabled={!admin||busy} onChange={()=>toggle(key)}/>{label}</label>)}</div></section>;
+
+function SetPasswordScreen({ reason, user, onDone }) {
+  const [password, setPassword] = useState(''), [confirm, setConfirm] = useState(''), [error, setError] = useState(''), [working, setWorking] = useState(false);
+  async function save(e) { e.preventDefault(); setError(''); if (password !== confirm) { setError('The passwords do not match.'); return; } setWorking(true); try { await changePassword(password); await onDone(); } catch (err) { setError(err.message); } finally { setWorking(false); } }
+  return <div className="login-page"><Story eyebrow={reason === 'recovery' ? 'PASSWORD RESET' : 'ONE MORE STEP'} footer={user?.email}><h1>Choose your<br/>own password.</h1><p>{reason === 'recovery' ? 'Set a new password for your account.' : 'Your account was created with a temporary password. Replace it before you continue.'}</p></Story>
+    <div className="login-form"><h2>New password</h2><form onSubmit={save}>
+      <label>New password (12+ characters)<input type="password" autoComplete="new-password" minLength={12} required value={password} onChange={e => setPassword(e.target.value)}/></label>
+      <label>Repeat new password<input type="password" autoComplete="new-password" minLength={12} required value={confirm} onChange={e => setConfirm(e.target.value)}/></label>
+      {error && <p className="error-inline" role="alert">{error}</p>}
+      <Button primary disabled={working} type="submit">{working ? <LoaderCircle className="spin" size={17}/> : <>Save password <ArrowRight size={17}/></>}</Button></form></div></div>;
 }
-// ── Drawings vault, warehouse and inventory ───────────────────────────────
-const fmtQty=n=>Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:3});
-const nameOf=(list,id)=>list.find(x=>x.id===id)?.name||'—';
-const allowed=(state,roles)=>state.user.role==='admin'||roles.includes(state.user.role);
-const toneOf=s=>['approved','received','issued','posted','active'].includes(s)?'green':['for_approval','pending_approval','pending','partially_received','partially_issued','requested','draft'].includes(s)?'amber':['rejected','cancelled','inactive'].includes(s)?'red':undefined;
-function Sheet({title,eyebrow='CRYSTAL POOLS WORKSPACE',close,large,children}){
-  return <div className="overlay modal-overlay" onClick={close}><section className={`modal ${large?'large':''}`} role="dialog" aria-modal="true" aria-label={title} onClick={e=>e.stopPropagation()}><div className="modal-heading"><div><div className="eyebrow">{eyebrow}</div><h2>{title}</h2></div><button className="icon-button" onClick={close} aria-label="Close dialog"><X size={21}/></button></div>{children}</section></div>;
+
+function SetupNeeded() {
+  return <div className="login-page"><Story eyebrow="SETUP REQUIRED"><h1>Connect the workspace<br/>to Supabase.</h1></Story><div className="login-form"><h2>One step left.</h2>
+    <p>Copy <code>cac/.env.example</code> to <code>cac/.env</code>, set <code>VITE_CAC_SUPABASE_URL</code> and <code>VITE_CAC_SUPABASE_PUBLISHABLE_KEY</code>, then restart. The README walks through the full setup.</p></div></div>;
+}
+
+// ── Settings: my account and staff ─────────────────────────────────────────
+function AccountSettings({ state }) {
+  const [password, setPassword] = useState(''), [message, setMessage] = useState(''), [working, setWorking] = useState(false);
+  async function save(e) { e.preventDefault(); setWorking(true); setMessage(''); try { await changePassword(password); setPassword(''); setMessage('Password changed.'); } catch (err) { setMessage(err.message); } finally { setWorking(false); } }
+  return <section className="panel settings-card business-settings"><h2>My account</h2><p>{state.user.email} · {roleLabel(state.user.role)} · sessions end after 12 hours without activity.</p>
+    <form className="setting-form" onSubmit={save}><label>New password (12+ characters)<input type="password" autoComplete="new-password" minLength={12} required value={password} onChange={e => setPassword(e.target.value)}/></label><Button disabled={working} type="submit">Change password</Button></form>
+    {message && <p className="form-note">{message}</p>}
+    {state.user.role === 'admin' && <div className="setting-form"><label>Full backup of every CAC table (JSON, no passwords)<span className="muted small-text">Drawing files stay in Supabase Storage. Supabase also keeps its own database backups.</span></label>
+      <Button onClick={() => downloadBackup().catch(err => setMessage(err.message))}><ArrowDownToLine size={15}/>Download backup</Button></div>}</section>;
+}
+
+function StaffSettings({ ctx, onAdd }) {
+  const { state, act, busy } = ctx, admin = state.user.role === 'admin';
+  return <section className="panel business-settings"><div className="panel-heading"><div><h2>People & permissions</h2><p>Server-enforced roles for each important decision.</p></div>{admin && <Button primary onClick={onAdd}><Plus size={15}/>Add staff member</Button>}</div>
+    {state.users.map(user => <div className="staff-row" key={user.id}><span className="avatar">{user.name.slice(0, 2)}</span><div><strong>{user.name}</strong><small>{user.email}</small></div>
+      <Badge tone={user.active ? undefined : 'red'}>{user.active ? roleLabel(user.role) : 'inactive'}</Badge>
+      {admin && user.id !== state.user.id && <Button disabled={busy} onClick={() => act(() => rpc('set_staff', { p_user: user.id, p_role: user.role, p_active: !user.active }), user.active ? 'Staff member deactivated.' : 'Staff member reactivated.')}>{user.active ? 'Deactivate' : 'Reactivate'}</Button>}</div>)}</section>;
+}
+
+function AddStaff({ ctx, close }) {
+  return <FormSheet title="Add staff member" state={ctx.state} close={close} submitLabel="Add staff member" intro="Field staff only see their own requirement forms. Commercial staff set prices and approve quotations. Engineers check drawings."
+    fields={[{ key: 'name', label: 'Full name', type: 'text', required: true }, { key: 'email', label: 'Email', type: 'email', required: true },
+      { key: 'password', label: 'Initial password (12+ characters; leave blank for an existing Supabase account)', type: 'password' },
+      { key: 'role', label: 'Role', type: 'select', options: ROLES.map(r => [r, roleLabel(r)]), required: true }]}
+    onSubmit={async values => { await rpc('create_staff', { p_email: values.email, p_name: values.name, p_role: values.role, p_password: values.password || null }); await ctx.refresh(); ctx.notify('Staff member added. They choose their own password at first sign-in.'); }}/>;
+}
+
+// ── Forms ──────────────────────────────────────────────────────────────────
+function Field({ field, value, onChange }) {
+  const options = (field.options || []).map(o => Array.isArray(o) ? o : [o, o]);
+  const common = { 'aria-label': field.label, value: value ?? '', onChange: e => onChange(e.target.value), required: field.required };
+  return <label className={field.type === 'textarea' ? 'wide' : ''}>{field.label}
+    {field.type === 'select' ? <select {...common}><option value="">{field.placeholder || `Choose ${field.label.toLowerCase()}`}</option>{options.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+      : field.type === 'textarea' ? <textarea {...common} rows={3}/>
+      : <input {...common} type={field.type} minLength={field.type === 'password' && value ? 12 : undefined}/>}</label>;
 }
 // A form in a dialog. onSubmit throws to keep the dialog open with the error shown.
-function FormSheet({title,fields,initial={},submitLabel='Save',onSubmit,close,state,intro,children}){
-  const [values,setValues]=useState(initial),[error,setError]=useState(''),[saving,setSaving]=useState(false);
-  const set=(key,value)=>setValues(old=>({...old,[key]:value}));
-  return <Sheet title={title} close={close} large={Boolean(children)}><form onSubmit={async e=>{e.preventDefault();setSaving(true);setError('');try{await onSubmit(values);close();}catch(err){setError(err.message);}finally{setSaving(false);}}}><div className="form-grid">{intro&&<p className="wide muted">{intro}</p>}{fields.map(field=><Field key={field.key} field={field} value={values[field.key]} onChange={value=>set(field.key,value)} state={state} values={values}/>)}{children&&children(values,set)}</div>{error&&<p className="error-inline" role="alert">{error}</p>}<div className="form-footer"><Button type="button" onClick={close}>Cancel</Button><Button type="submit" primary disabled={saving}>{saving?'Saving…':submitLabel}</Button></div></form></Sheet>;
+function FormSheet({ title, fields, initial = {}, submitLabel = 'Save', onSubmit, close, intro }) {
+  const [values, setValues] = useState(initial), [error, setError] = useState(''), [saving, setSaving] = useState(false);
+  return <Sheet title={title} close={close}><form onSubmit={async e => { e.preventDefault(); setSaving(true); setError(''); try { await onSubmit(values); close(); } catch (err) { setError(err.message); } finally { setSaving(false); } }}>
+    <div className="form-grid">{intro && <p className="wide muted">{intro}</p>}{fields.map(field => <Field key={field.key} field={field} value={values[field.key]} onChange={value => setValues(old => ({ ...old, [field.key]: value }))}/>)}</div>
+    {error && <p className="error-inline" role="alert">{error}</p>}
+    <div className="form-footer"><Button type="button" onClick={close}>Cancel</Button><Button type="submit" primary disabled={saving}>{saving ? 'Saving…' : submitLabel}</Button></div></form></Sheet>;
 }
-function LinesEditor({items,lines,setLines,rate}){
-  const set=(index,key,value)=>setLines(lines.map((line,i)=>i===index?{...line,[key]:value}:line));
-  return <div className="wide lines-editor"><label>Items</label>{lines.map((line,i)=><div className={`line-row ${rate?'with-rate':''}`} key={i}><select aria-label={`Item ${i+1}`} value={line.itemId||''} onChange={e=>set(i,'itemId',e.target.value)}><option value="">Choose item</option>{items.map(item=><option key={item.id} value={item.id}>{item.sku} · {item.name} ({item.uom})</option>)}</select><input aria-label={`Quantity ${i+1}`} type="number" min="0" step="any" placeholder="Qty" value={line.qty??''} onChange={e=>set(i,'qty',e.target.value)}/>{rate&&<input aria-label={`Rate ${i+1}`} type="number" min="0" step="any" placeholder="Rate ₹ (excl. GST)" value={line.rate??''} onChange={e=>set(i,'rate',e.target.value)}/>}<button type="button" className="icon-button" aria-label={`Remove line ${i+1}`} onClick={()=>setLines(lines.filter((_,n)=>n!==i))}><X size={15}/></button></div>)}<Button type="button" onClick={()=>setLines([...lines,{}])}><Plus size={14}/>Add line</Button></div>;
-}
-function DataTable({head,rows,render,onRow,empty}){
-  return <div className="panel table-panel">{rows.length?<div className="table-scroll"><table><thead><tr>{head.map(h=><th key={h}>{h}</th>)}{onRow&&<th/>}</tr></thead><tbody>{rows.map(row=><tr key={row.id} onClick={onRow?()=>onRow(row):undefined} className={onRow?'':'static-row'}>{render(row).map((cell,i)=><td key={i}>{cell}</td>)}{onRow&&<td><ChevronRight size={16}/></td>}</tr>)}</tbody></table></div>:<Empty title={empty[0]} text={empty[1]}/>}</div>;
-}
-const cell=(main,sub)=><>{main}{sub?<small>{sub}</small>:null}</>;
 
 // ── Drawings vault ─────────────────────────────────────────────────────────
-const DISCIPLINES=['Architectural','Structural (RCC)','Filtration & plumbing','Electrical','Tiling & finishes','FRP','Landscape','Shop drawing','As-built','Other'];
-function DrawingsVault({ctx,search}){
-  const {state}=ctx,r=state.records;
-  const [view,setView]=useState('all'),[openId,setOpenId]=useState(null),[creating,setCreating]=useState(false);
-  const drafter=allowed(state,['engineer','project','sales']);
-  const waiting=r.drawingRevision.filter(v=>v.status==='for_approval');
-  const forOf=d=>[d.projectId&&nameOf(r.project,d.projectId),d.opportunityId&&nameOf(r.opportunity,d.opportunityId),d.siteId&&nameOf(r.site,d.siteId)].filter(Boolean).join(' · ');
-  const q=search.toLowerCase();
-  const rows=r.drawing.filter(d=>view==='all'||waiting.some(v=>v.drawingId===d.id)).filter(d=>!q||`${d.name} ${d.number} ${d.discipline} ${forOf(d)}`.toLowerCase().includes(q));
-  const current=openId&&r.drawing.find(d=>d.id===openId);
+const DISCIPLINES = ['Architectural', 'Structural (RCC)', 'Filtration & plumbing', 'Electrical', 'Tiling & finishes', 'FRP', 'Landscape', 'Shop drawing', 'As-built', 'Other'];
+const nameOf = (list, id) => list.find(x => x.id === id)?.name || '—';
+const allowed = (state, roles) => state.user.role === 'admin' || roles.includes(state.user.role);
+const toneOf = s => s === 'approved' ? 'green' : ['for_approval', 'draft'].includes(s) ? 'amber' : s === 'rejected' ? 'red' : undefined;
+const requirementOf = (r, id) => (r.frpRequirement || []).find(x => x.id === id);
+
+function DrawingsVault({ ctx, search }) {
+  const { state } = ctx, r = state.records;
+  const [view, setView] = useState('all'), [openId, setOpenId] = useState(null), [creating, setCreating] = useState(false);
+  const drafter = allowed(state, ['engineer', 'project', 'sales']);
+  const waiting = r.drawingRevision.filter(v => v.status === 'for_approval');
+  const forOf = d => [d.client, requirementOf(r, d.requirementId)?.number].filter(Boolean).join(' · ');
+  const q = search.toLowerCase();
+  const rows = r.drawing.filter(d => view === 'all' || waiting.some(v => v.drawingId === d.id)).filter(d => !q || `${d.name} ${d.number} ${d.discipline} ${forOf(d)}`.toLowerCase().includes(q));
+  const current = openId && r.drawing.find(d => d.id === openId);
   return <>
-    <div className="info-strip"><Lock size={20}/><div><strong>One place for every drawing.</strong><span>Each revision is checked by someone other than the person who drew it. Approved revisions are locked, and approving a new one supersedes the last. Files open through links that expire after 10 minutes.</span></div>{drafter&&<Button primary onClick={()=>setCreating(true)}><Plus size={15}/>New drawing</Button>}</div>
-    <div className="tabs">{[['all','All drawings',r.drawing.length],['waiting','Waiting for approval',waiting.length]].map(([key,label,n])=><button key={key} className={view===key?'active':''} onClick={()=>setView(key)}>{label}<span>{n}</span></button>)}</div>
-    <DataTable head={['Drawing','Discipline','For','Latest revision','Approved']} rows={rows} onRow={d=>setOpenId(d.id)} empty={r.drawing.length?['No drawings match.','Change the tab or the search.']:['No drawings yet.','Add a drawing, then upload its first revision (R0).']}
-      render={d=>[cell(<strong className="record-link">{d.name}</strong>,d.number),d.discipline,<span className="muted">{forOf(d)}</span>,<>{d.latestRevision==null?'No file yet':`R${d.latestRevision}`} <Badge tone={toneOf(d.status)}>{d.status}</Badge></>,d.approvedRevision==null?'—':`R${d.approvedRevision}`]}/>
-    {creating&&<FormSheet title="New drawing" state={state} close={()=>setCreating(false)} submitLabel="Create drawing" intro="Attach the drawing to an opportunity, site or project. You upload its first revision (R0) next."
-      fields={[{key:'name',label:'Title',type:'text'},{key:'discipline',label:'Discipline',type:'select',options:DISCIPLINES},{key:'opportunityId',label:'Opportunity',type:'relation',options:'opportunity'},{key:'siteId',label:'Site',type:'relation',options:'site'},{key:'projectId',label:'Project',type:'relation',options:'project'},{key:'notes',label:'Notes',type:'textarea'}]}
-      onSubmit={async values=>{const d=await rpc('create_drawing',{p_values:toSnake(values)});await ctx.refresh();ctx.notify(`Drawing ${d.number} created. Upload its first revision.`);setOpenId(d.id);}}/>}
-    {current&&<DrawingSheet ctx={ctx} drawing={current} close={()=>setOpenId(null)}/>}
+    <div className="info-strip"><Lock size={20}/><div><strong>One place for every drawing.</strong><span>Each revision is checked by someone other than the person who drew it. Approved revisions are locked, and approving a new one supersedes the last. Files open through links that expire after 10 minutes.</span></div>
+      {drafter && <Button primary onClick={() => setCreating(true)}><Plus size={15}/>New drawing</Button>}</div>
+    <div className="tabs">{[['all', 'All drawings', r.drawing.length], ['waiting', 'Waiting for approval', waiting.length]].map(([key, label, n]) => <button key={key} className={view === key ? 'active' : ''} onClick={() => setView(key)}>{label}<span>{n}</span></button>)}</div>
+    <DataTable head={['Drawing', 'Discipline', 'For', 'Latest revision', 'Approved']} rows={rows} onRow={d => setOpenId(d.id)}
+      empty={r.drawing.length ? ['No drawings match.', 'Change the tab or the search.'] : ['No drawings yet.', 'Add a drawing, then upload its first revision (R0).']}
+      render={d => [cell(<button type="button" className="record-link">{d.name}</button>, d.number), d.discipline, <span className="muted">{forOf(d)}</span>,
+        <>{d.latestRevision == null ? 'No file yet' : `R${d.latestRevision}`} <Badge tone={toneOf(d.status)}>{d.status}</Badge></>, d.approvedRevision == null ? '—' : `R${d.approvedRevision}`]}/>
+    {creating && <FormSheet title="New drawing" state={state} close={() => setCreating(false)} submitLabel="Create drawing" intro="Name the client or site, or link the drawing to an FRP requirement. You upload its first revision (R0) next."
+      fields={[{ key: 'name', label: 'Title', type: 'text', required: true }, { key: 'discipline', label: 'Discipline', type: 'select', options: DISCIPLINES, required: true },
+        { key: 'client', label: 'Client or site', type: 'text' },
+        { key: 'requirementId', label: 'FRP requirement (optional)', type: 'select', placeholder: 'No requirement', options: (r.frpRequirement || []).map(x => [x.id, `${x.number} · ${x.customerName} · ${x.location}`]) },
+        { key: 'notes', label: 'Notes', type: 'textarea' }]}
+      onSubmit={async values => { const d = await rpc('create_drawing', { p_values: toSnake(values) }); await ctx.refresh(); ctx.notify(`Drawing ${d.number} created. Upload its first revision.`); setOpenId(d.id); }}/>}
+    {current && <DrawingSheet ctx={ctx} drawing={current} close={() => setOpenId(null)}/>}
   </>;
 }
-function DrawingSheet({ctx,drawing,close}){
-  const {state,notify}=ctx,r=state.records,me=state.user;
-  const revisions=r.drawingRevision.filter(v=>v.drawingId===drawing.id).sort((a,b)=>b.revision-a.revision);
-  const openRev=revisions.find(v=>['draft','for_approval'].includes(v.status));
-  const [note,setNote]=useState(''),[review,setReview]=useState(''),[working,setWorking]=useState(false);
-  const drafter=allowed(state,['engineer','project','sales']),checker=allowed(state,['engineer']);
-  const go=async(work,message)=>{setWorking(true);try{await work();await ctx.refresh();notify(message);}catch(error){notify(error.message,true);}finally{setWorking(false);}};
+
+function DrawingSheet({ ctx, drawing, close }) {
+  const { state, notify } = ctx, r = state.records, me = state.user;
+  const revisions = r.drawingRevision.filter(v => v.drawingId === drawing.id).sort((a, b) => b.revision - a.revision);
+  const openRev = revisions.find(v => ['draft', 'for_approval'].includes(v.status));
+  const [note, setNote] = useState(''), [review, setReview] = useState(''), [working, setWorking] = useState(false);
+  const drafter = allowed(state, ['engineer', 'project', 'sales']), checker = allowed(state, ['engineer']);
+  const go = async (work, message) => { setWorking(true); try { await work(); await ctx.refresh(); notify(message); } catch (error) { notify(error.message, true); } finally { setWorking(false); } };
   // Open the tab on the click itself (pop-up blockers), then point it at the 10-minute link.
-  const view=path=>{const win=window.open('about:blank','_blank');drawingUrl(path).then(url=>{if(win)win.location.href=url;else location.href=url;}).catch(error=>{win?.close();notify(error.message,true);});};
-  const next=revisions.length?Math.max(...revisions.map(v=>v.revision))+1:0;
+  const view = path => { const win = window.open('about:blank', '_blank'); drawingUrl(path).then(url => { if (win) win.location.href = url; else location.href = url; }).catch(error => { win?.close(); notify(error.message, true); }); };
+  const next = revisions.length ? Math.max(...revisions.map(v => v.revision)) + 1 : 0;
+  const req = requirementOf(r, drawing.requirementId);
   return <Sheet large title={drawing.name} eyebrow={`${drawing.number} · ${drawing.discipline}`} close={close}>
-    <div className="record-details">{[['Status',nice(drawing.status)],['Latest revision',drawing.latestRevision==null?'No file yet':`R${drawing.latestRevision}`],['Approved revision',drawing.approvedRevision==null?'None yet':`R${drawing.approvedRevision}`],['Opportunity',drawing.opportunityId&&nameOf(r.opportunity,drawing.opportunityId)],['Site',drawing.siteId&&nameOf(r.site,drawing.siteId)],['Project',drawing.projectId&&nameOf(r.project,drawing.projectId)],['Notes',drawing.notes]].filter(([,v])=>v).map(([k,v])=><div className="detail-field" key={k}><label>{k}</label><p>{v}</p></div>)}</div>
+    <div className="record-details">{[['Status', nice(drawing.status)], ['Latest revision', drawing.latestRevision == null ? 'No file yet' : `R${drawing.latestRevision}`], ['Approved revision', drawing.approvedRevision == null ? 'None yet' : `R${drawing.approvedRevision}`],
+      ['Client or site', drawing.client], ['FRP requirement', req && `${req.number} · ${req.customerName} · ${req.location}`], ['Notes', drawing.notes]].filter(([, v]) => v).map(([k, v]) => <div className="detail-field" key={k}><label>{k}</label><p>{v}</p></div>)}</div>
     <h3 className="section-heading">Revisions</h3>
-    {revisions.length?revisions.map(v=><div className="revision-row" key={v.id}><div><strong>R{v.revision} · {v.name}</strong><small>{(Number(v.size)/1048576).toFixed(1)} MB · uploaded by {nameOf(state.users,v.createdBy)} · {dateTime(v.createdAt)}{v.changeNote?` · ${v.changeNote}`:''}</small>{v.reviewedBy&&<small>{v.status==='rejected'?'Rejected':'Checked'} by {nameOf(state.users,v.reviewedBy)} · {dateTime(v.reviewedAt)}{v.reviewNote?` · ${v.reviewNote}`:''}</small>}</div><div className="revision-actions"><Badge tone={toneOf(v.status)}>{v.status}</Badge><Button onClick={()=>view(v.path)}>Open</Button>{v.status==='draft'&&drafter&&<Button primary disabled={working} onClick={()=>go(()=>rpc('submit_drawing_revision',{p_revision:v.id}),`R${v.revision} sent for approval.`)}>Submit for approval</Button>}</div></div>):<p className="muted small-text">No revisions yet.</p>}
-    {openRev?.status==='for_approval'&&checker&&(openRev.createdBy===me.id?<p className="muted small-text">R{openRev.revision} is waiting for a checker: someone other than you must approve it.</p>:<div className="setting-form"><label>Review note (required to reject)<input value={review} onChange={e=>setReview(e.target.value)} placeholder="e.g. Checked against the site survey"/></label><Button primary disabled={working} onClick={()=>go(()=>rpc('review_drawing_revision',{p_revision:openRev.id,p_decision:'approved',p_note:review}),`R${openRev.revision} approved.`)}><Check size={14}/>Approve R{openRev.revision}</Button><Button disabled={working} onClick={()=>go(()=>rpc('review_drawing_revision',{p_revision:openRev.id,p_decision:'rejected',p_note:review}),`R${openRev.revision} rejected.`)}>Reject</Button></div>)}
-    {openRev?.status==='draft'&&<p className="muted small-text">Submit R{openRev.revision} for approval before uploading another revision.</p>}
-    {!openRev&&drafter&&<div className="setting-form"><label>What changed in R{next}<input value={note} onChange={e=>setNote(e.target.value)} placeholder={next?'What changed since the last revision':'First issue'}/></label><label className={`button upload-button ${working?'disabled-look':''}`}><FileUp size={14}/>{working?'Uploading…':`Upload R${next}`}<input className="file-button-input" type="file" accept=".pdf,.dwg,.dxf,.png,.jpg,.jpeg,.webp" disabled={working} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)go(()=>uploadDrawing(drawing.id,file,note).then(()=>setNote('')),`R${next} uploaded. Submit it for approval when ready.`);}}/></label></div>}
+    {revisions.length ? revisions.map(v => <div className="revision-row" key={v.id}><div><strong>R{v.revision} · {v.name}</strong>
+        <small>{(Number(v.size) / 1048576).toFixed(1)} MB · uploaded by {nameOf(state.users, v.createdBy)} · {dateTime(v.createdAt)}{v.changeNote ? ` · ${v.changeNote}` : ''}</small>
+        {v.reviewedBy && <small>{v.status === 'rejected' ? 'Rejected' : 'Checked'} by {nameOf(state.users, v.reviewedBy)} · {dateTime(v.reviewedAt)}{v.reviewNote ? ` · ${v.reviewNote}` : ''}</small>}</div>
+      <div className="revision-actions"><Badge tone={toneOf(v.status)}>{v.status}</Badge><Button onClick={() => view(v.path)}>Open</Button>
+        {v.status === 'draft' && drafter && <Button primary disabled={working} onClick={() => go(() => rpc('submit_drawing_revision', { p_revision: v.id }), `R${v.revision} sent for approval.`)}>Submit for approval</Button>}</div></div>)
+      : <p className="muted small-text">No revisions yet.</p>}
+    {openRev?.status === 'for_approval' && checker && (openRev.createdBy === me.id ? <p className="muted small-text">R{openRev.revision} is waiting for a checker: someone other than you must approve it.</p>
+      : <div className="setting-form"><label>Review note (required to reject)<input value={review} onChange={e => setReview(e.target.value)} placeholder="e.g. Checked against the site survey"/></label>
+        <Button primary disabled={working} onClick={() => go(() => rpc('review_drawing_revision', { p_revision: openRev.id, p_decision: 'approved', p_note: review }), `R${openRev.revision} approved.`)}><Check size={14}/>Approve R{openRev.revision}</Button>
+        <Button disabled={working} onClick={() => go(() => rpc('review_drawing_revision', { p_revision: openRev.id, p_decision: 'rejected', p_note: review }), `R${openRev.revision} rejected.`)}>Reject</Button></div>)}
+    {openRev?.status === 'draft' && <p className="muted small-text">Submit R{openRev.revision} for approval before uploading another revision.</p>}
+    {!openRev && drafter && <div className="setting-form"><label>What changed in R{next}<input value={note} onChange={e => setNote(e.target.value)} placeholder={next ? 'What changed since the last revision' : 'First issue'}/></label>
+      <label className={`button upload-button ${working ? 'disabled-look' : ''}`}><FileUp size={14}/>{working ? 'Uploading…' : `Upload R${next}`}
+        <input className="file-button-input" type="file" accept=".pdf,.dwg,.dxf,.png,.jpg,.jpeg,.webp" disabled={working} onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; if (file) go(() => uploadDrawing(drawing.id, file, note).then(() => setNote('')), `R${next} uploaded. Submit it for approval when ready.`); }}/></label></div>}
   </Sheet>;
 }
 
-// ── Warehouse and inventory ────────────────────────────────────────────────
-const ITEM_CATEGORIES=['Tiles','Mosaic & murals','Pool chemicals','Filtration & pumps','Lighting','Fittings & plumbing','FRP','Waterproofing','Electrical','Tools & consumables','Other'];
-const UOMS=['nos','box','sqm','sqft','kg','ltr','m','set','bag','roll','pair'];
-const MOVE_LABEL={receipt:'Receipt',issue:'Issue',return:'Return',transfer_out:'Transfer out',transfer_in:'Transfer in',adjustment_in:'Adjustment +',adjustment_out:'Adjustment −'};
-const itemFields=edit=>[{key:'name',label:'Item name',type:'text'},{key:'sku',label:'SKU (code)',type:'text'},{key:'category',label:'Category',type:'select',options:ITEM_CATEGORIES},{key:'uom',label:'Unit',type:'select',options:UOMS},{key:'hsn',label:'HSN code',type:'text'},{key:'gstRate',label:'GST %',type:'select',options:['0','0.25','3','5','12','18','28']},{key:'reorderLevel',label:'Reorder level',type:'number'},{key:'reorderQty',label:'Reorder quantity',type:'number'},{key:'batchTracked',label:'Track by batch / shade lot',type:'checkbox'},{key:'description',label:'Description',type:'textarea'},...(edit?[{key:'status',label:'Status',type:'select',options:['active','inactive']}]:[])];
-const warehouseFields=edit=>[{key:'name',label:'Name',type:'text'},{key:'code',label:'Code (e.g. WH-02)',type:'text'},{key:'type',label:'Type',type:'select',options:['Warehouse','Site store','Factory','Showroom']},{key:'address',label:'Address',type:'textarea'},...(edit?[{key:'status',label:'Status',type:'select',options:['active','inactive']}]:[])];
-const vendorFields=edit=>[{key:'name',label:'Vendor name',type:'text'},{key:'gstin',label:'GSTIN',type:'text'},{key:'contact',label:'Contact person',type:'text'},{key:'phone',label:'Phone',type:'text'},{key:'email',label:'Email',type:'email'},{key:'paymentTerms',label:'Payment terms',type:'text'},{key:'address',label:'Address',type:'textarea'},...(edit?[{key:'status',label:'Status',type:'select',options:['active','inactive']}]:[])];
-const whereOf=(r,l)=>`${r.warehouse.find(w=>w.id===l.warehouseId)?.code||'—'}${l.bin?`/${l.bin}`:''}${l.batch?` · ${l.batch}`:''}`;
-
-function Inventory({ctx,search}){
-  const {state}=ctx,r=state.records;
-  const [view,setView]=useState('stock'),[sheet,setSheet]=useState(null),[lowOnly,setLowOnly]=useState(false);
-  const store=allowed(state,['store']),raiser=allowed(state,['store','project']),requester=allowed(state,['project','engineer','store']),master=allowed(state,['store','commercial']);
-  const activeItems=r.invItem.filter(i=>i.status==='active');
-  const open=type=>setSheet({type});
-  const done=async message=>{await ctx.refresh();ctx.notify(message);};
-  const onOrder=id=>r.purchaseOrder.filter(p=>['approved','partially_received'].includes(p.status)).flatMap(p=>p.lines).filter(l=>l.itemId===id).reduce((s,l)=>s+Number(l.qty)-Number(l.received),0);
-  const stock=r.invItem.map(item=>{const levels=r.stockLevel.filter(l=>l.itemId===item.id&&Number(l.qty)>0);const onHand=levels.reduce((s,l)=>s+Number(l.qty),0),value=levels.reduce((s,l)=>s+Number(l.value),0),ordered=onOrder(item.id);return {...item,levels,onHand,value,ordered,low:item.status==='active'&&Number(item.reorderLevel)>0&&onHand+ordered<Number(item.reorderLevel)};});
-  const q=search.toLowerCase(),match=row=>!q||JSON.stringify(row).toLowerCase().includes(q);
-  const pendingPo=r.purchaseOrder.filter(p=>p.status==='pending_approval'),openMr=r.materialRequest.filter(m=>['requested','partially_issued'].includes(m.status)),pendingAdj=r.stockAdjustment.filter(a=>a.status==='pending');
-  const mainWh=r.warehouse.find(w=>w.status==='active')?.id;
-  const reorder=item=>setSheet({type:'po',initial:{warehouseId:mainWh,lines:[{itemId:item.id,qty:Number(item.reorderQty)||Number(item.reorderLevel)||1}]}});
-  const tabList=[['stock','Stock',r.invItem.length],['po','Purchase orders',r.purchaseOrder.length],['grn','Goods receipts',r.goodsReceipt.length],['mr','Material requests',r.materialRequest.length],['adj','Adjustments',r.stockAdjustment.length],['ledger','Stock ledger',r.stockMove.length],['items','Items',r.invItem.length],['warehouses','Warehouses',r.warehouse.length],['vendors','Vendors',r.vendor.length]];
-  const linkedTo=row=>[row.projectId&&nameOf(r.project,row.projectId),row.opportunityId&&nameOf(r.opportunity,row.opportunityId)].filter(Boolean).join(' · ')||'—';
-  return <>
-    <div className="stats-grid">{[
-      ['Stock value',shortMoney(stock.reduce((s,i)=>s+i.value,0)),'Moving weighted average cost',Boxes,'stock'],
-      ['Below reorder level',stock.filter(i=>i.low).length,'Counting stock already on order',Warehouse,'stock'],
-      ['Purchase orders to approve',pendingPo.length,'Commercial approves; never the raiser',ShieldCheck,'po'],
-      ['Open material requests',openMr.length,`${pendingAdj.length} adjustment${pendingAdj.length===1?'':'s'} awaiting approval`,PackageCheck,'mr'],
-    ].map(([label,value,sub,Icon,target])=><button className="stat-card" key={label} onClick={()=>{setView(target);setLowOnly(label==='Below reorder level');}}><div><span>{label}</span><Icon size={17}/></div><strong>{value}</strong><small>{sub}</small></button>)}</div>
-    <div className="info-strip"><Warehouse size={20}/><div><strong>Every movement is on the ledger.</strong><span>Receipts come in against approved purchase orders, issues go to a project, and stock never goes negative. Adjustments and write-offs post only after Commercial approves them.</span></div>
-      <div className="inv-actions">{store&&<><Button onClick={()=>open('issue')}>Issue to project</Button><Button onClick={()=>open('transfer')}><ArrowLeftRight size={14}/>Transfer</Button><Button onClick={()=>open('return')}>Return</Button><Button onClick={()=>open('adjust')}>Adjustment</Button></>}{raiser&&<Button primary onClick={()=>setSheet({type:'po',initial:{warehouseId:mainWh,lines:[{}]}})}><Plus size={14}/>Purchase order</Button>}{requester&&<Button onClick={()=>setSheet({type:'mr',initial:{warehouseId:mainWh,lines:[{}]}})}>Material request</Button>}</div></div>
-    <div className="tabs">{tabList.map(([key,label,n])=><button key={key} className={view===key?'active':''} onClick={()=>{setView(key);setLowOnly(false);}}>{label}<span>{n}</span></button>)}</div>
-    {view==='stock'&&<><div className="right-align"><label className="check-filter"><input type="checkbox" checked={lowOnly} onChange={e=>setLowOnly(e.target.checked)}/>Below reorder level only</label></div>
-      <DataTable head={['Item','On hand','Locations','On order','Value','Avg cost','Reorder']} rows={stock.filter(i=>!lowOnly||i.low).filter(match)} empty={r.invItem.length?['Nothing matches.','Change the filter or the search.']:['No items yet.','Add items under Items, then receive stock against a purchase order.']}
-        render={i=>[cell(<strong>{i.name}</strong>,`${i.sku} · ${i.category}`),`${fmtQty(i.onHand)} ${i.uom}`,<span className="small-text muted">{i.levels.map(l=>`${whereOf(r,l)}: ${fmtQty(l.qty)}`).join(' · ')||'—'}</span>,i.ordered?fmtQty(i.ordered):'—',money(i.value),i.onHand?money(i.value/i.onHand):'—',
-          i.low?<span className="reorder-cell"><Badge tone="red">Low</Badge>{raiser&&<button className="text-button" onClick={()=>reorder(i)}>Reorder</button>}</span>:Number(i.reorderLevel)>0?<Badge tone="green">OK</Badge>:'—']}/></>}
-    {view==='po'&&<DataTable head={['Purchase order','Vendor','Deliver to','Total','Status','Raised']} rows={r.purchaseOrder.filter(match)} onRow={po=>setSheet({type:'poView',id:po.id})} empty={['No purchase orders yet.','Raise one with "Purchase order", or from a low-stock item.']}
-      render={po=>[cell(<strong>{po.name}</strong>,`${po.lines.length} line${po.lines.length===1?'':'s'}${po.projectId?` · ${nameOf(r.project,po.projectId)}`:''}`),nameOf(r.vendor,po.vendorId),nameOf(r.warehouse,po.warehouseId),money(po.total),<Badge tone={toneOf(po.status)}>{po.status}</Badge>,cell(date(po.createdAt),nameOf(state.users,po.createdBy))]}/>}
-    {view==='grn'&&<DataTable head={['Goods receipt','Purchase order','Warehouse','Received','Value','Items']} rows={r.goodsReceipt.filter(match)} empty={['No goods received yet.','Receive goods from an approved purchase order.']}
-      render={g=>[cell(<strong>{g.name}</strong>,g.deliveryNote),nameOf(r.purchaseOrder,g.poId),nameOf(r.warehouse,g.warehouseId),cell(date(g.receivedOn),nameOf(state.users,g.createdBy)),money(g.value),<span className="small-text muted">{g.lines.map(l=>`${l.item}: ${fmtQty(l.qty)}${l.batch?` (${l.batch})`:''}`).join(' · ')}</span>]}/>}
-    {view==='mr'&&<DataTable head={['Material request','For','From','Needed by','Status']} rows={r.materialRequest.filter(match)} onRow={m=>setSheet({type:'mrView',id:m.id})} empty={['No material requests yet.','Projects request material here; the store issues it.']}
-      render={m=>[cell(<strong>{m.name}</strong>,m.lines.map(l=>`${l.item}: ${fmtQty(l.issued)}/${fmtQty(l.qty)}`).join(' · ')),linkedTo(m),nameOf(r.warehouse,m.warehouseId),m.neededBy?date(m.neededBy):'—',<Badge tone={toneOf(m.status)}>{m.status}</Badge>]}/>}
-    {view==='adj'&&<DataTable head={['Adjustment','Item','Location','Change','Reason','Status']} rows={r.stockAdjustment.filter(match)} onRow={a=>setSheet({type:'adjView',id:a.id})} empty={['No adjustments.','Opening stock, physical counts and write-offs are requested here.']}
-      render={a=>[cell(<strong>{a.name}</strong>,nameOf(state.users,a.createdBy)),nameOf(r.invItem,a.itemId),whereOf(r,a),<span className={Number(a.qtyChange)<0?'overdue-text':''}>{Number(a.qtyChange)>0?'+':''}{fmtQty(a.qtyChange)}</span>,cell(a.reason,a.note),<Badge tone={toneOf(a.status)}>{a.status}</Badge>]}/>}
-    {view==='ledger'&&<DataTable head={['Date','Document','Movement','Item','Location','Qty','Unit cost','Value','Balance','For']} rows={r.stockMove.filter(match)} empty={['No stock movements yet.','Receipts, issues, returns, transfers and approved adjustments appear here.']}
-      render={m=>{const out=['issue','transfer_out','adjustment_out'].includes(m.type);return [dateTime(m.createdAt),m.name,MOVE_LABEL[m.type],nameOf(r.invItem,m.itemId),whereOf(r,m),<span className={out?'overdue-text':''}>{out?'−':'+'}{fmtQty(m.qty)}</span>,money(m.unitCost),money(m.value),fmtQty(m.balanceQty),m.poId?nameOf(r.purchaseOrder,m.poId):linkedTo(m)];}}/>}
-    {view==='items'&&<><div className="right-align">{master&&<Button primary onClick={()=>setSheet({type:'item',initial:{gstRate:'18',batchTracked:false}})}><Plus size={14}/>Add item</Button>}</div>
-      <DataTable head={['Item','Category','Unit','HSN · GST','Reorder at','Status']} rows={r.invItem.filter(match)} onRow={master?i=>setSheet({type:'item',id:i.id,initial:{...i,gstRate:String(Number(i.gstRate))}}):undefined} empty={['No items yet.','Add the materials, equipment and tiles you stock.']}
-        render={i=>[cell(<strong>{i.name}</strong>,`${i.sku}${i.batchTracked?' · batch tracked':''}`),i.category,i.uom,`${i.hsn||'—'} · ${Number(i.gstRate)}%`,Number(i.reorderLevel)?`${fmtQty(i.reorderLevel)} (order ${fmtQty(i.reorderQty)})`:'—',<Badge tone={toneOf(i.status)}>{i.status}</Badge>]}/></>}
-    {view==='warehouses'&&<><div className="right-align">{store&&<Button primary onClick={()=>setSheet({type:'warehouse',initial:{type:'Warehouse'}})}><Plus size={14}/>Add warehouse</Button>}</div>
-      <DataTable head={['Warehouse','Type','Address','Stock value','Status']} rows={r.warehouse.filter(match)} onRow={store?w=>setSheet({type:'warehouse',id:w.id,initial:w}):undefined} empty={['No warehouses.','Add your warehouse, factory and site stores.']}
-        render={w=>[cell(<strong>{w.name}</strong>,w.code),w.type,<span className="small-text muted">{w.address||'—'}</span>,money(r.stockLevel.filter(l=>l.warehouseId===w.id).reduce((s,l)=>s+Number(l.value),0)),<Badge tone={toneOf(w.status)}>{w.status}</Badge>]}/></>}
-    {view==='vendors'&&<><div className="right-align">{master&&<Button primary onClick={()=>setSheet({type:'vendor',initial:{}})}><Plus size={14}/>Add vendor</Button>}</div>
-      <DataTable head={['Vendor','GSTIN','Contact','Payment terms','Status']} rows={r.vendor.filter(match)} onRow={master?v=>setSheet({type:'vendor',id:v.id,initial:v}):undefined} empty={['No vendors yet.','Add the suppliers you buy from.']}
-        render={v=>[cell(<strong>{v.name}</strong>,v.email),v.gstin||'—',cell(v.contact||'—',v.phone),v.paymentTerms||'—',<Badge tone={toneOf(v.status)}>{v.status}</Badge>]}/></>}
-
-    {sheet?.type==='item'&&<FormSheet title={sheet.id?'Edit item':'Add item'} state={state} initial={sheet.initial} fields={itemFields(sheet.id)} close={()=>setSheet(null)} onSubmit={async v=>{await rpc('save_inv_item',{p_values:toSnake(v),p_id:sheet.id||null});await done('Item saved.');}}/>}
-    {sheet?.type==='warehouse'&&<FormSheet title={sheet.id?'Edit warehouse':'Add warehouse'} state={state} initial={sheet.initial} fields={warehouseFields(sheet.id)} close={()=>setSheet(null)} onSubmit={async v=>{await rpc('save_warehouse',{p_values:toSnake(v),p_id:sheet.id||null});await done('Warehouse saved.');}}/>}
-    {sheet?.type==='vendor'&&<FormSheet title={sheet.id?'Edit vendor':'Add vendor'} state={state} initial={sheet.initial} fields={vendorFields(sheet.id)} close={()=>setSheet(null)} onSubmit={async v=>{await rpc('save_vendor',{p_values:toSnake(v),p_id:sheet.id||null});await done('Vendor saved.');}}/>}
-    {sheet?.type==='po'&&<FormSheet title={sheet.id?'Edit purchase order':'New purchase order'} state={state} initial={sheet.initial} submitLabel="Save draft" close={()=>setSheet(null)} intro="Rates are before GST; GST comes from each item. Save the draft, then submit it for Commercial approval."
-      fields={[{key:'vendorId',label:'Vendor',type:'relation',options:'vendor'},{key:'warehouseId',label:'Deliver to',type:'relation',options:'warehouse'},{key:'projectId',label:'For project (optional)',type:'relation',options:'project'},{key:'expectedDate',label:'Expected delivery',type:'date'},{key:'notes',label:'Notes',type:'textarea'}]}
-      onSubmit={async v=>{const po=await rpc('save_purchase_order',{p_values:toSnake({...v,lines:(v.lines||[]).filter(l=>l.itemId)}),p_id:sheet.id||null});await done(`${po.name} saved as a draft. Submit it for approval when ready.`);}}>{(values,set)=><LinesEditor items={activeItems} lines={values.lines||[{}]} setLines={lines=>set('lines',lines)} rate/>}</FormSheet>}
-    {sheet?.type==='mr'&&<FormSheet title="New material request" state={state} initial={sheet.initial} submitLabel="Send request" close={()=>setSheet(null)} intro="The store issues the material against this request."
-      fields={[{key:'projectId',label:'Project',type:'relation',options:'project'},{key:'opportunityId',label:'Or opportunity',type:'relation',options:'opportunity'},{key:'warehouseId',label:'Issue from',type:'relation',options:'warehouse'},{key:'neededBy',label:'Needed by',type:'date'},{key:'notes',label:'Notes',type:'textarea'}]}
-      onSubmit={async v=>{const mr=await rpc('create_material_request',{p_values:toSnake({...v,lines:(v.lines||[]).filter(l=>l.itemId)})});await done(`${mr.name} sent to the store.`);}}>{(values,set)=><LinesEditor items={activeItems} lines={values.lines||[{}]} setLines={lines=>set('lines',lines)}/>}</FormSheet>}
-    {sheet?.type==='issue'&&<FormSheet title="Issue stock to a project" state={state} initial={{warehouseId:mainWh,...sheet.initial}} submitLabel="Issue" close={()=>setSheet(null)} intro="Issued at the location's moving average cost."
-      fields={[{key:'itemId',label:'Item',type:'relation',options:'invItem'},{key:'warehouseId',label:'From warehouse',type:'relation',options:'warehouse'},{key:'bin',label:'Bin (optional)',type:'text'},{key:'batch',label:'Batch / shade lot',type:'text'},{key:'qty',label:'Quantity',type:'number'},{key:'projectId',label:'Project',type:'relation',options:'project'},{key:'opportunityId',label:'Or opportunity',type:'relation',options:'opportunity'},{key:'note',label:'Note',type:'textarea'}]}
-      onSubmit={async v=>{const m=await rpc('issue_stock',{p_values:toSnake(v)});await done(`${m.name} posted.`);}}/>}
-    {sheet?.type==='return'&&<FormSheet title="Return stock from a project" state={state} initial={{warehouseId:mainWh}} submitLabel="Post return" close={()=>setSheet(null)} intro="Up to what was issued to that project; valued at its issue cost."
-      fields={[{key:'itemId',label:'Item',type:'relation',options:'invItem'},{key:'warehouseId',label:'Into warehouse',type:'relation',options:'warehouse'},{key:'bin',label:'Bin (optional)',type:'text'},{key:'batch',label:'Batch / shade lot',type:'text'},{key:'qty',label:'Quantity',type:'number'},{key:'projectId',label:'From project',type:'relation',options:'project'},{key:'opportunityId',label:'Or opportunity',type:'relation',options:'opportunity'},{key:'note',label:'Note',type:'textarea'}]}
-      onSubmit={async v=>{const m=await rpc('return_stock',{p_values:toSnake(v)});await done(`${m.name} posted.`);}}/>}
-    {sheet?.type==='transfer'&&<FormSheet title="Transfer stock" state={state} initial={{fromWarehouseId:mainWh}} submitLabel="Transfer" close={()=>setSheet(null)} intro="Moves stock between warehouses or bins at its current average cost."
-      fields={[{key:'itemId',label:'Item',type:'relation',options:'invItem'},{key:'batch',label:'Batch / shade lot',type:'text'},{key:'fromWarehouseId',label:'From warehouse',type:'relation',options:'warehouse'},{key:'fromBin',label:'From bin',type:'text'},{key:'toWarehouseId',label:'To warehouse',type:'relation',options:'warehouse'},{key:'toBin',label:'To bin',type:'text'},{key:'qty',label:'Quantity',type:'number'},{key:'note',label:'Note',type:'textarea'}]}
-      onSubmit={async v=>{const t=await rpc('transfer_stock',{p_values:toSnake(v)});await done(`${t.out.name} posted.`);}}/>}
-    {sheet?.type==='adjust'&&<FormSheet title="Request a stock adjustment" state={state} initial={{warehouseId:mainWh,reason:'Opening stock'}} submitLabel="Send for approval" close={()=>setSheet(null)} intro="Positive to add stock (with its unit cost), negative to remove it. Commercial approves before anything is posted."
-      fields={[{key:'itemId',label:'Item',type:'relation',options:'invItem'},{key:'warehouseId',label:'Warehouse',type:'relation',options:'warehouse'},{key:'bin',label:'Bin (optional)',type:'text'},{key:'batch',label:'Batch / shade lot',type:'text'},{key:'qtyChange',label:'Quantity change (e.g. 10 or -2)',type:'text'},{key:'unitCost',label:'Unit cost ₹ (for additions)',type:'number'},{key:'reason',label:'Reason',type:'select',options:['Opening stock','Physical count','Damaged','Expired','Lost','Found','Other']},{key:'note',label:'Note',type:'textarea'}]}
-      onSubmit={async v=>{const a=await rpc('request_adjustment',{p_values:toSnake(v)});await done(`${a.name} sent to Commercial for approval.`);}}/>}
-    {sheet?.type==='poView'&&r.purchaseOrder.find(p=>p.id===sheet.id)&&<PurchaseOrderSheet ctx={ctx} po={r.purchaseOrder.find(p=>p.id===sheet.id)} close={()=>setSheet(null)} edit={po=>setSheet({type:'po',id:po.id,initial:{vendorId:po.vendorId,warehouseId:po.warehouseId,projectId:po.projectId,expectedDate:po.expectedDate,notes:po.notes,lines:po.lines.map(l=>({itemId:l.itemId,qty:l.qty,rate:l.rate}))}})}/>}
-    {sheet?.type==='mrView'&&r.materialRequest.find(m=>m.id===sheet.id)&&<MaterialRequestSheet ctx={ctx} mr={r.materialRequest.find(m=>m.id===sheet.id)} close={()=>setSheet(null)}/>}
-    {sheet?.type==='adjView'&&r.stockAdjustment.find(a=>a.id===sheet.id)&&<AdjustmentSheet ctx={ctx} adj={r.stockAdjustment.find(a=>a.id===sheet.id)} close={()=>setSheet(null)}/>}
-  </>;
-}
-function useWorking(ctx){
-  const [working,setWorking]=useState(false);
-  const go=async(work,message)=>{setWorking(true);try{const result=await work();await ctx.refresh();ctx.notify(typeof message==='function'?message(result):message);return true;}catch(error){ctx.notify(error.message,true);return false;}finally{setWorking(false);}};
-  return [working,go];
-}
-function PurchaseOrderSheet({ctx,po,close,edit}){
-  const {state}=ctx,r=state.records,me=state.user;
-  const [working,go]=useWorking(ctx),[note,setNote]=useState(''),[recv,setRecv]=useState({}),[deliveryNote,setDeliveryNote]=useState('');
-  const raiser=allowed(state,['store','project']),commercial=allowed(state,['commercial']),store=allowed(state,['store']);
-  const remaining=po.lines.filter(l=>Number(l.received)<Number(l.qty));
-  const setLine=(id,key,value)=>setRecv(old=>({...old,[id]:{...old[id],[key]:value}}));
-  return <Sheet large title={po.name} eyebrow={`Purchase order · ${nice(po.status)}`} close={close}>
-    <div className="record-details">{[['Vendor',nameOf(r.vendor,po.vendorId)],['Deliver to',nameOf(r.warehouse,po.warehouseId)],['Project',po.projectId&&nameOf(r.project,po.projectId)],['Expected',po.expectedDate&&date(po.expectedDate)],['Raised by',`${nameOf(state.users,po.createdBy)} · ${dateTime(po.createdAt)}`],['Approved by',po.approvedBy&&`${nameOf(state.users,po.approvedBy)} · ${dateTime(po.approvedAt)}`],['Review note',po.reviewNote],['Cancelled because',po.cancelReason],['Notes',po.notes]].filter(([,v])=>v).map(([k,v])=><div className="detail-field" key={k}><label>{k}</label><p>{v}</p></div>)}</div>
-    <div className="table-scroll"><table className="lines-table"><thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Rate</th><th>GST</th><th>Amount</th></tr></thead><tbody>{po.lines.map(l=><tr key={l.itemId} className="static-row"><td>{l.item}<small>{l.sku}</small></td><td>{fmtQty(l.qty)} {l.uom}</td><td>{fmtQty(l.received)}</td><td>{money(l.rate)}</td><td>{Number(l.gstRate)}%</td><td>{money(Number(l.amount)+Number(l.tax))}</td></tr>)}</tbody></table></div>
-    <p className="po-totals">Subtotal {money(po.subtotal)} · GST {money(po.tax)} · <strong>Total {money(po.total)}</strong></p>
-    <div className="detail-actions">
-      {['draft','rejected'].includes(po.status)&&raiser&&<><Button onClick={()=>edit(po)}>Edit</Button><Button primary disabled={working} onClick={()=>go(()=>rpc('submit_purchase_order',{p_po:po.id}),`${po.name} sent to Commercial for approval.`)}>Submit for approval</Button></>}
-      {po.status==='pending_approval'&&commercial&&(po.createdBy===me.id?<span className="muted small-text">Control rule: someone other than the person who raised this order must approve it.</span>:<div className="setting-form"><label>Note (required to reject)<input value={note} onChange={e=>setNote(e.target.value)} placeholder="e.g. Within the project budget"/></label><Button primary disabled={working} onClick={()=>go(()=>rpc('review_purchase_order',{p_po:po.id,p_decision:'approved',p_note:note}),`${po.name} approved.`)}><Check size={14}/>Approve</Button><Button disabled={working} onClick={()=>go(()=>rpc('review_purchase_order',{p_po:po.id,p_decision:'rejected',p_note:note}),`${po.name} rejected.`)}>Reject</Button></div>)}
-      {!['partially_received','received','cancelled'].includes(po.status)&&allowed(state,['store','project','commercial'])&&<Button disabled={working} onClick={()=>{const reason=window.prompt('Reason for cancelling this purchase order');if(reason)go(()=>rpc('cancel_purchase_order',{p_po:po.id,p_reason:reason}),`${po.name} cancelled.`);}}>Cancel order</Button>}
-    </div>
-    {['approved','partially_received'].includes(po.status)&&store&&remaining.length>0&&<><h3 className="section-heading">Receive goods (GRN)</h3>
-      {remaining.map(l=>{const item=r.invItem.find(i=>i.id===l.itemId);const left=Number(l.qty)-Number(l.received);return <div className="line-row receive-row" key={l.itemId}><span>{l.item}<small>{fmtQty(left)} {l.uom} to receive</small></span><input aria-label={`Received ${l.item}`} type="number" min="0" max={left} step="any" placeholder="Qty received" value={recv[l.itemId]?.qty??''} onChange={e=>setLine(l.itemId,'qty',e.target.value)}/><input aria-label={`Batch ${l.item}`} placeholder={item?.batchTracked?'Batch / shade lot (required)':'Batch (optional)'} value={recv[l.itemId]?.batch??''} onChange={e=>setLine(l.itemId,'batch',e.target.value)}/><input aria-label={`Bin ${l.item}`} placeholder="Bin (optional)" value={recv[l.itemId]?.bin??''} onChange={e=>setLine(l.itemId,'bin',e.target.value)}/></div>;})}
-      <div className="setting-form"><label>Supplier challan / invoice reference<input value={deliveryNote} onChange={e=>setDeliveryNote(e.target.value)}/></label><Button primary disabled={working} onClick={async()=>{const lines=Object.entries(recv).filter(([,v])=>Number(v.qty)>0).map(([itemId,v])=>({item_id:itemId,qty:v.qty,batch:v.batch||'',bin:v.bin||''}));if(await go(()=>rpc('receive_goods',{p_po:po.id,p_lines:lines,p_delivery_note:deliveryNote}),g=>`${g.name} posted: stock received.`)){setRecv({});setDeliveryNote('');}}}><PackageCheck size={14}/>Post goods receipt</Button></div></>}
-  </Sheet>;
-}
-function MaterialRequestSheet({ctx,mr,close}){
-  const {state}=ctx,r=state.records;
-  const [working,go]=useWorking(ctx),[issue,setIssue]=useState({});
-  const store=allowed(state,['store']);
-  const setLine=(id,key,value)=>setIssue(old=>({...old,[id]:{...old[id],[key]:value}}));
-  return <Sheet large title={mr.name} eyebrow={`Material request · ${nice(mr.status)}`} close={close}>
-    <div className="record-details">{[['For',[mr.projectId&&nameOf(r.project,mr.projectId),mr.opportunityId&&nameOf(r.opportunity,mr.opportunityId)].filter(Boolean).join(' · ')],['Issue from',nameOf(r.warehouse,mr.warehouseId)],['Needed by',mr.neededBy&&date(mr.neededBy)],['Requested by',`${nameOf(state.users,mr.createdBy)} · ${dateTime(mr.createdAt)}`],['Notes',mr.notes],['Cancelled because',mr.cancelReason]].filter(([,v])=>v).map(([k,v])=><div className="detail-field" key={k}><label>{k}</label><p>{v}</p></div>)}</div>
-    <h3 className="section-heading">Lines</h3>
-    {mr.lines.map(l=>{const left=Number(l.qty)-Number(l.issued);const item=r.invItem.find(i=>i.id===l.itemId);const here=r.stockLevel.filter(s=>s.itemId===l.itemId&&s.warehouseId===mr.warehouseId&&Number(s.qty)>0);return <div className="line-row receive-row" key={l.itemId}><span>{l.item}<small>{fmtQty(l.issued)} of {fmtQty(l.qty)} {l.uom} issued · in stock: {here.map(s=>`${s.bin?s.bin+' ':''}${s.batch||'no batch'}: ${fmtQty(s.qty)}`).join(', ')||'none'}</small></span>
-      {store&&['requested','partially_issued'].includes(mr.status)&&left>0&&<><input aria-label={`Issue ${l.item}`} type="number" min="0" max={left} step="any" placeholder="Qty" value={issue[l.itemId]?.qty??''} onChange={e=>setLine(l.itemId,'qty',e.target.value)}/><input aria-label={`Batch ${l.item}`} placeholder={item?.batchTracked?'Batch (required)':'Batch'} value={issue[l.itemId]?.batch??''} onChange={e=>setLine(l.itemId,'batch',e.target.value)}/><Button disabled={working} onClick={async()=>{const v=issue[l.itemId]||{};if(await go(()=>rpc('issue_stock',{p_values:{item_id:l.itemId,qty:v.qty,batch:v.batch||'',bin:v.bin||'',request_id:mr.id}}),m=>`${m.name} posted.`))setIssue(old=>({...old,[l.itemId]:{}}));}}>Issue</Button></>}</div>;})}
-    {['requested','partially_issued'].includes(mr.status)&&allowed(state,['project','engineer','store'])&&<div className="detail-actions"><Button disabled={working} onClick={()=>{const reason=window.prompt('Reason for cancelling this request');if(reason)go(()=>rpc('cancel_material_request',{p_request:mr.id,p_reason:reason}),`${mr.name} cancelled.`);}}>Cancel request</Button></div>}
-  </Sheet>;
-}
-function AdjustmentSheet({ctx,adj,close}){
-  const {state}=ctx,r=state.records,me=state.user;
-  const [working,go]=useWorking(ctx),[note,setNote]=useState('');
-  return <Sheet title={adj.name} eyebrow={`Stock adjustment · ${nice(adj.status)}`} close={close}>
-    <div className="record-details">{[['Item',nameOf(r.invItem,adj.itemId)],['Location',whereOf(r,adj)],['Change',`${Number(adj.qtyChange)>0?'+':''}${fmtQty(adj.qtyChange)}`],['Unit cost',adj.unitCost!=null&&money(adj.unitCost)],['Reason',adj.reason],['Note',adj.note],['Requested by',`${nameOf(state.users,adj.createdBy)} · ${dateTime(adj.createdAt)}`],['Reviewed by',adj.reviewedBy&&`${nameOf(state.users,adj.reviewedBy)} · ${dateTime(adj.reviewedAt)}`],['Review note',adj.reviewNote]].filter(([,v])=>v).map(([k,v])=><div className="detail-field" key={k}><label>{k}</label><p>{v}</p></div>)}</div>
-    {adj.status==='pending'&&allowed(state,['commercial'])&&(adj.createdBy===me.id?<p className="muted small-text">Control rule: someone other than the requester must approve this adjustment.</p>:<div className="setting-form"><label>Note (required to reject)<input value={note} onChange={e=>setNote(e.target.value)}/></label><Button primary disabled={working} onClick={()=>go(()=>rpc('review_adjustment',{p_adjustment:adj.id,p_decision:'approved',p_note:note}),`${adj.name} approved and posted.`).then(ok=>ok&&close())}><Check size={14}/>Approve and post</Button><Button disabled={working} onClick={()=>go(()=>rpc('review_adjustment',{p_adjustment:adj.id,p_decision:'rejected',p_note:note}),`${adj.name} rejected.`).then(ok=>ok&&close())}>Reject</Button></div>)}
-  </Sheet>;
-}
-class ErrorBoundary extends React.Component{
-  constructor(props){super(props);this.state={error:null};}
-  static getDerivedStateFromError(error){return {error};}
-  componentDidCatch(error,info){console.error('CAC crashed',error,info);}
-  render(){if(!this.state.error)return this.props.children;return <div className="loading"><Waves size={36}/><h2>Something went wrong on this screen.</h2><p>Your data is safe in Supabase. Reload to continue.</p><code className="crash-detail">{String(this.state.error?.message||this.state.error)}</code><button className="button primary" onClick={()=>location.reload()}>Reload workspace</button></div>;}
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error, info) { console.error('CAC crashed', error, info); }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return <div className="loading"><Waves size={36}/><h2>Something went wrong on this screen.</h2><p>Your data is safe in Supabase. Reload to continue.</p><code className="crash-detail">{String(this.state.error?.message || this.state.error)}</code><button className="button primary" onClick={() => location.reload()}>Reload workspace</button></div>;
+  }
 }
 createRoot(document.getElementById('root')).render(<ErrorBoundary><App/></ErrorBoundary>);

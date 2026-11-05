@@ -1,13 +1,13 @@
 # Crystal Pools
 
-Marketing website for Crystal Pools, plus a separate admin panel for managing its content and the CAC growth workspace (`cac/`, see [cac/README.md](cac/README.md)).
+Marketing website for Crystal Pools, plus a separate admin panel for managing its content and the CAC workspace for requirement forms, FRP quotations and drawings (`cac/`, see [cac/README.md](cac/README.md)).
 All content (page text and images, blogs, projects, testimonials, enquiries, banner, settings) lives in Supabase.
 
 | App | Folder | Dev URL | Build output | Deployed at |
 |---|---|---|---|---|
 | Public website | `src/`, `index.html`, `server.ts` | http://localhost:5173 | `dist/` (+ `dist/server.cjs`) | www.crystalpools.in |
 | Admin panel | `admin/` | http://localhost:5174/admin/ | `dist/admin/` | www.crystalpools.in/admin |
-| CAC growth workspace | `cac/` | http://127.0.0.1:5185 | `dist/cac/` | www.crystalpools.in/cac |
+| CAC workspace | `cac/` | http://127.0.0.1:5185 | `dist/cac/` | www.crystalpools.in/cac |
 
 ## Setup
 

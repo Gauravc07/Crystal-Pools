@@ -1,15 +1,13 @@
 // The staff app talks only to Supabase: Auth for sign-in, `cac.*` functions for
-// every read/write (rules run in Postgres), Storage for survey photos, and the
-// cac-worker Edge Function to process queued workflow runs.
+// every read and write (rules, and the FRP quotation agent, run in Postgres),
+// and Storage for drawing files.
 import { createClient } from '@supabase/supabase-js';
-import { readXlsx, sha256Hex } from '../supabase/functions/_shared/xlsx.js';
 
 // Hosted at www.crystalpools.in/cac, CAC uses the website's Supabase project, so it falls back to the website's public settings.
 const url = import.meta.env.VITE_CAC_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_CAC_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export const configured = Boolean(url && key);
 export const supabase = configured ? createClient(url, key, { db: { schema: 'cac' }, auth: { storageKey: 'cac-auth' } }) : null;
-export const PHOTO_BUCKET = 'cac-survey-photos';
 
 const camelKey = key => key.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
 const snakeKey = key => key.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`);
@@ -66,47 +64,13 @@ export async function loadState() {
   try {
     const state = await rpc('workspace_state');
     const users = state.users.map(u => ({ ...u, id: u.userId }));
-    const records = Object.fromEntries(Object.entries(state.records).map(([kind, rows]) => [kind, rows.map(row => ({
-      ...row, kind, ...(kind === 'opportunity' ? { owner: users.find(u => u.id === row.ownerId)?.name } : {}),
-    }))]));
+    const records = Object.fromEntries(Object.entries(state.records).map(([kind, rows]) => [kind, rows.map(row => ({ ...row, kind }))]));
     return { ...state, user: { ...state.user, id: state.user.userId }, users, records };
   } catch (error) {
     // Signed in to Supabase but not (or no longer) an active CAC staff member.
     if (error.code === '42501') { await signOut(); throw Object.assign(error, { status: 401 }); }
     throw error;
   }
-}
-
-// Record writes send only snake_case column names; the server whitelists fields.
-export const saveRecord = (kind, values, id) => rpc('write_record', { p_kind: snakeKey(kind), p_values: toSnake(values), p_id: id || null });
-
-// Wakes the worker; queued runs also complete on its next scheduled pass.
-export function wakeWorker() {
-  supabase.functions.invoke('cac-worker', { body: {} }).catch(() => {});
-}
-export async function enqueueRun(agent, targetId, input = {}) {
-  const job = await rpc('enqueue_run', { p_agent: agent, p_target: targetId, p_input: toSnake(input), p_dedupe: crypto.randomUUID() });
-  wakeWorker();
-  return job;
-}
-
-export async function uploadSurveyPhoto(surveyId, file) {
-  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('Only PNG, JPEG and WebP images are supported.');
-  if (file.size > 2 * 1024 * 1024) throw new Error('Use an image smaller than 2 MB.');
-  const path = `${surveyId}/${crypto.randomUUID().replaceAll('-', '')}.${file.type.split('/')[1].replace('jpeg', 'jpg')}`;
-  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message.includes('row-level security') ? 'Photos can be added by engineers to unverified surveys (12 maximum).' : error.message);
-  return rpc('register_photo', { p_survey: surveyId, p_path: path, p_name: file.name.slice(0, 200) });
-}
-// Project lead reports: the browser reads the .xlsx and sends its cell text; the worker extracts the leads.
-export async function uploadLeadReport(file) {
-  if (!/\.xlsx$/i.test(file.name)) throw new Error(/\.xls$/i.test(file.name) ? 'Old .xls files are not supported. Open it, save it as .xlsx, then upload it.' : 'Choose an .xlsx spreadsheet.');
-  if (file.size > 5 * 1024 * 1024) throw new Error('Use an .xlsx file smaller than 5 MB.');
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const { sheets } = await readXlsx(bytes);
-  const result = await rpc('upload_lead_report', { p_name: file.name.slice(0, 200), p_sha256: await sha256Hex(bytes), p_sheets: sheets });
-  wakeWorker();
-  return result;
 }
 
 // Drawings vault: files go to the private "cac-drawings" bucket, then are registered as the next revision.
@@ -126,19 +90,4 @@ export async function drawingUrl(path) {
   const { data, error } = await supabase.storage.from(DRAWING_BUCKET).createSignedUrl(path, 600);
   if (error || !data?.signedUrl) throw new Error('Could not open the file. Try again.');
   return data.signedUrl;
-}
-
-export async function photoUrls(paths) {
-  if (!paths.length) return {};
-  const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 600);
-  return Object.fromEntries((data || []).filter(d => d.signedUrl).map(d => [d.path, d.signedUrl]));
-}
-
-// CSV export with spreadsheet formula escaping, built from the loaded records.
-export function downloadCsv(kind, rows) {
-  const fields = [...new Set(rows.flatMap(row => Object.keys(row)))].filter(f => f !== 'kind');
-  const cell = value => { let text = value && typeof value === 'object' ? JSON.stringify(value) : String(value ?? ''); if (/^[=+@\-\t\r]/.test(text)) text = `'${text}`; return `"${text.replaceAll('"', '""')}"`; };
-  const csv = [fields.map(cell).join(','), ...rows.map(row => fields.map(f => cell(row[f])).join(','))].join('\r\n');
-  const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `cac-${kind}.csv` });
-  link.click(); URL.revokeObjectURL(link.href);
 }

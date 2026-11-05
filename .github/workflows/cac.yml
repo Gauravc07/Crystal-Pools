@@ -24,7 +24,7 @@ jobs:
           cache: npm
           cache-dependency-path: cac/package-lock.json
       - run: npm ci
-      # SQL rules, workflows, AI adapters (mocked) and run limits, on in-process Postgres.
+      # SQL rules: the FRP quotation agent, the drawings vault and staff access, on in-process Postgres.
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium

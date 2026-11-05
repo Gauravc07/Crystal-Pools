@@ -58,40 +58,18 @@ export async function call(db, name, args = {}, identity = {}) {
   return as(db, identity, async tx => (await tx.query(sql, keys.map(k => encode(args[k])))).rows[0].result);
 }
 
-// A fake supabase-js client (rpc + storage.download) for the shared worker.
-export function serviceClient(db) {
-  return {
-    async rpc(name, args = {}) {
-      try { return { data: await call(db, name, args, { role: 'service_role' }), error: null }; }
-      catch (error) { return { data: null, error: { message: error.message, code: error.code } }; }
-    },
-    storage: { from: () => ({ download: async () => ({ data: new Blob([new Uint8Array([137, 80, 78, 71])]), error: null }) }) },
-  };
-}
-
-// agents: 'all' turns every assistant on (most tests exercise one); 'defaults' keeps the installed on/off state.
-export async function setup(t, { seed = true, agents = 'all' } = {}) {
+// A copy of the database with every migration, the first admin and one staff member per role.
+export async function setup(t) {
   template ??= buildTemplate();
   const db = await (await template).clone();
   t?.after(() => db.close());
-  if (agents === 'all') await db.query('update cac.agent set active = true');
   const admin = (await call(db, 'bootstrap_admin', { p_email: 'admin@cac.test', p_name: 'Pilot owner', p_password: 'cac-test-password' }, { role: 'service_role' })).user_id;
-  if (seed) await call(db, 'seed_demo', { p_admin: admin }, { role: 'service_role' });
   const staff = {};
-  for (const role of ['sales', 'engineer', 'commercial', 'project', 'store', 'viewer']) {
+  for (const role of ['sales', 'engineer', 'commercial', 'project', 'viewer']) {
     staff[role] = (await db.query(`select (cac.ensure_staff($1, $2, $3, 'cac-test-password')->>'user_id') as id`, [`${role}@cac.test`, `${role} user`, role])).rows[0].id;
   }
   const one = async (sql, params) => (await db.query(sql, params)).rows[0];
-  const ids = seed ? {
-    opportunity: (await one(`select id from cac.opportunity where name = 'Sahyadri · resort pool'`)).id,
-    villaOpportunity: (await one(`select id from cac.opportunity where name = 'Meadow · private pool'`)).id,
-    customer: (await one(`select id from cac.customer where name = 'Sahyadri Retreat (demo)'`)).id,
-    site: (await one(`select id from cac.site where name = 'Lonavala resort · west garden'`)).id,
-    survey: (await one(`select id from cac.survey limit 1`)).id,
-    quote: (await one(`select id from cac.quote limit 1`)).id,
-    rate: (await one(`select id from cac.rate where status = 'approved' order by name limit 1`)).id,
-  } : {};
   // Shorthand: run a CAC function as a staff member ("admin" or a role name).
   const rpc = (who, name, args) => call(db, name, args, { user: who === 'admin' ? admin : staff[who] });
-  return { db, admin, staff, ids, rpc, one, all: async (sql, params) => (await db.query(sql, params)).rows };
+  return { db, admin, staff, rpc, one, all: async (sql, params) => (await db.query(sql, params)).rows };
 }
