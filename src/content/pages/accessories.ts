@@ -12,7 +12,7 @@ export const accessoriesPage = {
   sections: [
     seoSection(
       'Swimming Pool Accessories & Equipment',
-      'Crystal Pools supplies swimming pool accessories, filtration and filter systems, and swimming pool pumps in Pune and across India — ladders, skimmers, sand filters, and more.',
+      'Swimming pool accessories, filtration systems, sand filters, pumps, ladders and skimmers from Crystal Pools, supplying Pune and across India.',
     ),
     {
       title: 'Hero',

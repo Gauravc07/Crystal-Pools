@@ -62,12 +62,21 @@ then read it in the component with `usePageContent(schema).text('key')` / `.imag
 
 ## Production website server
 
-`server.ts` serves the built site and adds, server-side so crawlers and link previews see it:
-- each page's SEO title, description and share image (including admin edits) and each blog post's;
-- the Google Analytics tag and Search Console verification, when set in **Settings → Google**;
-- business details as structured data (`HomeAndConstructionBusiness`) with the Google Business Profile link;
-- `/sitemap.xml` with every published post, 301 redirects from the old `/blog` URLs and renamed posts;
-- real 404 status for unknown URLs, security headers, and long-term caching for build assets.
+On Vercel, every website page goes through one function, `api/render.mjs`, which runs `server/seo.ts`. (`server.ts` runs the same logic under Express for other hosts.) It adds, so crawlers and link previews see it in the first response:
+- each page's SEO title, description, canonical and share image, with admin edits, and readable page text that React replaces on load;
+- the Google Analytics tag and Search Console verification, when set in the admin;
+- structured data: the business, each branch, the Contact FAQ, blog posts and city pages;
+- `/sitemap.xml` with every page, published post, city page and project;
+- real 404s, 301s for trailing slashes, renamed posts, old website URLs (`server/legacyRedirects.ts`) and admin-managed redirects.
 
-It needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` at runtime (read from `.env` if present), and
-`PUBLIC_SITE_URL` for canonical links.
+**How it builds:** Vercel serves files before rewrites, so `scripts/build-render.mjs` (the last step of `npm run build`) removes `dist/index.html` and `dist/sitemap.xml`, bakes the page shell and public Supabase settings into `dist-server/render.cjs`, and keeps `dist/_shell.html` as a fallback.
+
+**If Supabase is down or slow,** pages render from built-in defaults within about 2.5 seconds. Responses are cached at the CDN for 2 minutes, so admin edits appear within about 5 minutes.
+
+**To roll back:** revert the merge, or promote the previous deployment in Vercel. Migration `0008` only adds things, so it can stay.
+
+## SEO tools
+
+The admin's **SEO** section needs the `seo` permission (Users → edit user), and needs migration `0008` applied (`npm run db:migrate`) **before** the code is deployed. It covers titles and descriptions with checks, redirects, city pages, Google connections and company facts, and the monthly report. An SEO user can change only SEO fields, sees lead counts but not the leads, and can't change visible page text.
+
+Run the checks with `npm run test:seo-db` (migrations and permissions on an in-process database; needs `cac` dependencies installed) and `npm run check:content` (includes title and description lengths).

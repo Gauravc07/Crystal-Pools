@@ -11,6 +11,7 @@ export interface SiteSettings {
   hero_video: string | null;
   hero_image_light: string | null;
   hero_image_dark: string | null;
+  est_label: string;
 }
 
 // Used until the settings load, and if Supabase is unreachable — the site never shows blanks.
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   hero_video: null,
   hero_image_light: null,
   hero_image_dark: null,
+  est_label: 'EST 2000',
 };
 
 let resolved: SiteSettings | null = null;
@@ -39,7 +41,7 @@ export function loadSiteSettings(): Promise<SiteSettings> {
   pending ??= (async () => {
     const { data } = await supabase
       .from('site_settings')
-      .select('phone, whatsapp, email, address, branches, social_links, hero_video, hero_image_light, hero_image_dark')
+      .select('*')
       .eq('id', 1)
       .maybeSingle();
     resolved = data ? { ...DEFAULT_SETTINGS, ...data } : DEFAULT_SETTINGS;

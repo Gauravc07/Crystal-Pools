@@ -16,7 +16,7 @@ type Form = Omit<ProjectRow, 'id' | 'updated_at'>;
 
 const EMPTY: Form = {
   name: '', slug: '', location: '', pool_type: 'private', description: '',
-  cover_image: null, images: [], is_published: false, sort_order: 0,
+  cover_image: null, images: [], is_published: false, sort_order: 0, meta_title: '', meta_description: '',
 };
 
 export default function ProjectEditor() {
@@ -139,6 +139,13 @@ export default function ProjectEditor() {
                 </Select>
               </div>
               <TextArea label="Description" rows={5} value={form.description} onChange={e => update('description', e.target.value)} placeholder="Size, features, finishes, timeline…" />
+            </div>
+          </Card>
+
+          <Card title="Project page SEO" description="Published projects get their own page at /projects/project-name. Leave empty to use the name and description.">
+            <div className="grid gap-5">
+              <Field label="Google title" value={form.meta_title ?? ''} onChange={e => update('meta_title', e.target.value)} hint={`${(form.meta_title ?? '').length}/60 characters`} />
+              <TextArea label="Google description" rows={2} value={form.meta_description ?? ''} onChange={e => update('meta_description', e.target.value)} hint={`${(form.meta_description ?? '').length}/160 characters`} />
             </div>
           </Card>
 

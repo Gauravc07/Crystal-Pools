@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { Fragment, useRef, useEffect } from 'react';
 import type { FC } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, MotionValue } from 'motion/react';
 
@@ -52,7 +52,8 @@ export default function AnimatedTextReveal({
 
           return (
             // inline-block keeps each word from breaking across lines
-            <span key={wi} className="inline-block mr-[0.25em] mb-[0.1em]">
+            <Fragment key={wi}>
+            <span className="inline-block mr-[0.25em] mb-[0.1em]">
               {word.split('').map((char, ci) => (
                 <Char
                   key={ci}
@@ -62,6 +63,9 @@ export default function AnimatedTextReveal({
                 />
               ))}
             </span>
+            {/* Zero-size space: the gap comes from the margin, but crawlers need a real space between words */}
+            {wi < words.length - 1 && <span style={{ fontSize: 0 }}> </span>}
+            </Fragment>
           );
         })}
       </div>

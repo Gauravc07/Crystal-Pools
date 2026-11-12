@@ -65,6 +65,11 @@ export function allFields(schema: PageSchema): Record<string, Field> {
   return Object.assign({}, ...schema.sections.map(s => s.fields));
 }
 
+/** Final page title: adds the brand unless the title already includes it. Used by the website and the server. */
+export function pageTitle(title: string) {
+  return /crystal pools/i.test(title) ? title : `${title} | Crystal Pools`;
+}
+
 /** Standard SEO section every page gets. */
 export function seoSection(title: string, description: string): Section {
   return {

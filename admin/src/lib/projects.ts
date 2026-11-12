@@ -29,7 +29,9 @@ export interface ProjectRow {
   images: GalleryImage[];
   is_published: boolean;
   sort_order: number;
+  meta_title: string;
+  meta_description: string;
   updated_at: string;
 }
 
-export const PROJECT_COLUMNS = 'id, name, slug, location, pool_type, description, cover_image, images, is_published, sort_order, updated_at';
+export const PROJECT_COLUMNS = '*';

@@ -27,7 +27,7 @@ export interface Profile {
   role: Role;
   is_active: boolean;
   must_change_password: boolean;
-  /** Editors only: 'blogs' | 'projects' | 'testimonials' | 'page:<id>' */
+  /** Editors only: 'blogs' | 'projects' | 'testimonials' | 'seo' | 'page:<id>' */
   permissions: string[];
 }
 

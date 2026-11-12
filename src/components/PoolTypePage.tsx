@@ -65,7 +65,7 @@ export default function PoolTypePage({ schema, poolType, poolName, gallery, layo
             className={layout === 'narrow' ? 'max-w-2xl' : 'max-w-3xl'}
           >
             <h1 className="text-3xl md:text-5xl lg:text-6xl text-white dark:text-brand-gold font-sans font-bold leading-[1.2] mb-2 md:mb-4">
-              {c.text('hero.title')}<br />
+              {c.text('hero.title')}{' '}<br />
               <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-8xl">{c.text('hero.highlight')}</span>
             </h1>
           </motion.div>

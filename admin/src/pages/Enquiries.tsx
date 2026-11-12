@@ -17,6 +17,10 @@ interface Lead {
   project_type: string;
   message: string;
   source_page: string;
+  traffic_source?: string;
+  landing_page?: string;
+  referrer?: string;
+  utm_campaign?: string;
   status: LeadStatus;
   notes: string;
   created_at: string;
@@ -30,7 +34,13 @@ const STATUSES: { value: LeadStatus; label: string; tone: 'cyan' | 'amber' | 'sl
 const statusMeta = (s: LeadStatus) => STATUSES.find(x => x.value === s)!;
 
 const PAGE_SIZE = 25;
-const COLUMNS = 'id, name, email, phone, project_type, message, source_page, status, notes, created_at';
+const COLUMNS = '*';
+
+const SOURCE_LABELS: Record<string, string> = {
+  google_search: 'Google search', google_ads: 'Google Ads', google_business: 'Google Business Profile',
+  other_search: 'Other search', social: 'Social media', campaign: 'Campaign', referral: 'Another website', direct: 'Direct',
+};
+const sourceLabel = (s?: string) => (s ? SOURCE_LABELS[s] ?? s : 'Not recorded');
 
 /** Escapes a value for PostgREST's or() filter syntax. */
 const orValue = (v: string) => `"${v.replace(/["\\]/g, '\\$&')}"`;
@@ -47,11 +57,11 @@ function applyFilters<T extends { eq: Function; or: Function }>(query: T, status
 }
 
 function toCsv(rows: Lead[]) {
-  const header = ['Date', 'Name', 'Email', 'Phone', 'Project type', 'Message', 'Status', 'Notes', 'Source page'];
+  const header = ['Date', 'Name', 'Email', 'Phone', 'Project type', 'Message', 'Status', 'Notes', 'Source page', 'Traffic source', 'Landing page', 'Campaign'];
   const cell = (v: string) => `"${v.replace(/"/g, '""')}"`;
   const lines = rows.map(r => [
     formatDateTime(r.created_at), r.name, r.email, r.phone, r.project_type, r.message,
-    statusMeta(r.status).label, r.notes, r.source_page,
+    statusMeta(r.status).label, r.notes, r.source_page, sourceLabel(r.traffic_source), r.landing_page, r.utm_campaign,
   ].map(v => cell(String(v ?? ''))).join(','));
   return '\uFEFF' + [header.map(cell).join(','), ...lines].join('\r\n');
 }
@@ -127,6 +137,10 @@ function LeadDetail({ lead, onClose, onSaved, onDeleted }: {
           <div className="sm:col-span-2">
             <dt className="text-slate-500">Message</dt>
             <dd className="mt-1 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-slate-800">{lead.message}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-slate-500">Came from</dt>
+            <dd className="text-slate-800">{sourceLabel(lead.traffic_source)}{lead.referrer ? ` (${lead.referrer})` : ''}{lead.landing_page ? `, first page ${lead.landing_page}` : ''}{lead.utm_campaign ? `, campaign ${lead.utm_campaign}` : ''}</dd>
           </div>
           {lead.source_page && (
             <div className="sm:col-span-2">
@@ -279,6 +293,7 @@ export default function Enquiries() {
                   <th className="px-5 py-3 font-medium">Name</th>
                   <th className="px-5 py-3 font-medium">Contact</th>
                   <th className="px-5 py-3 font-medium hidden lg:table-cell">Message</th>
+                  <th className="px-5 py-3 font-medium hidden md:table-cell">Source</th>
                   <th className="px-5 py-3 font-medium">Date</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                 </tr>
@@ -297,6 +312,7 @@ export default function Enquiries() {
                     <td className="px-5 py-3 text-slate-600 hidden lg:table-cell max-w-xs">
                       <p className="truncate">{lead.message}</p>
                     </td>
+                    <td className="px-5 py-3 text-slate-600 hidden md:table-cell whitespace-nowrap">{sourceLabel(lead.traffic_source)}</td>
                     <td className="px-5 py-3 text-slate-600 whitespace-nowrap">{formatDate(lead.created_at)}</td>
                     <td className="px-5 py-3"><Badge tone={statusMeta(lead.status).tone}>{statusMeta(lead.status).label}</Badge></td>
                   </tr>

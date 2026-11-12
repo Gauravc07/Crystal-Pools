@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { useSiteSettings } from '../lib/siteSettings';
 
 interface PageLoaderProps {
   onFillComplete?: () => void;
@@ -9,6 +10,7 @@ interface PageLoaderProps {
 export default function PageLoader({ onFillComplete }: PageLoaderProps) {
   const shouldReduceMotion = useReducedMotion();
   const [phase, setPhase] = useState(0);
+  const { est_label } = useSiteSettings();
 
   useEffect(() => {
     if (shouldReduceMotion) {
@@ -65,7 +67,7 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
             className="absolute flex items-center justify-center"
           >
             <span className="text-sm md:text-base font-display text-slate-400 tracking-[0.4em] uppercase font-light">
-              EST 2000
+              {est_label}
             </span>
           </motion.div>
         )}

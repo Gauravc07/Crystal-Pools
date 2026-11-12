@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 import { TypeAnimation } from 'react-type-animation';
@@ -26,6 +26,9 @@ export default function Home() {
 
   const shouldReduceMotion = useReducedMotion();
   const { isDarkMode } = useTheme();
+  // Once the banner video is playing, the light-mode still behind it is hidden, so it can't show
+  // through while the video loops or while switching light/dark. It stays as the fallback if the video can't play.
+  const [videoPlaying, setVideoPlaying] = useState(false);
   // Homepage banner media can be replaced from the admin panel; the built-in files are the fallback.
   const settings = useSiteSettings();
   const hero = {
@@ -56,12 +59,13 @@ export default function Home() {
             alt=""
             aria-hidden="true"
             fetchPriority="high"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isDarkMode || videoPlaying ? 'opacity-0' : 'opacity-100'}`}
           />
           <CrossfadeVideo
             src={hero.video}
             className="absolute inset-0 w-full h-full object-cover"
             isVisible={!isDarkMode}
+            onPlayingChange={setVideoPlaying}
           />
           <img
             src={hero.dark}
@@ -83,7 +87,9 @@ export default function Home() {
                 visible: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } }
               }}
             >
-              <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[0.9] tracking-tighter drop-shadow-xl">
+              {/* The animated headline retypes itself, so crawlers and screen readers get the full sentence here */}
+              <h1 className="sr-only">{content.text('hero.lead')} {words.join(', ')}</h1>
+              <div aria-hidden="true" className="hero-heading text-4xl md:text-7xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[0.9] tracking-tighter drop-shadow-xl">
                 <motion.span
                   className="block mb-2 text-white dark:text-brand-gold"
                   variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0 } }}
@@ -109,7 +115,7 @@ export default function Home() {
                     />
                   </span>
                 </motion.span>
-              </h1>
+              </div>
             </motion.div>
           </div>
         </div>

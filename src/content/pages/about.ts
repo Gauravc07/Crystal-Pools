@@ -9,8 +9,8 @@ export const aboutPage = {
   group: 'Main pages',
   sections: [
     seoSection(
-      'About Crystal Pools',
-      "Established in 1993, Crystal Pools is India's trusted swimming pool consultant, builder, and one of the leading swimming pool contractors in Pune. Meet our leadership team and discover our 25+ year journey of engineering excellence.",
+      'About Crystal Pools | Swimming Pool Contractor, Pune',
+      "Established in 1993, Crystal Pools is a trusted swimming pool consultant and contractor in Pune. Meet our leadership team and discover our journey.",
     ),
     {
       title: 'Hero',

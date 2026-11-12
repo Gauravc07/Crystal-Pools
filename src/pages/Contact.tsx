@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState, type ChangeEvent, type SyntheticEvent } from 'react';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { getAttribution } from '../lib/attribution';
 import { motion } from 'motion/react';
 import { Send, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
@@ -77,14 +78,17 @@ export default function Contact() {
     setErrorMessage(null);
     try {
       // Save the lead — this is what appears in the admin panel.
-      const { error } = await supabase.from('leads').insert({
+      const lead = {
         name: fields.name.trim(),
         email: fields.email.trim(),
         phone: fields.phone.trim(),
         project_type: fields.projectType,
         message: fields.message.trim(),
         source_page: window.location.pathname,
-      });
+      };
+      let { error } = await supabase.from('leads').insert({ ...lead, ...getAttribution() });
+      // Never lose an enquiry over tracking: retry without the source details
+      if (error) ({ error } = await supabase.from('leads').insert(lead));
       if (error) throw error;
 
       // Email notification to the sales inbox (best effort; the lead is already saved).
@@ -145,7 +149,7 @@ export default function Contact() {
             viewport={{ once: true }}
             className="text-3xl md:text-5xl lg:text-7xl font-display font-bold text-white dark:text-brand-gold mb-6 leading-[1.2] drop-shadow-lg"
           >
-            {c.text('hero.title')}<br />
+            {c.text('hero.title')}{' '}<br />
             <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-[80px]">{c.text('hero.highlight')}</span>
           </motion.h1>
           <motion.p 

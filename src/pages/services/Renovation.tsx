@@ -53,7 +53,7 @@ export default function Renovation() {
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
             className="text-6xl sm:text-7xl md:text-8xl font-display font-light text-white dark:text-brand-gold leading-none mb-8"
           >
-            {c.text('hero.title')}<br />
+            {c.text('hero.title')}{' '}<br />
             <span className="text-[#f9c80e]">{c.text('hero.highlight')}</span>
           </motion.h1>
           <motion.p

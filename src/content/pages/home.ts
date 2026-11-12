@@ -9,8 +9,8 @@ export const homePage = {
   group: 'Main pages',
   sections: [
     seoSection(
-      'Premium Swimming Pool Construction',
-      'Crystal Pools is a leading swimming pool consultant, builder, and construction company in Pune since 1993. Luxury private, commercial, and competition swimming pools construction across Pune, Mumbai, Nashik, and beyond.',
+      'Swimming Pool Contractor in Pune | Crystal Pools Since 1993',
+      'Swimming pool contractor in Pune since 1993. Crystal Pools designs and builds private, commercial and competition pools across India. Book a site visit.',
     ),
     {
       title: 'Hero',

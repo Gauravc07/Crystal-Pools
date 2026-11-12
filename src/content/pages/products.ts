@@ -20,7 +20,7 @@ export const productsPage = {
   sections: [
     seoSection(
       'Swimming Pool Equipment & Accessories',
-      'Crystal Pools is a trusted swimming pool equipment supplier and swimming pool manufacturer, offering filtration, pumps, filter systems, and accessories in Pune and across India.',
+      'Swimming pool equipment and accessories from Crystal Pools, including filtration, pumps and filter systems, supplied in Pune and across India.',
     ),
     {
       title: 'Hero',

@@ -1,16 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 
 const prefersReducedMotion =
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export default function CrossfadeVideo({ src, className, isVisible }: { src: string, className?: string, isVisible: boolean }) {
+export default function CrossfadeVideo({ src, className, isVisible, onPlayingChange }: {
+  src: string;
+  className?: string;
+  isVisible: boolean;
+  /** Tells the page when the video is really showing, so a still image behind it can step aside */
+  onPlayingChange?: (playing: boolean) => void;
+}) {
   const v1 = useRef<HTMLVideoElement>(null);
   const v2 = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState<1 | 2>(1);
 
   // Respect user motion preference — skip video entirely if reduced motion is on
   if (prefersReducedMotion) return null;
+
+  useEffect(() => {
+    if (!onPlayingChange) return;
+    const vids = [v1.current, v2.current].filter(Boolean) as HTMLVideoElement[];
+    const playing = () => onPlayingChange(true);
+    const failed = () => onPlayingChange(false);
+    for (const v of vids) { v.addEventListener('playing', playing); v.addEventListener('error', failed); }
+    return () => { for (const v of vids) { v.removeEventListener('playing', playing); v.removeEventListener('error', failed); } };
+  }, [onPlayingChange]);
+
+  // Loop crossfade: the incoming copy fades in ON TOP while the outgoing one stays fully visible
+  // underneath until the fade ends, so nothing behind the video ever shows through.
+  const layer = (n: 1 | 2): CSSProperties => (active === n
+    ? { opacity: 1, zIndex: 2, transition: 'opacity 500ms ease-in-out' }
+    : { opacity: 0, zIndex: 1, transition: 'opacity 0s linear 500ms' });
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -61,16 +83,16 @@ export default function CrossfadeVideo({ src, className, isVisible }: { src: str
         autoPlay
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out"
-        style={{ opacity: active === 1 ? 1 : 0 }}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={layer(1)}
       />
       <video
         ref={v2}
         src={src}
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out"
-        style={{ opacity: active === 2 ? 1 : 0 }}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={layer(2)}
       />
     </div>
   );

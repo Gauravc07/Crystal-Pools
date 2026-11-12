@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { PAGES } from '../src/content/index';
-import { allFields } from '../src/content/types';
+import { allFields, pageTitle } from '../src/content/types';
 
 const ids = new Set<string>();
 let problems = 0;
@@ -12,6 +12,13 @@ for (const p of PAGES) {
   if (ids.has(p.id)) fail(`duplicate id ${p.id}`);
   ids.add(p.id);
   if (!/^[a-z0-9-]+$/.test(p.id)) fail(`bad id ${p.id}`);
+  if (p.id !== 'footer') {
+    const f = allFields(p);
+    const title = f['seo.title']?.type === 'text' ? pageTitle(f['seo.title'].default) : '';
+    const desc = f['seo.description']?.type === 'text' ? f['seo.description'].default : '';
+    if (title.length > 65) fail(`${p.id}: title is ${title.length} characters (max 65)`);
+    if (desc.length > 160) fail(`${p.id}: description is ${desc.length} characters (max 160)`);
+  }
   const keys = p.sections.flatMap(s => Object.keys(s.fields));
   if (new Set(keys).size !== keys.length) fail(`duplicate key in ${p.id}`);
   for (const [k, f] of Object.entries(allFields(p))) {

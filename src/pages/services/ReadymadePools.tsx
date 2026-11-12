@@ -271,7 +271,7 @@ export default function ReadymadePools() {
             transition={{ duration: 1.2, ease: [0.33, 1, 0.68, 1] }}
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-light text-white leading-none mb-6"
           >
-            <Lines text={c.text('hero.title')} /><br />
+            <Lines text={c.text('hero.title')} />{' '}<br />
             <span className="text-[#c9963c] font-serif italic font-normal">{c.text('hero.highlight')}</span>
           </motion.h1>
 

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-
-const SITE_NAME = 'Crystal Pools';
+import { pageTitle } from '../content/types';
 
 export function usePageMeta(title: string, description: string, image?: string | null) {
   useEffect(() => {
-    document.title = `${title} | ${SITE_NAME}`;
+    const fullTitle = pageTitle(title);
+    document.title = fullTitle;
 
     const setMeta = (selector: string, content: string, attr = 'name') => {
       let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${selector}"]`);
@@ -17,10 +17,10 @@ export function usePageMeta(title: string, description: string, image?: string |
     };
 
     setMeta('description', description);
-    setMeta('og:title', `${title} | ${SITE_NAME}`, 'property');
+    setMeta('og:title', fullTitle, 'property');
     setMeta('og:description', description, 'property');
-    setMeta('twitter:title', `${title} | ${SITE_NAME}`, 'property');
-    setMeta('twitter:description', description, 'property');
+    setMeta('twitter:title', fullTitle);
+    setMeta('twitter:description', description);
     // Canonical URL for this page (on the www domain, without query strings)
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {
@@ -34,7 +34,7 @@ export function usePageMeta(title: string, description: string, image?: string |
     if (image) {
       const absolute = new URL(image, window.location.origin).href;
       setMeta('og:image', absolute, 'property');
-      setMeta('twitter:image', absolute, 'property');
+      setMeta('twitter:image', absolute);
     }
   }, [title, description, image]);
 }

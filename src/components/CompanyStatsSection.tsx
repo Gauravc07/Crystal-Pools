@@ -28,7 +28,8 @@ const RisingStat = ({ target, label, suffix = '', isInView }: { target: number, 
       className="flex flex-col items-center justify-center p-4 md:p-6 text-center group z-10 relative"
     >
       <div className="relative font-display font-bold text-5xl md:text-6xl lg:text-7xl tracking-tighter select-none flex justify-center w-full min-w-37.5">
-        <motion.div className="text-white drop-shadow-md dark:drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+        <span className="sr-only">{target}{suffix}</span>
+        <motion.div aria-hidden="true" className="text-white drop-shadow-md dark:drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
           {formattedCount}
         </motion.div>
       </div>

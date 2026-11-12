@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "icn1"
+  ],
   "redirects": [
     {
       "source": "/",
@@ -42,8 +45,12 @@
       "destination": "/cac/index.html"
     },
     {
-      "source": "/((?!admin(?:/|$)|cac(?:/|$)|assets/|images/|documents/|.*\\.[a-z0-9]+$).*)",
-      "destination": "/index.html"
+      "source": "/sitemap.xml",
+      "destination": "/api/render?__path=/sitemap.xml"
+    },
+    {
+      "source": "/((?!admin(?:/|$)|cac(?:/|$)|api(?:/|$)|assets/|images/|documents/|.*\\.(?!html?$|aspx$)[a-z0-9]+$).*)",
+      "destination": "/api/render?__path=/$1"
     }
   ],
   "headers": [
@@ -113,6 +120,15 @@
       ]
     },
     {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
       "source": "/cac(.*)",
       "headers": [
         {
@@ -122,6 +138,15 @@
         {
           "key": "Referrer-Policy",
           "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/_shell.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     }

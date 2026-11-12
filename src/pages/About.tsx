@@ -55,7 +55,7 @@ export default function About() {
             variants={fadeUpVariant}
             className="text-3xl md:text-5xl lg:text-7xl font-sans font-bold text-white dark:text-brand-gold mb-6 leading-[1.2] drop-shadow-lg"
           >
-            {c.text('hero.title')}<br />
+            {c.text('hero.title')}{' '}<br />
             <span className="font-serif italic text-[#f9c80e] font-normal text-5xl md:text-7xl lg:text-[80px]">{c.text('hero.highlight')}</span>
           </motion.h1>
           <motion.p

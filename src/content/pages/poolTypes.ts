@@ -99,7 +99,7 @@ export const commercialPools = poolTypeSchema({
   id: 'commercial-pools',
   label: 'Commercial Swimming Pools',
   path: '/commercial-swimming-pools',
-  seo: ['Commercial Swimming Pools', 'Crystal Pools is a leading commercial swimming pool consultant and pool builder in Pune, designing high-traffic commercial swimming pools for hotels, resorts, and apartment complexes across India.'],
+  seo: ['Commercial Swimming Pools', 'Commercial swimming pool consultant and builder in Pune, designing high-traffic pools for hotels, resorts and apartment complexes across India.'],
   hero: {
     image: '/images/pool-types/commercial.webp',
     alt: 'Commercial Swimming Pool',
@@ -283,7 +283,7 @@ export const readymadePools = poolTypeSchema({
   id: 'readymade-pools',
   label: 'Readymade Swimming Pools',
   path: '/readymade-swimming-pool',
-  seo: ['Readymade Swimming Pools', 'Prefabricated FRP readymade and portable swimming pools in Pune for fast installation. Quick setup, durable construction, and full equipment support from Crystal Pools.'],
+  seo: ['Readymade Swimming Pools', 'Prefabricated FRP readymade and portable swimming pools in Pune. Quick setup, durable construction and full equipment support from Crystal Pools.'],
   hero: {
     image: '/images/pool-types/readymade.webp',
     alt: 'Readymade Swimming Pool',

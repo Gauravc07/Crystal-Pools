@@ -147,7 +147,7 @@ export default function Settings() {
           </div>
         </Card>
 
-        <Card title="Google" description="Connect Google Analytics, Search Console and your Google Business Profile. Takes effect on the live site within a few minutes.">
+        <Card title="Google" description="Connect Google Analytics, Search Console and your Google Business Profile. Takes effect on the live site within about 5 minutes.">
           <div className="grid gap-5">
             <Field
               label="Google Analytics 4 Measurement ID"
