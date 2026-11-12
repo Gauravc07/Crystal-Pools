@@ -99,7 +99,7 @@ export function Lines({ text }: { text: string }): ReactNode {
   return parts.map((line, i) => (
     <Fragment key={i}>
       {line}
-      {i < parts.length - 1 && <br />}
+      {i < parts.length - 1 && <>{' '}<br /></>}
     </Fragment>
   ));
 }

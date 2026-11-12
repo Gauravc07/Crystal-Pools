@@ -10,7 +10,7 @@ export const readymadeServicePage = {
   sections: [
     seoSection(
       'Readymade & Prefabricated Pools — Crystal Pools',
-      "Discover Crystal Pools' premium prefabricated, portable swimming pool range in Pune. Faster installation, zero seepage, architectural customization, and superior ROI across India.",
+      "Prefabricated and portable swimming pools from Crystal Pools in Pune. Faster installation, zero seepage and architectural customization across India.",
     ),
     {
       title: 'Hero',

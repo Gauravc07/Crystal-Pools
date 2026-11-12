@@ -62,10 +62,10 @@ export default function TurnkeyProjects() {
               className="font-display font-bold leading-none tracking-tight"
             >
               <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white dark:text-brand-gold uppercase">
-                {c.text('hero.line1')}
+                {c.text('hero.line1')}{' '}
               </span>
               <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif italic font-normal normal-case text-[#f9c80e]">
-                {c.text('hero.line2')}
+                {c.text('hero.line2')}{' '}
               </span>
               <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif italic font-normal normal-case text-[#f9c80e]">
                 {c.text('hero.line3')}

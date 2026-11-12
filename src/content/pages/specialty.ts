@@ -12,8 +12,8 @@ export const specialtyPage = {
   group: 'Products',
   sections: [
     seoSection(
-      'Specialty Installations — Saunas, Jacuzzis & Tile Adhesives',
-      'Bespoke saunas, steam rooms, jacuzzis and hydrotherapy tubs, plus premium pool tile adhesive and grout systems — designed and installed by Crystal Pools across India.',
+      'Saunas, Jacuzzis & Specialty Installations',
+      'Saunas, steam rooms, jacuzzis and hydrotherapy tubs, plus pool tile adhesive and grout systems, designed and installed by Crystal Pools across India.',
     ),
     {
       title: 'Hero',

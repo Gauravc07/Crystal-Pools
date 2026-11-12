@@ -19,7 +19,7 @@ export const turnkeyPage = {
   sections: [
     seoSection(
       'Turnkey Swimming Pool Construction',
-      'Crystal Pools delivers end-to-end swimming pool construction services in Pune and across India — from design and civil works to hydraulic engineering and commissioning, all from one swimming pool contractor.',
+      'End-to-end swimming pool construction in Pune and across India, from design and civil works to hydraulic engineering and commissioning, by Crystal Pools.',
     ),
     {
       title: 'Hero',
@@ -156,7 +156,7 @@ export const poolTilesPage = {
   sections: [
     seoSection(
       'Glass Mosaic Pool Tiles & Murals',
-      'Bespoke ceramic pool murals and premium glass mosaic tiles by Element Mosaics, a Crystal Pools brand. Luminous, durable, chemical-resistant finishes for swimming pools.',
+      'Ceramic pool murals and glass mosaic tiles by Element Mosaics, a Crystal Pools brand. Luminous, durable, chemical-resistant finishes for swimming pools.',
     ),
     {
       title: 'Hero',
@@ -226,7 +226,7 @@ export const renovationPage = {
   sections: [
     seoSection(
       'Swimming Pool Renovation & Repairs',
-      'Expert swimming pool renovation in Pune and across India — leak repairs, waterproofing, mosaic re-tiling, lighting and filtration upgrades that restore and modernise aging pools.',
+      'Swimming pool renovation in Pune and across India: leak repairs, waterproofing, mosaic re-tiling, lighting and filtration upgrades for aging pools.',
     ),
     {
       title: 'Hero',

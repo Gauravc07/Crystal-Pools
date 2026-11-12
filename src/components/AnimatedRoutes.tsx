@@ -30,6 +30,8 @@ const Accessories               = lazy(() => import('../pages/services/Accessori
 const Renovation                = lazy(() => import('../pages/services/Renovation'));
 const ReadymadePools            = lazy(() => import('../pages/services/ReadymadePools'));
 const SpecialtyInstallations    = lazy(() => import('../pages/products/SpecialtyInstallations'));
+const CityPage                  = lazy(() => import('../pages/CityPage'));
+const ProjectPage               = lazy(() => import('../pages/ProjectPage'));
 
 // Old /blog/:slug links (before the move to /blogs) keep working.
 function LegacyBlogRedirect() {
@@ -151,6 +153,8 @@ export default function AnimatedRoutes() {
             <Route path="/blog" element={<Navigate to="/blogs" replace />} />
             <Route path="/blog/:slug" element={<LegacyBlogRedirect />} />
             <Route path="/contact-swimming-pool-contractor" element={<PageWrapper><Contact /></PageWrapper>} />
+            <Route path="/swimming-pool-contractor/:slug" element={<PageWrapper><CityPage /></PageWrapper>} />
+            <Route path="/projects/:slug" element={<PageWrapper><ProjectPage /></PageWrapper>} />
             <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
           </Routes>
         </AnimatePresence>

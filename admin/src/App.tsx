@@ -23,6 +23,7 @@ const Enquiries = lazy(() => import('./pages/Enquiries'));
 const Banner = lazy(() => import('./pages/Banner'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Users = lazy(() => import('./pages/Users'));
+const SeoPage = lazy(() => import('./pages/seo/SeoPage'));
 
 const superAdmin = (p: Profile | null | undefined) => !!p?.is_active && p.role === 'super_admin';
 
@@ -54,6 +55,10 @@ export default function App() {
             </Route>
             <Route element={<RequireAccess check={p => can(p, 'testimonials')} />}>
               <Route path="testimonials" element={<Testimonials />} />
+            </Route>
+
+            <Route element={<RequireAccess check={p => can(p, 'seo')} />}>
+              <Route path="seo" element={<SeoPage />} />
             </Route>
 
             <Route element={<RequireAccess check={superAdmin} />}>

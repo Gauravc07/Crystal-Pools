@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:admin": "vite --config vite.admin.config.ts",
-    "build": "vite build && vite build --config vite.admin.config.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs && npm run build:cac",
+    "build": "vite build && vite build --config vite.admin.config.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist-server/server.cjs && npm run build:cac && node scripts/build-render.mjs",
     "build:admin": "vite build --config vite.admin.config.ts",
     "build:cac": "npm --prefix cac ci --no-audit --no-fund && npm --prefix cac run build -- --base=/cac/ --outDir=../dist/cac --emptyOutDir",
     "start": "node --env-file-if-exists=.env dist-server/server.cjs",
@@ -17,6 +17,7 @@
     "clean": "node -e \"for (const d of ['dist','dist-server']) fs.rmSync(d,{recursive:true,force:true})\"",
     "lint": "tsc --noEmit && tsx scripts/check-content.ts",
     "check:content": "tsx scripts/check-content.ts",
+    "test:seo-db": "node scripts/test-seo-db.mjs",
     "images:optimize": "node --env-file=.env scripts/optimize-images.mjs"
   },
   "dependencies": {

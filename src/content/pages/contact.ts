@@ -9,8 +9,8 @@ export const contactPage = {
   group: 'Main pages',
   sections: [
     seoSection(
-      'Contact Crystal Pools — Get a Free Quote',
-      'Reach out to Crystal Pools, a trusted swimming pool consultant and contractor in Pune, for luxury pool construction, renovation, and equipment across Pune, Mumbai, Nashik, and all India. Call or send an inquiry today.',
+      'Contact Swimming Pool Contractor in Pune',
+      'Contact Crystal Pools, a swimming pool consultant and contractor in Pune, for pool construction, renovation and equipment across India. Book a site visit.',
     ),
     {
       title: 'Hero',

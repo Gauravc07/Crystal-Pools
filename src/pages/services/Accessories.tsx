@@ -306,7 +306,7 @@ export default function Accessories() {
             className="font-display font-light text-white dark:text-brand-gold leading-none tracking-tight"
           >
             {c.text('hero.title').split('\n').map((line, i) => (
-              <span key={i} className="block text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem]">{line}</span>
+              <span key={i} className="block text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem]">{line}{' '}</span>
             ))}
           </motion.h1>
 
