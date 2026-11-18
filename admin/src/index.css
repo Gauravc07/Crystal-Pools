@@ -39,3 +39,9 @@
   content: attr(data-placeholder);
   @apply text-slate-400 float-left h-0 pointer-events-none;
 }
+
+/* Tables in the blog editor */
+.rte-content table { @apply w-full border-collapse my-4; }
+.rte-content th, .rte-content td { @apply border border-slate-300 px-3 py-2 align-top; }
+.rte-content th { @apply bg-slate-100 font-semibold; }
+.rte-content .selectedCell { @apply bg-brand-cyan/10; }

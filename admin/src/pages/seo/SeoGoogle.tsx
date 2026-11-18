@@ -25,7 +25,7 @@ export default function SeoGoogle() {
       if (error || !data) return notify(error?.message ?? 'Could not load settings.', 'error');
       setForm({
         ga: data.ga_measurement_id ?? '', gsc: data.gsc_verification ?? '', gbp: data.gbp_url ?? '',
-        founding: data.founding_year ?? '1993', est: data.est_label ?? 'EST 2000',
+        founding: data.founding_year ?? '2000', est: data.est_label ?? 'EST 2000',
       });
     });
     supabase.from('page_content').select('page, key, value').then(({ data }) => {

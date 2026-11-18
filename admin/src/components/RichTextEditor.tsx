@@ -5,8 +5,9 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Youtube from '@tiptap/extension-youtube';
 import { Placeholder } from '@tiptap/extension-placeholder';
+import { TableKit } from '@tiptap/extension-table';
 import {
-  Bold, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrdered, Minus, Quote, Redo2,
+  Bold, Table2, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrdered, Minus, Quote, Redo2,
   Strikethrough, Underline as UnderlineIcon, Undo2, Youtube as YoutubeIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -120,6 +121,11 @@ function Toolbar({ editor, folder }: { editor: Editor; folder: string }) {
       />
       <ToolbarButton icon={ImagePlus} label="Insert image" disabled={uploading} onClick={() => fileRef.current?.click()} />
       <ToolbarButton icon={YoutubeIcon} label="Embed YouTube video" onClick={() => setPrompt({ kind: 'youtube', value: '' })} />
+      <ToolbarButton
+        icon={Table2}
+        label="Insert table (3 columns, header row)"
+        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+      />
       <Divider />
       <ToolbarButton icon={Undo2} label="Undo" disabled={!state.canUndo} onClick={() => editor.chain().focus().undo().run()} />
       <ToolbarButton icon={Redo2} label="Redo" disabled={!state.canRedo} onClick={() => editor.chain().focus().redo().run()} />
@@ -168,6 +174,8 @@ export default function RichTextEditor({ value, onChange, folder, editable = tru
       Image.configure({ HTMLAttributes: { loading: 'lazy' } }),
       Youtube.configure({ nocookie: true, width: 640, height: 360, HTMLAttributes: { class: 'video-embed' } }),
       Placeholder.configure({ placeholder: 'Start writing your post…' }),
+      // Without this, opening and saving a post would silently delete its tables
+      TableKit.configure({ table: { resizable: false } }),
     ],
     content: value,
     editable,
