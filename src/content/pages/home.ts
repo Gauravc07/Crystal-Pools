@@ -9,12 +9,13 @@ export const homePage = {
   group: 'Main pages',
   sections: [
     seoSection(
-      'Swimming Pool Contractor in Pune | Crystal Pools Since 1993',
-      'Swimming pool contractor in Pune since 1993. Crystal Pools designs and builds private, commercial and competition pools across India. Book a site visit.',
+      'Swimming Pool Contractor in Pune | Crystal Pools Since 2000',
+      'Crystal Pools has built 3200+ swimming pools since 2000. Premium pools for villas, bungalows, hotels and resorts in Pune and across India. Book a site visit.',
     ),
     {
       title: 'Hero',
       fields: {
+        'hero.heading': { type: 'text', label: 'Main heading (H1, small line above the animated headline)', default: 'Swimming Pool Contractor in Pune Since 2000' },
         'hero.lead': { type: 'text', label: 'Headline (first line)', default: 'We build' },
         'hero.words': {
           type: 'list', resizable: true,
@@ -23,6 +24,7 @@ export const homePage = {
           item: { word: { type: 'text', label: 'Word / phrase' } },
           default: [{ word: 'Bespoke Pools' }, { word: 'Luxury Retreats' }, { word: 'Aquatic Artistry' }, { word: 'Elegant Spas' }],
         },
+        'hero.proof': { type: 'text', label: 'Proof line (shown just below the banner)', multiline: true, default: 'Crystal Pools has designed and built 3200+ swimming pools for 3200+ clients since 2000, from villas and bungalows in Pune to projects across India and the Maldives.' },
         'hero.alt': { type: 'text', label: 'Banner image description (alt text)', default: 'Crystal Pools View', help: 'The banner video and images themselves are changed under Homepage Banner.' },
       },
     },
@@ -68,9 +70,9 @@ export const homePage = {
             label: { type: 'text', label: 'Label' },
           },
           default: [
-            { value: '2000', suffix: '+', label: 'Pools' },
+            { value: '3200', suffix: '+', label: 'Pools' },
             { value: '8', suffix: '', label: 'Categories' },
-            { value: '2000', suffix: '+', label: 'Happy Clients' },
+            { value: '3200', suffix: '+', label: 'Happy Clients' },
             { value: '25', suffix: '+', label: 'Years Of Experience' },
           ],
         },

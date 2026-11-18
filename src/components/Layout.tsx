@@ -24,7 +24,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <ErrorBoundary>
         <Navbar />
       </ErrorBoundary>
-      <main className="flex-grow relative w-full flex flex-col">
+      <main className="flex-grow relative w-full flex flex-col min-h-screen">
         <ErrorBoundary>
           {children}
         </ErrorBoundary>

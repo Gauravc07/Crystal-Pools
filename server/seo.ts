@@ -172,7 +172,7 @@ function businessSchema(site: SiteData) {
     image: mediaUrl('site', s.og_image) ?? `${SITE_URL}/images/hero/light-mode.webp`,
     telephone: s.phone,
     email: s.email,
-    foundingDate: s.founding_year || '1993',
+    foundingDate: s.founding_year || '2000',
     address: s.address
       ? { '@type': 'PostalAddress', streetAddress: s.address, addressLocality: 'Pune', addressRegion: 'Maharashtra', postalCode, addressCountry: 'IN' }
       : undefined,
@@ -258,13 +258,14 @@ function pick(page: PageSchema, site: SiteData, key: string): string {
 
 function pageHeading(page: PageSchema, site: SiteData) {
   const fields = allFields(page);
+  if (page.id === 'home' && fields['hero.heading']) return pick(page, site, 'hero.heading');
   if (page.id === 'home') {
     const f = fields['hero.words'];
     const raw = site.overrides.home?.['hero.words'];
     const items = (Array.isArray(raw) ? raw : f?.type === 'list' ? f.default : []) as { word?: string }[];
     return `${pick(page, site, 'hero.lead')} ${items.map(w => w.word).filter(Boolean).join(', ')}`.trim();
   }
-  if (fields['hero.line1']) return ['hero.line1', 'hero.line2', 'hero.line3'].map(k => pick(page, site, k)).join(' ').replace(/s+/g, ' ').trim();
+  if (fields['hero.line1']) return ['hero.line1', 'hero.line2', 'hero.line3'].map(k => pick(page, site, k)).join(' ').replace(/\s+/g, ' ').trim();
   for (const [a, b] of [['hero.title', 'hero.highlight'], ['header.heading', ''], ['hero.heading', '']]) {
     if (fields[a]) return `${pick(page, site, a)} ${b && fields[b] ? pick(page, site, b) : ''}`.replace(/\s+/g, ' ').trim();
   }
@@ -278,6 +279,12 @@ function siteNav() {
 
 function pageBody(page: PageSchema, site: SiteData) {
   const parts: string[] = [`<h1>${escapeHtml(pageHeading(page, site))}</h1>`];
+  if (page.id === 'home') {
+    const f = allFields(page)['hero.words'];
+    const raw = site.overrides.home?.['hero.words'];
+    const items = (Array.isArray(raw) ? raw : f?.type === 'list' ? f.default : []) as { word?: string }[];
+    parts.push(`<p>${escapeHtml(`${pick(page, site, 'hero.lead')} ${items.map(w => w.word).filter(Boolean).join(', ')}`)}</p>`);
+  }
   const skip = new Set(['hero.title', 'hero.highlight', 'hero.lead', 'hero.words', 'header.heading', 'hero.heading', 'hero.line1', 'hero.line2', 'hero.line3']);
   for (const section of page.sections) {
     for (const [key, field] of Object.entries(section.fields)) {

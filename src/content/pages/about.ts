@@ -10,7 +10,7 @@ export const aboutPage = {
   sections: [
     seoSection(
       'About Crystal Pools | Swimming Pool Contractor, Pune',
-      "Established in 1993, Crystal Pools is a trusted swimming pool consultant and contractor in Pune. Meet our leadership team and discover our journey.",
+      "Established in 2000, Crystal Pools is a trusted swimming pool consultant and contractor in Pune. Meet our leadership team and discover our journey.",
     ),
     {
       title: 'Hero',
@@ -19,7 +19,7 @@ export const aboutPage = {
         'hero.alt': { type: 'text', label: 'Image description (alt text)', default: 'Cinematic infinity pool at sunset' },
         'hero.title': { type: 'text', label: 'Headline (first line)', default: 'Committed to' },
         'hero.highlight': { type: 'text', label: 'Headline (highlighted line)', default: 'Excellence.' },
-        'hero.intro': { type: 'text', label: 'Intro', multiline: true, default: 'For over three decades, we have been crafting iconic aquatic experiences that redefine the boundaries of engineering and design.' },
+        'hero.intro': { type: 'text', label: 'Intro', multiline: true, default: 'For over 25 years, we have been crafting iconic aquatic experiences that redefine the boundaries of engineering and design.' },
       },
     },
     {
@@ -53,7 +53,7 @@ export const aboutPage = {
       title: 'Corporate resources',
       fields: {
         'resources.heading': { type: 'text', label: 'Heading', default: 'Corporate Resources' },
-        'resources.intro': { type: 'text', label: 'Intro', multiline: true, default: 'Access our official documentation and corporate literature to learn more about our engineering standards, project methodologies, and 30-year legacy of excellence.' },
+        'resources.intro': { type: 'text', label: 'Intro', multiline: true, default: 'Access our official documentation and corporate literature to learn more about our engineering standards, project methodologies, and 25-year legacy of excellence.' },
         'resources.profileButton': { type: 'text', label: 'Company profile button', default: 'Download Company Profile' },
         'resources.brochureButton': { type: 'text', label: 'Brochure button', default: 'Corporate Brochure' },
         'resources.cardTitle': { type: 'text', label: 'Card title', default: 'Technical Specifications' },
@@ -96,7 +96,7 @@ export const aboutPage = {
             description: { type: 'text', label: 'Description', multiline: true },
           },
           default: [
-            { year: '1998', title: 'The Foundation', description: 'Nilesh Shukla laid the foundation of Crystal Pools with a vision to redefine aquatic architecture.' },
+            { year: '2000', title: 'The Foundation', description: 'Nilesh Shukla laid the foundation of Crystal Pools with a vision to redefine aquatic architecture.' },
             { year: '2005', title: 'Pioneering Technology', description: 'Introduced advanced filtration and structural technologies to the Indian market.' },
             { year: '2010', title: 'Expanding Reach', description: 'Successfully completed milestone projects across multiple states, establishing a national footprint.' },
             { year: '2015', title: 'Global Standards', description: 'Achieved complete adherence to international manufacturing standards under Make in India.' },

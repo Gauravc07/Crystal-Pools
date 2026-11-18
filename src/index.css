@@ -154,6 +154,12 @@
 .blog-content ul { @apply list-disc pl-6 space-y-2; }
 .blog-content ol { @apply list-decimal pl-6 space-y-2; }
 .blog-content li > p { @apply m-0; }
+/* Tables scroll sideways on small screens instead of squashing */
+.blog-content table { @apply block w-full max-w-full overflow-x-auto border-collapse text-base leading-6; }
+.blog-content th, .blog-content td { @apply min-w-40 border border-slate-200 dark:border-white/10 px-4 py-3 text-left align-top; }
+.blog-content th { @apply bg-[#0a5c86] text-white font-semibold; }
+.blog-content tr:nth-child(even) td { @apply bg-slate-50 dark:bg-white/5; }
+.blog-content td p, .blog-content th p { @apply m-0; }
 .blog-content blockquote { @apply border-l-4 border-brand-cyan pl-6 italic text-slate-600 dark:text-slate-400; }
 .blog-content img { @apply w-full h-auto rounded-3xl my-10; }
 .blog-content hr { @apply my-12 border-slate-200 dark:border-slate-800; }

@@ -87,8 +87,15 @@ export default function Home() {
                 visible: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } }
               }}
             >
-              {/* The animated headline retypes itself, so crawlers and screen readers get the full sentence here */}
-              <h1 className="sr-only">{content.text('hero.lead')} {words.join(', ')}</h1>
+              <motion.h1
+                className="mb-4 md:mb-6 text-xs sm:text-sm md:text-base font-display font-semibold uppercase tracking-[0.25em] text-brand-gold drop-shadow-lg"
+                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
+              >
+                {content.text('hero.heading')}
+              </motion.h1>
+              {/* The animated headline retypes itself, so screen readers get the full sentence here */}
+              <p className="sr-only">{content.text('hero.lead')} {words.join(', ')}</p>
               <div aria-hidden="true" className="hero-heading text-4xl md:text-7xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[0.9] tracking-tighter drop-shadow-xl">
                 <motion.span
                   className="block mb-2 text-white dark:text-brand-gold"
@@ -137,6 +144,14 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {content.text('hero.proof') && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-14">
+          <p className="max-w-4xl text-lg md:text-xl leading-relaxed text-slate-700 dark:text-slate-300">
+            {content.text('hero.proof')}
+          </p>
+        </div>
+      )}
 
       <PoolAnimatedSection />
 

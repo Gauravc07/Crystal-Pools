@@ -51,7 +51,7 @@ export const blogListPage = {
   group: 'Main pages',
   sections: [
     seoSection(
-      'Insights & Architecture',
+      'Swimming Pool Guides & Ideas',
       'Expert perspectives on luxury pool construction, wellness routines, and cutting-edge water technology from the Crystal Pools team.',
     ),
     {
