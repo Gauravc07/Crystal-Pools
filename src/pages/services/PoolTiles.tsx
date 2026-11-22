@@ -5,6 +5,7 @@ import { DOCUMENTS } from '../../config/documents';
 import { LinkButton } from '../../components/Button';
 import { Lines, usePageContent, pageImage } from '../../lib/pageContent';
 import { poolTilesPage } from '../../content/pages/services';
+import { responsive } from '../../lib/responsiveImage';
 
 // Bento grid cell for each gallery position: [size classes, animation delay]
 const GALLERY_CELLS: [string, number][] = [
@@ -27,7 +28,7 @@ export default function PoolTiles() {
       <section className="min-h-screen w-full relative flex items-center bg-black">
         <div className="absolute inset-0 z-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
@@ -85,7 +86,7 @@ export default function PoolTiles() {
         {/* Left Column (Sticky Visuals) */}
         <div className="lg:w-1/2 relative sticky-col lg:top-0 h-[50vh] lg:h-screen overflow-hidden">
           <img
-            src={c.image('mosaic.image')}
+            src={c.image('mosaic.image')} {...responsive(c.image('mosaic.image'))}
             alt={c.text('mosaic.alt')}
             className="w-full h-full object-cover"
           />
@@ -181,7 +182,7 @@ export default function PoolTiles() {
                 transition={{ duration: 0.8, delay: GALLERY_CELLS[i][1] }}
                 className={`${GALLERY_CELLS[i][0]} overflow-hidden rounded-2xl`}
               >
-                <img src={pageImage(cell.image)} alt={cell.alt} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                <img src={pageImage(cell.image)} {...responsive(pageImage(cell.image))} alt={cell.alt} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
               </motion.div>
             ))}
 

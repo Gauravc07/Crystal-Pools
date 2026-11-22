@@ -7,6 +7,7 @@ import { fetchCategories, fetchPosts, formatPostDate, postImage } from '../lib/b
 import type { Category, PostSummary } from '../lib/blog';
 import { usePageContent } from '../lib/pageContent';
 import { blogListPage } from '../content/pages/galleryBlog';
+import { responsive } from '../lib/responsiveImage';
 
 export default function Blog() {
   const c = usePageContent(blogListPage);
@@ -114,7 +115,7 @@ export default function Blog() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-white dark:bg-dark-surface rounded-4xl p-4 border border-slate-100 dark:border-slate-800 hover:shadow-xl dark:hover:shadow-2xl dark:hover:shadow-[#38bdf8]/5 transition-shadow duration-500">
                 <div className="h-100 lg:h-125 w-full rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                   <img
-                    src={postImage(featuredPost.featured_image) ?? undefined}
+                    src={postImage(featuredPost.featured_image) ?? undefined} {...responsive(postImage(featuredPost.featured_image) ?? undefined)}
                     alt={featuredPost.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
@@ -199,7 +200,7 @@ export function PostCard({ post }: { post: PostSummary }) {
     >
       <div className="h-64 w-full overflow-hidden relative bg-slate-100 dark:bg-slate-800">
         <img
-          src={postImage(post.featured_image) ?? undefined}
+          src={postImage(post.featured_image) ?? undefined} {...responsive(postImage(post.featured_image) ?? undefined)}
           alt={post.title}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

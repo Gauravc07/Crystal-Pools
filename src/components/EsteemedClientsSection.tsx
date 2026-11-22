@@ -14,6 +14,7 @@ import {
 
 import { pageImage, usePageContent } from '../lib/pageContent';
 import { homePage } from '../content/pages/home';
+import { responsive } from '../lib/responsiveImage';
 
 // Decorative icons, cycled across the client names edited in the admin panel.
 const ICONS = [Building2, Hotel, Landmark, Home, Castle, Tent, Trees, Warehouse, MapPin, Landmark];
@@ -23,7 +24,7 @@ const LogoCard: FC<{ Icon: ElementType, name: string, logo?: string }> = ({ Icon
     <div className="flex items-center space-x-3 px-12 py-6 cursor-pointer group transition-all duration-300">
       <div className="flex items-center space-x-3 opacity-60 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500">
         {logo
-          ? <img src={logo} alt={`${name} logo`} loading="lazy" className="h-10 w-auto max-w-[140px] object-contain" />
+          ? <img src={logo} {...responsive(logo)} alt={`${name} logo`} loading="lazy" className="h-10 w-auto max-w-[140px] object-contain" />
           : <Icon className="w-8 h-8 text-[#0a5c86] dark:text-white" />}
         <span className="text-xl font-display font-bold text-slate-800 dark:text-slate-300 tracking-tight whitespace-nowrap">
           {name}

@@ -11,6 +11,7 @@ import { contactPage } from '../content/pages/contact';
 
 import LiquidWaterEffect from '../components/LiquidWaterEffect';
 import ContactFAQSection from '../components/ContactFAQSection';
+import { responsive } from '../lib/responsiveImage';
 
 // ---------------------------------------------------------------------------
 // Form types & helpers
@@ -135,7 +136,7 @@ export default function Contact() {
       <section className="relative min-h-screen pt-24 pb-12 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={c.image('hero.image')} 
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))} 
             alt={c.text('hero.alt')} 
             className="w-full h-full object-cover"
           />

@@ -4,6 +4,7 @@ import { Phone, Mail, Instagram, Facebook, Linkedin, Youtube, ArrowRight } from 
 import { Link } from 'react-router-dom';
 import { telHref, useSiteSettings } from '../lib/siteSettings';
 import { projectImage, useProjects } from '../lib/content';
+import { responsive } from '../lib/responsiveImage';
 
 const SOCIAL_ICONS = { facebook: Facebook, instagram: Instagram, linkedin: Linkedin, youtube: Youtube } as const;
 
@@ -239,7 +240,7 @@ export default function PoolFooterGallery({ images: fallbackImages, poolName, po
               }}
             >
               <img 
-                src={img.src} 
+                src={img.src} {...responsive(img.src)} 
                 alt={img.alt} 
                 className="w-full h-full object-cover object-center pointer-events-none" 
               />

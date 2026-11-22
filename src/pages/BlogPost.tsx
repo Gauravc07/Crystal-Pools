@@ -8,6 +8,7 @@ import type { Post, PostSummary } from '../lib/blog';
 import { sanitizeHtml } from '../lib/sanitize';
 import { PostCard } from './Blog';
 import NotFound from './NotFound';
+import { responsive } from '../lib/responsiveImage';
 
 type State =
   | { kind: 'loading' }
@@ -130,7 +131,7 @@ export default function BlogPost() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="max-w-5xl mx-auto px-6 lg:px-12 mt-10 md:mt-14"
           >
-            <img src={image} alt={post.title} className="w-full aspect-video object-cover rounded-4xl" />
+            <img src={image} {...responsive(image)} alt={post.title} className="w-full aspect-video object-cover rounded-4xl" />
           </motion.div>
         )}
 

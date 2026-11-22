@@ -1,0 +1,695 @@
+{
+ "/images/about/hero.webp": {
+  "w": 1376,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/about/pool-construction.webp": {
+  "w": 1122,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/gallery/dark/gallery-01.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-02.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-03.webp": {
+  "w": 1448,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-04.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-05.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-06.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-07.webp": {
+  "w": 1023,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/gallery/dark/gallery-08.webp": {
+  "w": 1333,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/dark/gallery-09.webp": {
+  "w": 1023,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/gallery/dark/gallery-10.webp": {
+  "w": 1178,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/gallery/light/gallery-01.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-02.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-03.webp": {
+  "w": 1448,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-04.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-05.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-06.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-07.webp": {
+  "w": 1023,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/gallery/light/gallery-08.webp": {
+  "w": 1335,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/gallery/light/gallery-09.webp": {
+  "w": 1023,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/gallery/light/gallery-10.webp": {
+  "w": 1180,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/hero/dark-mode.webp": {
+  "w": 1920,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/hero/light-mode.webp": {
+  "w": 1920,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/commercial.webp": {
+  "w": 1920,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/competition.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/overflow.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/private.webp": {
+  "w": 1920,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/readymade.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/recreational.webp": {
+  "w": 1920,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/pool-types/skimmer.png": {
+  "w": 1024,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/pool-types/vanishing-edge.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/equipment-catalogue/disinfection/chemical-tablet-feeder.webp": {
+  "w": 1196,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/products/equipment-catalogue/disinfection/dosingstar-dosing-pump.webp": {
+  "w": 1227,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/products/equipment-catalogue/disinfection/pool-general.webp": {
+  "w": 1313,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/equipment-catalogue/disinfection/pool-hose.webp": {
+  "w": 1254,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/products/equipment-catalogue/disinfection/pool-plastic.webp": {
+  "w": 1319,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/equipment-catalogue/filters/b-series.webp": {
+  "w": 1358,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/equipment-catalogue/filters/f-series.webp": {
+  "w": 1297,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/equipment-catalogue/filters/m-series.webp": {
+  "w": 1126,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/products/equipment-catalogue/filters/ms-series.webp": {
+  "w": 1309,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/equipment-catalogue/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/adhesive-grout/1.webp": {
+  "w": 1324,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/adhesive-grout/4.webp": {
+  "w": 1122,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/products/specialty-installations/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/jacuzzi/1.webp": {
+  "w": 1311,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/jacuzzi/2.webp": {
+  "w": 1335,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/jacuzzi/3.webp": {
+  "w": 1324,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/jacuzzi/4.webp": {
+  "w": 1329,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/jacuzzi/5.webp": {
+  "w": 1331,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/sunbath/1.webp": {
+  "w": 1268,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/products/specialty-installations/sunbath/2.webp": {
+  "w": 1341,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/sunbath/3.webp": {
+  "w": 1323,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/sunbath/4.webp": {
+  "w": 1327,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/products/specialty-installations/sunbath/5.webp": {
+  "w": 1338,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/sections/footer.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/accessories/deck-level-overflow-edge.webp": {
+  "w": 1537,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/accessories/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/accessories/standard-skimmer-edge.webp": {
+  "w": 1537,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/hub/swimming-pool.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/1.webp": {
+  "w": 1402,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/2.webp": {
+  "w": 1301,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/3.webp": {
+  "w": 1448,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/4.webp": {
+  "w": 1342,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/5.webp": {
+  "w": 1254,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/services/pool-tiles/6.webp": {
+  "w": 1164,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/services/pool-tiles/7.webp": {
+  "w": 1343,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/8.webp": {
+  "w": 1672,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/pool-tiles/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/readymade-pools/Advantage-01.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/readymade-pools/Advantage-02.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/readymade-pools/Advantage-03.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/readymade-pools/Advantage-04.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/readymade-pools/Advantage-05.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/readymade-pools/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/renovation/1.webp": {
+  "w": 2016,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/renovation/2.webp": {
+  "w": 1566,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/renovation/3.webp": {
+  "w": 1536,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/renovation/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/turnkey-projects/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/bell-jet-fountain.webp": {
+  "w": 1377,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/bubbler-jet-fountain.webp": {
+  "w": 1387,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/dandelion.webp": {
+  "w": 1306,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/foam-jet-fountain.webp": {
+  "w": 1297,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/geyser-jet-fountain.webp": {
+  "w": 1322,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/hero.webp": {
+  "w": 1400,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ },
+ "/images/services/water-features/laminar-jets.webp": {
+  "w": 1000,
+  "v": [
+   640
+  ]
+ },
+ "/images/services/water-features/tiered-cascade-fountain.webp": {
+  "w": 1000,
+  "v": [
+   640,
+   960
+  ]
+ },
+ "/images/services/water-features/water-curtains.webp": {
+  "w": 1414,
+  "v": [
+   640,
+   960,
+   1280
+  ]
+ }
+}

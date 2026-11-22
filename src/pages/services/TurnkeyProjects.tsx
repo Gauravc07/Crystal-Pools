@@ -5,6 +5,7 @@ import { IMAGES } from '../../config/images';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { Lines, usePageContent } from '../../lib/pageContent';
 import { turnkeyPage } from '../../content/pages/services';
+import { responsive } from '../../lib/responsiveImage';
 
 // Icon and colours for each scope step position
 const SCOPE_STYLES = [
@@ -30,7 +31,7 @@ export default function TurnkeyProjects() {
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover"
           />

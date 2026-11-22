@@ -6,6 +6,7 @@ import { PAGES } from '../src/content';
 import { allFields, pageTitle } from '../src/content/types';
 import type { Field, PageSchema } from '../src/content/types';
 import { LEGACY_REDIRECTS } from './legacyRedirects';
+import { srcSetFor } from '../src/lib/responsiveImage';
 
 // Canonical links always name the real site, whatever host or environment served the page.
 const SITE_URL = 'https://www.crystalpools.in';
@@ -26,6 +27,7 @@ interface Settings {
   social_links: Record<string, string> | null;
   seo_title: string; seo_description: string; og_image: string | null;
   ga_measurement_id: string; gsc_verification: string; gbp_url: string;
+  hero_image_light?: string | null;
   founding_year?: string;
 }
 
@@ -149,10 +151,8 @@ function analyticsTags(site: SiteData): string[] {
   if (s?.ga_measurement_id) {
     const id = escapeHtml(s.ga_measurement_id);
     // ga-init.js is a file rather than inline code because the site's security policy blocks inline scripts.
-    tags.push(
-      `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>`,
-      `<script src="/ga-init.js" data-id="${id}"></script>`,
-    );
+    // It records the page view at once and fetches Google's script after the page has loaded.
+    tags.push(`<script src="/ga-init.js" data-id="${id}" defer></script>`);
   }
   return tags;
 }
@@ -337,15 +337,30 @@ function pageExtras(page: PageSchema, site: SiteData): string[] {
   return extras;
 }
 
+/**
+ * Starts the download of a page's main (largest) image straight away, instead of after the scripts have
+ * loaded and rendered it. Uses the same srcset as the <img>, so the browser fetches the same file once.
+ */
+function preloadImage(url: string | null | undefined) {
+  if (!url) return '';
+  const path = url.startsWith(SITE_URL) ? url.slice(SITE_URL.length) : url;
+  const set = srcSetFor(path);
+  return `<link rel="preload" as="image" href="${escapeHtml(path)}"${set ? ` imagesrcset="${escapeHtml(set)}" imagesizes="100vw"` : ''} fetchpriority="high" />`;
+}
+
 function pageMeta(page: PageSchema, site: SiteData): PageMeta {
   const fields = allFields(page);
   const heroImage = fields['hero.image'] ? mediaUrl('pages', pick(page, site, 'hero.image')) : null;
+  // Home: the banner's light-mode still (the default theme) is the main image
+  const mainImage = page.id === 'home'
+    ? mediaUrl('site', site.settings?.hero_image_light) ?? '/images/hero/light-mode.webp'
+    : heroImage;
   return {
     title: pick(page, site, 'seo.title'),
     description: pick(page, site, 'seo.description'),
     image: heroImage ?? mediaUrl('site', site.settings?.og_image) ?? `${SITE_URL}/images/hero/light-mode.webp`,
     canonical: `${SITE_URL}${page.path === '/' ? '/' : page.path}`,
-    extra: pageExtras(page, site),
+    extra: [preloadImage(mainImage), ...pageExtras(page, site)],
   };
 }
 
@@ -366,6 +381,7 @@ function postMeta(post: Post): PageMeta {
     canonical: `${SITE_URL}/blogs/${post.slug}`,
     type: 'article',
     extra: [
+      preloadImage(mediaUrl('blog', post.featured_image)),
       post.tags?.length ? `<meta name="keywords" content="${escapeHtml(post.tags.join(', '))}" />` : '',
       `<meta property="article:published_time" content="${escapeHtml(post.published_at)}" />`,
       jsonLd({

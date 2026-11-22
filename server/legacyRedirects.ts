@@ -9,7 +9,7 @@ const ACCESSORIES = '/services/accessories';
 const WATER = '/services/waterfall-fountain';
 const SPECIALTY = '/products/specialty-installations';
 const READYMADE = '/readymade-swimming-pool';
-const COST_GUIDE = '/blogs/swimming-pool-construction-cost-in-pune-factors-that-affect-the-budget';
+const COST_GUIDE = '/blogs/swimming-pool-construction-cost';
 
 const GROUPS: [string, string[]][] = [
   ['/', ['/index.html', '/home.html', '/user', '/user/index.html']],

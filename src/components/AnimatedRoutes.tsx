@@ -107,7 +107,7 @@ export default function AnimatedRoutes() {
     fillTimerRef.current = setTimeout(() => {
       try { sessionStorage.setItem('cp-loaded', '1'); } catch {}
       setIsInitialLoad(false);
-    }, 500);
+    }, 100);
   };
 
   return (

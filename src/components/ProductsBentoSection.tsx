@@ -5,6 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 import TiltCard from './TiltCard';
 import { usePageContent, pageImage } from '../lib/pageContent';
 import { homePage } from '../content/pages/home';
+import { responsive } from '../lib/responsiveImage';
 
 // Link for each card position (text and images are edited in the admin panel).
 const PRODUCT_PATHS = ['/products', '/products/specialty-installations'];
@@ -71,7 +72,7 @@ export default function ProductsBentoSection() {
 
                   {/* Background image */}
                   <img
-                    src={product.image}
+                    src={product.image} {...responsive(product.image)}
                     alt={product.title}
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[0.25,1,0.5,1] group-hover:scale-[1.06]"

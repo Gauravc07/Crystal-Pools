@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import TiltCard from './TiltCard';
 import { usePageContent, pageImage } from '../lib/pageContent';
 import { poolTypesPage } from '../content/pages/hubs';
+import { responsive } from '../lib/responsiveImage';
 
 // Each card position links to its pool type page.
 const POOL_PATHS = [
@@ -62,7 +63,7 @@ export default function PoolBentoSection() {
                   className="group relative block w-full h-full rounded-[20px] overflow-hidden cursor-pointer bg-[#101C2B]"
                 >
                   <img 
-                    src={pool.img} 
+                    src={pool.img} {...responsive(pool.img)} 
                     alt={pool.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                   />

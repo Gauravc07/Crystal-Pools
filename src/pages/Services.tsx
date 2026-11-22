@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { usePageContent, pageImage } from '../lib/pageContent';
 import { servicesPage } from '../content/pages/hubs';
+import { responsive } from '../lib/responsiveImage';
 
 // Layout and link for each card position; text and images come from the admin panel.
 const SLOTS = [
@@ -82,7 +83,7 @@ export default function Services() {
                 {/* Background image */}
                 <div className="absolute inset-0 z-0">
                   <img
-                    src={service.image}
+                    src={service.image} {...responsive(service.image)}
                     alt={service.title}
                     className="w-full h-full object-cover transition-transform duration-700 ease-[0.25,1,0.5,1] group-hover:scale-[1.06]"
                   />

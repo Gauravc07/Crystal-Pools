@@ -17,21 +17,21 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
       onFillComplete?.();
       return;
     }
-    // 1. Initial State: Blank for 200ms
-    const t1 = setTimeout(() => setPhase(1), 200);
+    // 1. Initial State: blank for a moment
+    const t1 = setTimeout(() => setPhase(1), 50);
     
     // 2. Transition Out: Phase 2 begins to hide "EST YEAR"
-    const t2 = setTimeout(() => setPhase(2), 1000);
+    const t2 = setTimeout(() => setPhase(2), 300);
     
     // 3. Phase 3: Brand Reveal
-    const t3 = setTimeout(() => setPhase(3), 1400);
+    const t3 = setTimeout(() => setPhase(3), 400);
     
     // 4. Trigger completion so parent unmounts and triggers `exit` animation
     const t4 = setTimeout(() => {
         if (onFillComplete) {
             onFillComplete();
         }
-    }, 2800);
+    }, 750);
 
     return () => {
       clearTimeout(t1);
@@ -47,7 +47,7 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
       initial={{ opacity: 1, clipPath: "inset(0% 0% 0% 0%)" }}
       exit={{
         clipPath: "inset(0% 0% 100% 0%)",
-        transition: { duration: 1.0, ease: [0.76, 0, 0.24, 1] }
+        transition: { duration: 0.35, ease: [0.76, 0, 0.24, 1] }
       }}
     >
       {/* Background ambient lighting */}
@@ -63,7 +63,7 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
             initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -15, filter: "blur(8px)" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
             className="absolute flex items-center justify-center"
           >
             <span className="text-sm md:text-base font-display text-slate-400 tracking-[0.4em] uppercase font-light">
@@ -77,13 +77,13 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
             key="brand"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.0, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="absolute flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8"
           >
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
                 animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1] }}
+                transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
                 className="w-20 h-20 md:w-28 md:h-28 relative flex items-center justify-center"
             >
                 {/* Subtle reflection/glow under the logo */}
@@ -94,7 +94,7 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
             <motion.div
               initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-              transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.3, delay: 0.05, ease: "easeOut" }}
               className="flex flex-col items-center md:items-start"
             >
               <p aria-hidden="true" className="text-3xl md:text-5xl font-display text-slate-800 tracking-wider mb-3 font-light uppercase">
@@ -106,7 +106,7 @@ export default function PageLoader({ onFillComplete }: PageLoaderProps) {
                 <motion.div 
                   initial={{ x: "-100%" }}
                   animate={{ x: "0%" }}
-                  transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }}
+                  transition={{ duration: 0.35, ease: [0.76, 0, 0.24, 1] }}
                   className="absolute inset-y-0 left-0 w-full bg-linear-to-r from-[#38bdf8] to-[#0a5c86]"
                 />
               </div>

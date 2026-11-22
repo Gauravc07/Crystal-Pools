@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { usePageContent } from '../../lib/pageContent';
 import { accessoriesPage } from '../../content/pages/accessories';
+import { responsive } from '../../lib/responsiveImage';
 
 // Tab ids in order; tab names come from the admin panel.
 const TAB_IDS = ['ladders', 'skimmers', 'pumps', 'filters'];
@@ -80,7 +81,7 @@ export default function Accessories() {
               </ul>
             </div>
             
-            <img src={c.image('ladders.image')} alt={c.text('ladders.heading')} className="w-full h-80 object-cover rounded-xl" />
+            <img src={c.image('ladders.image')} {...responsive(c.image('ladders.image'))} alt={c.text('ladders.heading')} className="w-full h-80 object-cover rounded-xl" />
           </motion.div>
         );
 
@@ -121,14 +122,14 @@ export default function Accessories() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
               <div className="space-y-4">
                 <div className="relative h-64 rounded-xl overflow-hidden group">
-                  <img src={c.image('skimmers.image1')} alt={c.text('skimmers.caption1')} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={c.image('skimmers.image1')} {...responsive(c.image('skimmers.image1'))} alt={c.text('skimmers.caption1')} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
                   <h4 className="absolute bottom-4 left-6 text-white font-medium tracking-wide">{c.text('skimmers.caption1')}</h4>
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="relative h-64 rounded-xl overflow-hidden group">
-                  <img src={c.image('skimmers.image2')} alt={c.text('skimmers.caption2')} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={c.image('skimmers.image2')} {...responsive(c.image('skimmers.image2'))} alt={c.text('skimmers.caption2')} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
                   <h4 className="absolute bottom-4 left-6 text-white font-medium tracking-wide">{c.text('skimmers.caption2')}</h4>
                 </div>
@@ -270,7 +271,7 @@ export default function Accessories() {
         {/* Background image */}
         <div className="absolute inset-0 z-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover"
           />
@@ -432,7 +433,7 @@ export default function Accessories() {
                </div>
                {/* Replace this with actual schematic images */}
                <div className="w-full h-full bg-slate-800 flex items-center justify-center p-8 overflow-auto max-h-[85vh]">
-                 <img src={modalImage} alt="Technical Schematic" className="w-full h-auto object-contain" />
+                 <img src={modalImage} {...responsive(modalImage)} alt="Technical Schematic" className="w-full h-auto object-contain" />
                </div>
              </motion.div>
           </motion.div>

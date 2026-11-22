@@ -6,6 +6,7 @@ import type { PoolGalleryImage } from './PoolFooterGallery';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { Lines, usePageContent } from '../lib/pageContent';
 import type { PoolTypeSchema } from '../content/pages/poolTypes';
+import { responsive } from '../lib/responsiveImage';
 
 interface Props {
   schema: PoolTypeSchema;
@@ -51,7 +52,7 @@ export default function PoolTypePage({ schema, poolType, poolName, gallery, layo
       <section className="relative w-full min-h-[100dvh] md:min-h-[800px] flex flex-col justify-end pb-16 md:pb-24 px-4 sm:px-6 lg:px-8 pt-24">
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-[#060F1A]">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className={`absolute inset-0 w-full h-full object-cover object-center ${layout === 'narrow' ? 'md:object-[center_20%]' : 'md:object-[center_30%]'} opacity-90`}
           />
