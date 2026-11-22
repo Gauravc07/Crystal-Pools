@@ -5,6 +5,7 @@ import { ArrowRight, Waves } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Lines, pageImage, usePageContent } from '../../lib/pageContent';
 import { specialtyPage } from '../../content/pages/specialty';
+import { responsive } from '../../lib/responsiveImage';
 
 export default function SpecialtyInstallations() {
   const [isHoveringTherapy, setIsHoveringTherapy] = useState(false);
@@ -21,7 +22,7 @@ export default function SpecialtyInstallations() {
       <section className="relative w-full h-screen overflow-hidden bg-black flex items-center">
         <div className="absolute inset-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
@@ -111,7 +112,7 @@ export default function SpecialtyInstallations() {
                 className="group relative bg-[#f8fafc] dark:bg-black rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-slate-800"
               >
                 <div className="aspect-[4/3] w-full overflow-hidden">
-                  <img src={prod.image} alt={prod.name} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500" />
+                  <img src={prod.image} {...responsive(prod.image)} alt={prod.name} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800">
                   <h4 className="text-sm font-medium text-slate-900 dark:text-slate-200 text-center uppercase tracking-wide">{prod.name}</h4>
@@ -146,7 +147,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="col-span-2 h-[400px] rounded-2xl overflow-hidden"
               >
-                <img src={pageImage(saunaImages[0]?.image)} alt={saunaImages[0]?.alt} className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[0]?.image)} {...responsive(pageImage(saunaImages[0]?.image))} alt={saunaImages[0]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -155,7 +156,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-[250px] rounded-2xl overflow-hidden"
               >
-                <img src={pageImage(saunaImages[1]?.image)} alt={saunaImages[1]?.alt} className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[1]?.image)} {...responsive(pageImage(saunaImages[1]?.image))} alt={saunaImages[1]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -164,7 +165,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-[250px] rounded-2xl overflow-hidden"
               >
-                <img src={pageImage(saunaImages[2]?.image)} alt={saunaImages[2]?.alt} className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[2]?.image)} {...responsive(pageImage(saunaImages[2]?.image))} alt={saunaImages[2]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -173,7 +174,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-55 rounded-2xl overflow-hidden"
               >
-                <img src={pageImage(saunaImages[3]?.image)} alt={saunaImages[3]?.alt} className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[3]?.image)} {...responsive(pageImage(saunaImages[3]?.image))} alt={saunaImages[3]?.alt} className="w-full h-full object-cover" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -182,7 +183,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="h-55 rounded-2xl overflow-hidden"
               >
-                <img src={pageImage(saunaImages[4]?.image)} alt={saunaImages[4]?.alt} className="w-full h-full object-cover" />
+                <img src={pageImage(saunaImages[4]?.image)} {...responsive(pageImage(saunaImages[4]?.image))} alt={saunaImages[4]?.alt} className="w-full h-full object-cover" />
               </motion.div>
             </div>
             <div className="w-full lg:w-[40%]">
@@ -231,7 +232,7 @@ export default function SpecialtyInstallations() {
                   viewport={{ once: true }}
                   className="h-62.5 rounded-2xl overflow-hidden group relative cursor-pointer"
                 >
-                  <img src={pageImage(img.image)} alt={img.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={pageImage(img.image)} {...responsive(pageImage(img.image))} alt={img.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 </motion.div>
               ))}
               <motion.div
@@ -241,7 +242,7 @@ export default function SpecialtyInstallations() {
                 viewport={{ once: true }}
                 className="col-span-2 h-[400px] rounded-2xl overflow-hidden group relative cursor-pointer"
               >
-                <img src={pageImage(jacuzziImages[4]?.image)} alt={jacuzziImages[4]?.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={pageImage(jacuzziImages[4]?.image)} {...responsive(pageImage(jacuzziImages[4]?.image))} alt={jacuzziImages[4]?.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               </motion.div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 import { POOL_TYPE_LABELS } from '../lib/content';
 import { mediaUrl, supabase } from '../lib/supabase';
 import NotFound from './NotFound';
+import { responsive } from '../lib/responsiveImage';
 
 interface Project {
   name: string; location: string; pool_type: string; description: string; cover_image: string | null;
@@ -33,7 +34,7 @@ function ProjectContent({ project }: { project: Project }) {
           {images.map(img => (
             <img
               key={img.path}
-              src={mediaUrl('projects', img.path) ?? ''}
+              src={mediaUrl('projects', img.path) ?? ''} {...responsive(mediaUrl('projects', img.path) ?? '')}
               alt={img.alt || `${project.name}${place}`}
               loading="lazy"
               className="w-full rounded-2xl object-cover"

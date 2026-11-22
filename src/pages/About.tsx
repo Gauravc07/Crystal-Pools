@@ -9,6 +9,7 @@ import { IMAGES } from "../config/images";
 import { DOCUMENTS } from "../config/documents";
 import { Lines, usePageContent } from '../lib/pageContent';
 import { aboutPage } from '../content/pages/about';
+import { responsive } from '../lib/responsiveImage';
 
 export default function About() {
   const c = usePageContent(aboutPage);
@@ -40,7 +41,7 @@ export default function About() {
           <img
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover saturate-[1.1] brightness-[1.05]"
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
           />
           {/* Base overlay for text readability without making it dark and dull */}
           <div className="absolute inset-0 bg-black/20"></div>
@@ -110,7 +111,7 @@ export default function About() {
               <img
                 alt={c.text('philosophy.alt')}
                 className="w-full h-full object-cover"
-                src={c.image('philosophy.image')}
+                src={c.image('philosophy.image')} {...responsive(c.image('philosophy.image'))}
               />
             </motion.div>
           </div>

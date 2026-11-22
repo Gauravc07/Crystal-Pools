@@ -5,6 +5,7 @@ import { ArrowUp, Cloud, Bell, Aperture, Droplets, ArrowDown, Activity, Layers, 
 import { Link } from 'react-router-dom';
 import { Lines, usePageContent, pageImage } from '../../lib/pageContent';
 import { waterFeaturesPage } from '../../content/pages/services';
+import { responsive } from '../../lib/responsiveImage';
 
 // Icon for each fountain card position
 const ICONS = [ArrowUp, Cloud, Bell, Aperture, Droplets, ArrowDown, Activity, Layers, Music];
@@ -56,7 +57,7 @@ export default function WaterFeatures() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-80"
           />
@@ -154,7 +155,7 @@ export default function WaterFeatures() {
               className="flex-none w-[85vw] sm:w-[50vw] md:w-auto min-h-[400px] snap-center group relative overflow-hidden rounded-xl bg-slate-900"
             >
               <img 
-                src={item.image} 
+                src={item.image} {...responsive(item.image)} 
                 alt={item.title} 
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70 group-hover:opacity-100" 
               />

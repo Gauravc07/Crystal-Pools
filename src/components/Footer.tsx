@@ -4,6 +4,7 @@ import Logo from './Logo';
 
 import ScrollToTopButton from './ScrollToTopButton';
 import { IMAGES } from '../config/images';
+import { responsive } from '../lib/responsiveImage';
 import { DOCUMENTS } from '../config/documents';
 import { telHref, useSiteSettings } from '../lib/siteSettings';
 import { usePageContent } from '../lib/pageContent';
@@ -19,10 +20,16 @@ export default function Footer() {
   return (
     <footer className="relative text-slate-100 min-h-screen pt-20 lg:pt-28 pb-0 overflow-hidden bg-slate-900 border-none flex flex-col">
       {/* Background Image & Gradient */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center pointer-events-none"
-        style={{ backgroundImage: `url(${IMAGES.sections.footer})` }} 
-      >
+      {/* An image rather than a CSS background, so it loads only when it scrolls near and phones get a smaller copy */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <img
+          src={IMAGES.sections.footer} {...responsive(IMAGES.sections.footer)}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
          <div className="absolute inset-0 bg-linear-to-b from-transparent via-slate-900/80 to-[rgba(15,23,42,0.95)]" />
       </div>
 

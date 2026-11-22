@@ -17,6 +17,7 @@ import { IMAGES } from '../config/images';
 import { siteMedia, useSiteSettings } from '../lib/siteSettings';
 import { usePageContent } from '../lib/pageContent';
 import { homePage } from '../content/pages/home';
+import { responsive } from '../lib/responsiveImage';
 
 export default function Home() {
   const content = usePageContent(homePage);
@@ -55,7 +56,7 @@ export default function Home() {
         <div className="absolute inset-0">
           {/* Static images load instantly; video layers on top when ready */}
           <img
-            src={hero.light}
+            src={hero.light} {...responsive(hero.light)}
             alt=""
             aria-hidden="true"
             fetchPriority="high"
@@ -68,7 +69,7 @@ export default function Home() {
             onPlayingChange={setVideoPlaying}
           />
           <img
-            src={hero.dark}
+            src={hero.dark} {...responsive(hero.dark)}
             alt={content.text('hero.alt')}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
           />

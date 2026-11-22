@@ -13,6 +13,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Highlighted, Lines, parsePairs, pageImage, usePageContent } from '../../lib/pageContent';
 import { readymadeServicePage } from '../../content/pages/readymadeService';
 import { DOCUMENTS } from '../../config/documents';
+import { responsive } from '../../lib/responsiveImage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -245,7 +246,7 @@ export default function ReadymadePools() {
       <section className="relative w-full h-screen overflow-hidden flex items-center bg-black">
         <div className="absolute inset-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-85"
           />

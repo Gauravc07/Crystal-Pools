@@ -6,6 +6,7 @@ import { sanitizeHtml } from '../lib/sanitize';
 import { mediaUrl, supabase } from '../lib/supabase';
 import { telHref } from '../lib/siteSettings';
 import NotFound from './NotFound';
+import { responsive } from '../lib/responsiveImage';
 
 interface City {
   slug: string; city: string; meta_title: string; meta_description: string; heading: string;
@@ -24,10 +25,10 @@ function CityContent({ city }: { city: City }) {
           {city.heading || title}
         </h1>
         {city.intro && <p className="text-lg text-slate-600 dark:text-slate-300 mb-10 whitespace-pre-line">{city.intro}</p>}
-        {hero && <img src={hero} alt={`Swimming pool by Crystal Pools in ${city.city}`} className="w-full rounded-2xl mb-10 object-cover" />}
+        {hero && <img src={hero} {...responsive(hero)} alt={`Swimming pool by Crystal Pools in ${city.city}`} className="w-full rounded-2xl mb-10 object-cover" />}
         {city.body && (
           <div
-            className="prose prose-slate dark:prose-invert max-w-none mb-12"
+            className="blog-content city-content mb-12"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(city.body) }}
           />
         )}

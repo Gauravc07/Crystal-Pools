@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Anton&family=Pacifico&display=swap');
+@import './fonts.css';
 @import "tailwindcss";
 @source not "../admin";
 
@@ -162,6 +162,8 @@
 .blog-content td p, .blog-content th p { @apply m-0; }
 .blog-content blockquote { @apply border-l-4 border-brand-cyan pl-6 italic text-slate-600 dark:text-slate-400; }
 .blog-content img { @apply w-full h-auto rounded-3xl my-10; }
+/* City pages: all body text white in dark mode */
+.city-content, .city-content li, .city-content p { @apply dark:text-white; }
 .blog-content hr { @apply my-12 border-slate-200 dark:border-slate-800; }
 .blog-content div[data-youtube-video] { @apply my-10; }
 .blog-content iframe { @apply w-full h-auto aspect-video rounded-3xl; }

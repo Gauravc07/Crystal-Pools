@@ -4,6 +4,7 @@ import { usePageMeta } from '../../hooks/usePageMeta';
 import { Link } from 'react-router-dom';
 import { usePageContent, pageImage } from '../../lib/pageContent';
 import { renovationPage } from '../../content/pages/services';
+import { responsive } from '../../lib/responsiveImage';
 
 // Icon for each scope card position
 const ICONS = [Palette, Zap, Shield, CheckCircle];
@@ -25,7 +26,7 @@ export default function Renovation() {
       <section className="relative w-full h-screen overflow-hidden flex items-center bg-black">
         <div className="absolute inset-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
@@ -125,7 +126,7 @@ export default function Renovation() {
             className="md:col-span-3 md:row-span-2 overflow-hidden rounded-2xl"
           >
             <img
-              src={pageImage(gallery[0]?.image)}
+              src={pageImage(gallery[0]?.image)} {...responsive(pageImage(gallery[0]?.image))}
               alt={gallery[0]?.alt}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
             />
@@ -140,7 +141,7 @@ export default function Renovation() {
             className="md:col-span-2 overflow-hidden rounded-2xl"
           >
             <img
-              src={pageImage(gallery[1]?.image)}
+              src={pageImage(gallery[1]?.image)} {...responsive(pageImage(gallery[1]?.image))}
               alt={gallery[1]?.alt}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
             />
@@ -155,7 +156,7 @@ export default function Renovation() {
             className="md:col-span-2 overflow-hidden rounded-2xl"
           >
             <img
-              src={pageImage(gallery[2]?.image)}
+              src={pageImage(gallery[2]?.image)} {...responsive(pageImage(gallery[2]?.image))}
               alt={gallery[2]?.alt}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
             />

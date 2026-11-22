@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import BubbleBackground from './BubbleBackground';
 import { usePageContent, pageImage } from '../lib/pageContent';
 import { homePage } from '../content/pages/home';
+import { responsive } from '../lib/responsiveImage';
 
 // Each pool type slide links to its page, in this order.
 const POOL_PATHS = [
@@ -280,7 +281,7 @@ const MobileView = () => {
             0{idx + 1} / 08
           </div>
           <div className="h-[45vh] w-full rounded-[20px] overflow-hidden shadow-2xl relative">
-             <img src={item.img} className="w-full h-full object-cover transition-transform duration-1000 hover:scale-110" alt={item.title} />
+             <img src={item.img} {...responsive(item.img)} className="w-full h-full object-cover transition-transform duration-1000 hover:scale-110" alt={item.title} />
              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-black/30" />
           </div>
           <h3 className="text-3xl font-bold text-[#0a5c86] dark:text-white font-display leading-[1.1] pt-4">

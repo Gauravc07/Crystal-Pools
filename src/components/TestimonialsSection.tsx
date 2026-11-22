@@ -3,6 +3,7 @@ import { Quote, Star } from 'lucide-react';
 import { testimonialPhoto, useTestimonials } from '../lib/content';
 import { usePageContent } from '../lib/pageContent';
 import { homePage } from '../content/pages/home';
+import { responsive } from '../lib/responsiveImage';
 
 /** Client reviews managed in the admin panel. Renders nothing until at least one is published. */
 export default function TestimonialsSection() {
@@ -44,7 +45,7 @@ export default function TestimonialsSection() {
                 </blockquote>
                 <figcaption className="mt-8 flex items-center gap-3">
                   {photo ? (
-                    <img src={photo} alt="" loading="lazy" className="w-11 h-11 rounded-full object-cover" />
+                    <img src={photo} {...responsive(photo)} alt="" loading="lazy" className="w-11 h-11 rounded-full object-cover" />
                   ) : (
                     <span className="w-11 h-11 rounded-full bg-brand-blue/10 dark:bg-[#38bdf8]/10 text-brand-blue dark:text-[#38bdf8] text-sm font-semibold flex items-center justify-center">
                       {initials}

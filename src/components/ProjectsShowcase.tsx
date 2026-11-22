@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, MapPin, X } from 'lucide-react';
 import { POOL_TYPE_LABELS, projectImage, useProjects } from '../lib/content';
 import type { Project } from '../lib/content';
 import { usePanelContext } from '../contexts/PanelContext';
+import { responsive } from '../lib/responsiveImage';
 
 function ProjectViewer({ project, onClose }: { project: Project; onClose: () => void }) {
   const [index, setIndex] = useState(0);
@@ -55,7 +56,7 @@ function ProjectViewer({ project, onClose }: { project: Project; onClose: () => 
         {count > 0 && (
           <img
             key={images[index].path}
-            src={projectImage(images[index].path) ?? ''}
+            src={projectImage(images[index].path) ?? ''} {...responsive(projectImage(images[index].path) ?? '')}
             alt={images[index].alt || project.name}
             className="max-h-full max-w-full object-contain rounded-xl"
           />
@@ -111,7 +112,7 @@ export default function ProjectsShowcase({ heading, intro }: { heading: string; 
               className="group text-left rounded-[20px] overflow-hidden bg-white dark:bg-[#0f1724] border border-slate-100 dark:border-slate-800 hover:shadow-xl transition-shadow"
             >
               <div className="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
-                {cover && <img src={cover} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />}
+                {cover && <img src={cover} {...responsive(cover)} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />}
                 <span className="absolute top-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-md text-white text-xs font-bold uppercase tracking-widest rounded-full">
                   {POOL_TYPE_LABELS[p.pool_type] ?? p.pool_type}
                 </span>

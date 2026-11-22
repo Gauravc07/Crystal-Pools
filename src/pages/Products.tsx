@@ -8,6 +8,7 @@ import { productsPage } from '../content/pages/products';
 import { usePanelContext } from '../contexts/PanelContext';
 import { useLenis } from '../components/SmoothScroll';
 import { useSiteSettings, whatsappHref } from '../lib/siteSettings';
+import { responsive } from '../lib/responsiveImage';
 
 // Icon for each hero feature-strip position
 const BADGE_ICONS = [ShieldCheck, Settings2, Droplets, Headphones];
@@ -68,7 +69,7 @@ export default function Products() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src={c.image('hero.image')}
+            src={c.image('hero.image')} {...responsive(c.image('hero.image'))}
             alt={c.text('hero.alt')}
             className="w-full h-full object-cover opacity-90"
           />
@@ -189,7 +190,7 @@ export default function Products() {
                  {/* Image Container */}
                  <div className="relative w-full aspect-4/3 bg-[#f8fafc] dark:bg-[#0f1724] overflow-hidden">
                    <img 
-                     src={product.image} 
+                     src={product.image} {...responsive(product.image)} 
                      alt={product.title} 
                      className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-700 group-hover:scale-105"
                    />
@@ -287,7 +288,7 @@ export default function Products() {
               {/* High-Res Image — pinned, never scrolls */}
               <div className="w-full aspect-4/3 shrink-0 bg-[#f8fafc] dark:bg-[#0f1724]">
                 <img 
-                  src={selectedProduct.image} 
+                  src={selectedProduct.image} {...responsive(selectedProduct.image)} 
                   alt={selectedProduct.title} 
                   className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal"
                 />

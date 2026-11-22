@@ -4,6 +4,7 @@ import { galleryPage } from '../content/pages/galleryBlog';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePageMeta } from '../hooks/usePageMeta';
 import ProjectsShowcase from '../components/ProjectsShowcase';
+import { responsive } from '../lib/responsiveImage';
 
 const spans = [
   'col-span-1 md:col-span-2 md:row-span-1', // 01 - 1672×941 landscape
@@ -65,14 +66,14 @@ export default function Gallery() {
               >
                 {/* Light image */}
                 <img
-                  src={lightUrl}
+                  src={lightUrl} {...responsive(lightUrl)}
                   alt={photo.alt}
                   loading="lazy"
                   className={`absolute inset-0 w-full h-full object-cover transition-[opacity,transform] duration-700 md:group-hover:scale-105 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}
                 />
                 {/* Dark image */}
                 <img
-                  src={darkUrl}
+                  src={darkUrl} {...responsive(darkUrl)}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
