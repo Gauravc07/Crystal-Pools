@@ -274,7 +274,10 @@ function pageHeading(page: PageSchema, site: SiteData) {
 
 function siteNav() {
   const links = PAGES.filter(p => p.id !== 'footer').map(p => `<a href="${p.path}">${escapeHtml(p.label)}</a>`);
-  return `<nav>${links.join(' ')}</nav>`;
+  // Published city pages, as linked from the footer's branch list (siteCache is filled before any page renders)
+  const cities = (siteCache?.data.cities ?? []).map(c =>
+    `<a href="/swimming-pool-contractor/${escapeHtml(c.slug)}">Swimming pool contractor in ${escapeHtml(c.city)}</a>`);
+  return `<nav>${[...links, ...cities].join(' ')}</nav>`;
 }
 
 function pageBody(page: PageSchema, site: SiteData) {
