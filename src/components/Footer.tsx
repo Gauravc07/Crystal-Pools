@@ -9,6 +9,7 @@ import { DOCUMENTS } from '../config/documents';
 import { telHref, useSiteSettings } from '../lib/siteSettings';
 import { usePageContent } from '../lib/pageContent';
 import { footerContent } from '../content/pages/footer';
+import { cityPathFor, useCityLinks } from '../lib/cityPages';
 
 const SOCIAL_ICONS = { instagram: Instagram, facebook: Facebook, linkedin: Linkedin, youtube: Youtube } as const;
 
@@ -16,6 +17,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   const settings = useSiteSettings();
   const c = usePageContent(footerContent);
+  const cityLinks = useCityLinks();
 
   return (
     <footer className="relative text-slate-100 min-h-screen pt-20 lg:pt-28 pb-0 overflow-hidden bg-slate-900 border-none flex flex-col">
@@ -88,12 +90,18 @@ export default function Footer() {
           <div>
             <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">{c.text('branches.heading')}</h4>
             <ul className="grid grid-cols-2 gap-y-3 gap-x-2 text-[14px] text-slate-300 mb-6">
-              {settings.branches.map(branch => (
-                <li key={branch} className="flex items-center group cursor-default">
-                  <MapPin size={14} className="mr-2 text-cyan-500/70 group-hover:text-cyan-400 transition-colors" />
-                  <span className="group-hover:text-cyan-400 transition-colors">{branch}</span>
-                </li>
-              ))}
+              {settings.branches.map(branch => {
+                // A branch links to its city page once that page is published in the admin
+                const to = cityPathFor(branch, cityLinks);
+                return (
+                  <li key={branch} className={`flex items-center group ${to ? '' : 'cursor-default'}`}>
+                    <MapPin size={14} className="mr-2 text-cyan-500/70 group-hover:text-cyan-400 transition-colors" />
+                    {to
+                      ? <Link to={to} className="group-hover:text-cyan-400 transition-colors">{branch}</Link>
+                      : <span className="group-hover:text-cyan-400 transition-colors">{branch}</span>}
+                  </li>
+                );
+              })}
             </ul>
 
             <h4 className="text-base tracking-wider mb-4 font-semibold uppercase text-white border-b border-cyan-500/30 pb-2 inline-block">{c.text('hours.heading')}</h4>

@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   whatsapp: '919552526371',
   email: 'sales@crystalpools.in',
   address: '',
-  branches: ['Pune', 'Mumbai', 'Nashik', 'Kolhapur', 'Rajasthan', 'Goa'],
+  branches: ['Pune', 'Karnataka', 'Nashik', 'Kolhapur', 'Rajasthan', 'Goa'],
   social_links: {
     instagram: 'https://www.instagram.com/crystalpoolspune/',
     facebook: 'https://www.facebook.com/crystalpoolspune/',
